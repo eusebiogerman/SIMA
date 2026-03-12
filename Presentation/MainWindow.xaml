@@ -4,8 +4,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="INVENTARIO DE PRODUCTOS" 
-        Height="700" 
+        Title="Simple Inventory Management App(SIMA)" 
+        Height="821" 
         Width="1200"
         WindowStartupLocation="CenterScreen"
         Background="#F5F5F5">
@@ -31,26 +31,17 @@
     <!-- CONTENEDOR PRINCIPAL CON 3 FILAS -->
     <Grid Margin="15">
         <Grid.RowDefinitions>
-            <!-- TOP SECTION: Filtros -->
             <RowDefinition Height="Auto"/>
-
-            <!-- MAIN SECTION: Grid + Contador -->
             <RowDefinition Height="*"/>
-
-            <!-- BOTTOM SECTION: Botones de acción -->
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- ========================================= -->
-        <!-- TOP SECTION: PANEL DE FILTROS            -->
-        <!-- ========================================= -->
         <Border Grid.Row="0" 
                 Style="{StaticResource SeccionBorder}"
                 Margin="0,0,0,15">
 
             <StackPanel>
-                <!-- Título de la sección -->
-                <TextBlock Text="🔍 FILTROS DE BÚSQUEDA" 
+                <TextBlock Text="🔍 FILTER PRODUCTS" 
                           Style="{StaticResource TituloSeccion}"/>
 
                 <Grid>
@@ -64,77 +55,60 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Fila 1: Categoría + Botones principales -->
-
-                    <!-- Categoría ComboBox -->
                     <StackPanel Grid.Row="0" 
                                 Grid.Column="0"
                                 Orientation="Horizontal"
                                 Margin="0,0,0,0">
-                        <TextBlock Text="Categoría:" 
+                        <TextBlock Text="Category:" 
                                    FontWeight="SemiBold" 
-                                   Margin="0,0,25,0"
+                                   Margin="0,0,7,0"
                                    Foreground="#333333"/>
 
-                        <ComboBox x:Name="cmbCategoria" 
+                        <ComboBox x:Name="cmbCategory" 
                                   Width="300" 
                                   Height="35" 
                                   FontSize="14"
                                   BorderBrush="#CCCCCC"
                                   SelectedIndex="0"
-                                  Cursor="Hand"/>
+                                  Cursor="Hand" SelectionChanged="cmbCategory_SelectionChanged"/>
                     </StackPanel>
 
 
-                    <!-- Fila 2: Descripción -->
                     <StackPanel Grid.Row="1" 
                                 Grid.Column="0" 
                                 Orientation="Horizontal"
                                 Grid.ColumnSpan="2" 
                                 Margin="0,5,0,0">
-                        <TextBlock Text="Descripción:" 
+                        <TextBlock Text="Product:" 
                                    FontWeight="SemiBold" 
                                    Margin="0,0,15,0"
                                    Foreground="#333333"/>
 
-                        <TextBox x:Name="txtDescripcion" 
+                        <TextBox x:Name="txtSearch"
                                  Height="35" 
                                  Width="400"
                                  FontSize="14"
                                  Padding="10,5"
-                                 BorderBrush="#CCCCCC"/>
-                        
-                        <Button x:Name="btnBuscar" 
-                                Content="🔍 Buscar" 
-                                Width="100" 
-                                Height="35" 
-                                Margin="5,0" 
-                                Background="#2196F3" 
-                                Foreground="White" 
-                                FontWeight="Bold"
-                                BorderThickness="0"
-                                Cursor="Hand"/>
+                                 BorderBrush="#CCCCCC" TextChanged="txtSearch_TextChanged"/>
 
-                        <Button x:Name="btnLimpiar" 
-                                Content="🗑 Limpiar" 
+                        <Button x:Name="btnClear" 
+                                Content="🗑 Clear" 
                                 Width="100" 
                                 Height="35" 
                                 Background="#FF5722" 
                                 Foreground="White" 
                                 FontWeight="Bold"
                                 BorderThickness="0"
-                                Cursor="Hand"/>
+                                Cursor="Hand" Click="btnClear_Click"/>
 
                     </StackPanel>
 
-                    <!-- Fila 3: Filtros activos (tags) -->
                     <StackPanel Grid.Row="2" 
                                 Grid.Column="0" 
                                 Grid.ColumnSpan="2" 
                                 Orientation="Horizontal">
 
-                        <!-- Tag Categoría -->
-                        <Border x:Name="FiltroCategoriaTag" 
+                        <Border x:Name="filterCatTag" 
                                 Background="#E3F2FD" 
                                 CornerRadius="15" 
                                 Padding="10,3" 
@@ -146,13 +120,13 @@
                         </Border>
 
                         <!-- Tag Descripción -->
-                        <Border x:Name="FiltroDescripcionTag" 
+                        <Border x:Name="FilterProductTag" 
                                 Background="#E3F2FD" 
                                 CornerRadius="15" 
                                 Padding="10,3" 
                                 Margin="5,0,0,0"
                                 Visibility="Collapsed">
-                            <TextBlock x:Name="txtFiltroDescripcion" 
+                            <TextBlock x:Name="txtSearchProduct" 
                                        Foreground="#2196F3"
                                        FontSize="12"/>
                         </Border>
@@ -171,14 +145,13 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- CONTADOR DE RESULTADOS -->
             <Border Grid.Row="0" 
                     Style="{StaticResource SeccionBorder}"
                     Margin="0,0,0,10">
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                    <TextBlock x:Name="txtResultados" 
-                               Text="📊 Mostrando 12 productos encontrados" 
+                    <TextBlock x:Name="txtResults" 
+                               Text="📊 Show 12 products found" 
                                FontSize="12" 
                                FontWeight="SemiBold"
                                Foreground="#333333"/>
@@ -196,7 +169,8 @@
                           Background="Transparent"
                           BorderThickness="0"
                           ScrollViewer.VerticalScrollBarVisibility="Auto"
-                          Width="auto" >
+                          Width="auto"
+                          Cursor="Hand">
 
 
                     <ListView.View>
@@ -246,13 +220,13 @@
                             </GridViewColumn>
 
                             <!-- Columna Precio -->
-                            <GridViewColumn Header="Price" Width="200">
+                            <GridViewColumn Header="Price" Width="200" >
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding Price, StringFormat='${0:N2}'}" 
-                                                   Margin="10,0" 
                                                    FontWeight="Bold"
-                                                   Foreground="#2196F3"/>
+                                                   Foreground="#2196F3"
+                                                   TextAlignment="Right"/>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
@@ -306,9 +280,6 @@
             </Border>
         </Grid>
 
-        <!-- ========================================= -->
-        <!-- BOTTOM SECTION: BOTONES DE ACCIÓN        -->
-        <!-- ========================================= -->
         <Border Grid.Row="2" 
                 Style="{StaticResource SeccionBorder}">
 
@@ -319,32 +290,33 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- LEFT: Navegación -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal">
                     <TextBlock Text="📌 ACCIONES" 
                               Style="{StaticResource TituloSeccion}"
                               Margin="0,0,20,0"
                               VerticalAlignment="Center"/>
 
-                    <Button x:Name="btnAnterior" 
-                            Content="← Anterior" 
+                    <Button x:Name="btnPrevious" 
+                            Content="← Previous" 
                             Width="100" 
                             Height="35"
-                            Margin="0,0,10,0"
+                            Margin="0,0,5,0"
                             Background="White"
                             Foreground="#333333"
                             BorderBrush="#CCCCCC"
                             BorderThickness="1"
-                            Cursor="Hand"/>
+                            Cursor="Hand" Click="btnPrevious_Click"/>
 
-                    <TextBlock x:Name="txtPaginacion" 
-                               Text="Página 1 de 5" 
+                    <TextBlock x:Name="txtoffset" Text=""  Visibility="Hidden"/>
+                    <TextBlock x:Name="txtTotal" Text="" Visibility="Hidden"/>
+                    <TextBlock x:Name="txtPaging" 
+                               Text="Page 1 de 5" 
                                VerticalAlignment="Center"
                                Margin="10,0"
                                Foreground="#666666"/>
 
-                    <Button x:Name="btnSiguiente" 
-                            Content="Siguiente →" 
+                    <Button x:Name="btnNext" 
+                            Content="Next →" 
                             Width="100" 
                             Height="35"
                             Margin="10,0,0,0"
@@ -352,7 +324,8 @@
                             Foreground="#333333"
                             BorderBrush="#CCCCCC"
                             BorderThickness="1"
-                            Cursor="Hand"/>
+                            Cursor="Hand" 
+                            Click="btnNext_Click"/>
                 </StackPanel>
 
                 <!-- RIGHT: Acciones principales -->
@@ -362,15 +335,12 @@
                                Margin="0,0,10,0"
                                Foreground="#666666"/>
 
-                    <ComboBox x:Name="cmbItemsPorPagina" 
+                    <ComboBox x:Name="cmbLimitPage" 
                               Width="80" 
                               Height="35"
                               BorderBrush="#CCCCCC"
-                              SelectedIndex="0">
-                        <ComboBoxItem Content="12"/>
-                        <ComboBoxItem Content="24"/>
-                        <ComboBoxItem Content="48"/>
-                        <ComboBoxItem Content="96"/>
+                              Cursor="Hand"
+                              SelectedIndex="0" SelectionChanged="cmbLimitPage_SelectionChanged">
                     </ComboBox>
 
                     <Button x:Name="btnNuevoProducto" 
@@ -384,16 +354,6 @@
                             BorderThickness="0"
                             Cursor="Hand"/>
 
-                    <Button x:Name="btnExportar" 
-                            Content="📥 Exportar" 
-                            Width="100" 
-                            Height="35"
-                            Margin="10,0,0,0"
-                            Background="#FF9800"
-                            Foreground="White"
-                            FontWeight="Bold"
-                            BorderThickness="0"
-                            Cursor="Hand"/>
                 </StackPanel>
             </Grid>
         </Border>

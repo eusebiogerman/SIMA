@@ -20,6 +20,10 @@
   <Content Include="Infrastructure\data\stock.json">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </Content>
+  <Content Include="Infrastructure\data\PageLimit.json">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </Content>
+ 
 </ItemGroup>
 
 </Project>

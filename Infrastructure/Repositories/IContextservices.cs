@@ -12,7 +12,7 @@ namespace SIMA.Infrastructure.Repositories
 
         Task<IEnumerable<T>> GetbyId(int id);
 
-        Task<IEnumerable<T>> GetAll();
+        Task<IEnumerable<T>> GetAll(Paging page);
 
         Task Add(T entitiy);
 

@@ -1,4 +1,5 @@
 ﻿using SIMA.Domain.Models;
+using SIMA.ExtensionsHelper;
 using SIMA.Helper;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,7 @@ namespace SIMA.Infrastructure.Repositories
             _stockProductFile.loadData();
         }
 
+        #region Abstractions
         public Task Add(Category entitiy)
         {
             throw new NotImplementedException();
@@ -29,7 +31,7 @@ namespace SIMA.Infrastructure.Repositories
             throw new NotImplementedException();
         }
 
-        public async Task<IEnumerable<Category>> GetAll()
+        public async Task<IEnumerable<Category>> GetAll(Paging page)
         {
             int id = 0;
             List<Category> ls = new List<Category>();
@@ -42,7 +44,7 @@ namespace SIMA.Infrastructure.Repositories
                  .OrderBy(c => c)
                  .ToList();
 
-                ls.Add(new Category { Idcategory = id++ , Name = "All Category" });
+                ls.Add(new Category { Idcategory = id++ , Name =  "".defaultCategory() });
 
                 foreach (var item in distc)
                 {
@@ -67,7 +69,7 @@ namespace SIMA.Infrastructure.Repositories
             throw new NotImplementedException();
         }
 
-
+        #endregion
 
     }
 }

@@ -22,7 +22,12 @@ namespace SIMA.Helper
         public JsonFile() {
             _filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Infrastructure", "data", _filePath);
         }
-        
+
+        public JsonFile(string filepath)
+        {
+            _filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Infrastructure", "data", filepath);
+        }
+
         public void  loadData()
         
         {

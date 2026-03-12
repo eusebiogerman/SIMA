@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
+using System.Windows.Navigation;
 using System.Xml;
 using Newtonsoft.Json;
 using SIMA.Domain.Models;
@@ -21,14 +23,23 @@ namespace SIMA.Infrastructure.Repositories
             _stockProductFile.loadData();
         }
 
-        public async Task<IEnumerable<StockProduct>> GetbyId(int id)
+        private IEnumerable<StockProduct> getStock(StockProduct param)
         {
-            return await Task.Run(() =>  _stockProductFile.ServicesList.Where(p => p.IdStock == id));
+            return _stockProductFile.ServicesList.Where(p =>
+                               (param.Category == string.Empty || p.Category.Contains(param.Category, StringComparison.OrdinalIgnoreCase))
+                            && (param.Name == string.Empty || p.Name.Contains(param.Name, StringComparison.OrdinalIgnoreCase)));
         }
 
-        public async Task<IEnumerable<StockProduct>> GetAll()
+
+        #region Abstractions
+        public async Task<IEnumerable<StockProduct>> GetbyId(int id)
         {
-            return await Task.Run(() => _stockProductFile.ServicesList.AsEnumerable());
+            return await Task.Run(() => _stockProductFile.ServicesList.Where(p => p.IdStock == id));
+        }
+
+        public async Task<IEnumerable<StockProduct>> GetAll(Paging page)
+        {
+            return await Task.Run(() => _stockProductFile.ServicesList.AsEnumerable().Skip(page.Offset).Take(page.Limit));
         }
 
         public async Task Add(StockProduct entity)
@@ -58,7 +69,7 @@ namespace SIMA.Infrastructure.Repositories
             existingProduct.Price = entity.Price;
             existingProduct.Stock = entity.Stock;
 
-           await _stockProductFile.SaveData();
+            await _stockProductFile.SaveData();
         }
 
         public async Task Delete(int id)
@@ -73,18 +84,28 @@ namespace SIMA.Infrastructure.Repositories
             _stockProductFile.ServicesList.Remove(product);
             await _stockProductFile.SaveData();
         }
+        #endregion
 
-        // Métodos adicionales útiles
-        public async Task<IEnumerable<StockProduct>> GetByCategory(string category)
+        #region Util Function and Methods
+        public async Task<IEnumerable<StockProduct>> GetByFilter(StockProduct param, Paging page)
         {
             return await Task.Run(() =>
-                _stockProductFile.ServicesList.Where(p =>
-                    p.Category.Contains(category, StringComparison.OrdinalIgnoreCase)));
+              {
+                  IEnumerable<StockProduct> stock = getStock(param).Skip(page.Offset).Take(page.Limit);
+                  return stock.Any() ? stock : getStock(param).Skip(1).Take(page.Limit);
+              });
+
+
         }
 
         public async Task<IEnumerable<StockProduct>> GetLowStock(int threshold = 10)
         {
             return await Task.Run(() => _stockProductFile.ServicesList.Where(p => p.Stock <= threshold));
+        }
+
+        public async Task<int> GetTotalFound(StockProduct param)
+        {
+            return await Task.Run(() => getStock(param).Count());
         }
 
         public async Task<decimal> GetTotalValue()
@@ -107,6 +128,7 @@ namespace SIMA.Infrastructure.Repositories
                     .ToList()
             );
         }
+        #endregion
 
     }
 }
