@@ -1,0 +1,73 @@
+﻿using SIMA.Domain.Models;
+using SIMA.Helper;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace SIMA.Infrastructure.Repositories
+{
+    internal class CategoryServices : IContextservices<Category>
+    {
+        private JsonFile<StockProduct> _stockProductFile;
+
+        public CategoryServices()
+        {
+            _stockProductFile = new JsonFile<StockProduct>();
+            _stockProductFile.loadData();
+        }
+
+        public Task Add(Category entitiy)
+        {
+            throw new NotImplementedException();
+
+        }
+
+        public Task Delete(int id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<IEnumerable<Category>> GetAll()
+        {
+            int id = 0;
+            List<Category> ls = new List<Category>();
+
+            await Task.Run(() =>
+            {
+                List<string> distc = _stockProductFile.ServicesList
+                 .Select(p => p.Category)
+                 .Distinct()
+                 .OrderBy(c => c)
+                 .ToList();
+
+                ls.Add(new Category { Idcategory = id++ , Name = "All Category" });
+
+                foreach (var item in distc)
+                {
+                    var cat = new Category();
+                    cat.Idcategory = id++;
+                    cat.Name = item;
+                    ls.Add(cat);
+                }
+            });
+            
+            return ls;
+
+        }
+
+        public Task<IEnumerable<Category>> GetbyId(int id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task Update(Category entitiy)
+        {
+            throw new NotImplementedException();
+        }
+
+
+
+    }
+}

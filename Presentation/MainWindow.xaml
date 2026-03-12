@@ -1,4 +1,4 @@
-﻿<Window x:Class="SIMA.MainWindow"
+﻿<Window x:Class="SIMA.Presentation.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -81,16 +81,8 @@
                                   Height="35" 
                                   FontSize="14"
                                   BorderBrush="#CCCCCC"
-                                  SelectedIndex="0">
-                            <ComboBoxItem Content="Todas las categorías"/>
-                            <ComboBoxItem Content="Computadoras"/>
-                            <ComboBoxItem Content="Celulares"/>
-                            <ComboBoxItem Content="Accesorios"/>
-                            <ComboBoxItem Content="Monitores"/>
-                            <ComboBoxItem Content="Almacenamiento"/>
-                            <ComboBoxItem Content="Tabletas"/>
-                            <ComboBoxItem Content="Redes"/>
-                        </ComboBox>
+                                  SelectedIndex="0"
+                                  Cursor="Hand"/>
                     </StackPanel>
 
 
@@ -172,11 +164,10 @@
         <!-- ========================================= -->
         <!-- MAIN SECTION: GRID DE PRODUCTOS          -->
         <!-- ========================================= -->
-        <Grid Grid.Row="1" Margin="0,0,0,0">
+        <Grid Grid.Row="1" Margin="0,0,0,0" >
+
             <Grid.RowDefinitions>
-                <!-- Sub-sección: Contador (arriba del grid) -->
                 <RowDefinition Height="Auto"/>
-                <!-- Sub-sección: GridView -->
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
@@ -194,15 +185,19 @@
                 </StackPanel>
             </Border>
 
+            
             <!-- GRIDVIEW DE PRODUCTOS -->
             <Border Grid.Row="1" 
                     Style="{StaticResource SeccionBorder}"
                     Padding="0">
+                
 
-                <ListView x:Name="lvProductos" 
+                <ListView x:Name="gridProducts" 
                           Background="Transparent"
                           BorderThickness="0"
-                          ScrollViewer.VerticalScrollBarVisibility="Auto">
+                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                          Width="auto" >
+
 
                     <ListView.View>
                         <GridView>
@@ -210,7 +205,7 @@
                             <GridViewColumn Header="ID" Width="60">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding Id}" 
+                                        <TextBlock Text="{Binding IdStock}" 
                                                    Margin="10,0" 
                                                    VerticalAlignment="Center"
                                                    FontWeight="SemiBold"/>
@@ -219,14 +214,14 @@
                             </GridViewColumn>
 
                             <!-- Columna Nombre -->
-                            <GridViewColumn Header="Nombre" Width="200">
+                            <GridViewColumn Header="Product" Width="400">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" Margin="5">
                                             <TextBlock Text="{Binding Icono}" 
                                                        FontSize="16" 
                                                        Margin="0,0,8,0"/>
-                                            <TextBlock Text="{Binding Nombre}" 
+                                            <TextBlock Text="{Binding Name}" 
                                                        VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </DataTemplate>
@@ -234,7 +229,7 @@
                             </GridViewColumn>
 
                             <!-- Columna Categoría -->
-                            <GridViewColumn Header="Categoría" Width="150">
+                            <GridViewColumn Header="Category" Width="270">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border Background="#E0E0E0" 
@@ -242,7 +237,7 @@
                                                 Padding="8,3"
                                                 Margin="5"
                                                 HorizontalAlignment="Center">
-                                            <TextBlock Text="{Binding Categoria}" 
+                                            <TextBlock Text="{Binding Category}" 
                                                        HorizontalAlignment="Center"
                                                        FontSize="12"/>
                                         </Border>
@@ -251,10 +246,10 @@
                             </GridViewColumn>
 
                             <!-- Columna Precio -->
-                            <GridViewColumn Header="Precio" Width="120">
+                            <GridViewColumn Header="Price" Width="200">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding Precio, StringFormat='${0:N2}'}" 
+                                        <TextBlock Text="{Binding Price, StringFormat='${0:N2}'}" 
                                                    Margin="10,0" 
                                                    FontWeight="Bold"
                                                    Foreground="#2196F3"/>
@@ -263,7 +258,7 @@
                             </GridViewColumn>
 
                             <!-- Columna Stock -->
-                            <GridViewColumn Header="Stock" Width="80">
+                            <GridViewColumn Header="Stock" Width="100">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border Background="#4CAF50"
@@ -282,7 +277,7 @@
                             </GridViewColumn>
 
                             <!-- Columna Acciones -->
-                            <GridViewColumn Header="Acciones" Width="100">
+                            <GridViewColumn Header="Acciones" Width="auto">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" 
