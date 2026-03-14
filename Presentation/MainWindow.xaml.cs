@@ -24,8 +24,6 @@ namespace SIMA.Presentation
         private Wproduct _wproduct;
         private Util _util;
 
-
-
         public MainWindow()
         {
             InitializeComponent();
@@ -48,7 +46,6 @@ namespace SIMA.Presentation
             previous = 1,
             next = 2 
         }
-
         private StockProduct activeFilters()
         {
             return new StockProduct
@@ -197,19 +194,23 @@ namespace SIMA.Presentation
             {
                 _windowStock = new Wstocks();
             }
+            _windowStock.Owner = this;
             _windowStock.Activate();
             _windowStock.Show();
 
         }
         private void btnNuevoProducto_Click(object sender, RoutedEventArgs e)
         {
-            if (_wproduct == null)
-            {
-                _wproduct = new Wproduct();
-            }
-            _wproduct.Activate();
-            _wproduct.Show();
+            // Programmatically change what the frame is showing
 
+             if (_wproduct == null)
+             {
+                 _wproduct = new Wproduct();
+             }
+             _wproduct.Owner = this;
+             _wproduct.Activate();
+             _wproduct.Show();
+            
         }
         private void btnPrevious_Click(object sender, RoutedEventArgs e)
         {
@@ -225,7 +226,46 @@ namespace SIMA.Presentation
             this.Close();
 
        }
+        private void btnUpdate_Click(object sender, RoutedEventArgs e)
+        {
+            Button btn = sender as Button;
+            StockProduct rowData = (StockProduct)btn.DataContext;
 
+            if (rowData != null)
+            {
+                if (_windowStock != null)
+                {
+                    if (_windowStock.IsEnabled)
+                    {
+                        _windowStock.Close();
+                        _windowStock = null;
+                    }
+                }
+
+                _windowStock = new Wstocks(rowData);
+                _windowStock.Owner = this;
+                _windowStock.Activate();
+                _windowStock.Show();
+            }
+
+        }
+        private async void btnRemove_Click(object sender, RoutedEventArgs e)
+        {
+          MessageBoxResult result = MessageBox.Show(this, "Confirm remove Stock ?", "Remove Stock", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                Button btn = sender as Button;
+                StockProduct rowData = (StockProduct)btn.DataContext;
+                bool valid = await _stockservices.Delete(rowData.IdStock) > 0;
+                if (valid)
+                {
+                    FillStock();
+                    MessageBox.Show(this, "Stock Succesfully removed", "Remove Stock", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+
+        }
         #endregion
 
 

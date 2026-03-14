@@ -29,7 +29,7 @@ namespace SIMA.Infrastructure.Repositories
         {
             throw new NotImplementedException();
         }
-        public Task<int> Delete(int id)
+        public Task<int> Delete(int? id)
         {
             throw new NotImplementedException();
         }
@@ -67,6 +67,30 @@ namespace SIMA.Infrastructure.Repositories
         public Task<bool> Set(Category entitiy)
         {
             throw new NotImplementedException();
+        }
+        public async Task<int> GetIdIndex(string category)
+        {
+            int id = 0;
+            int retid = 0;
+            List<Category> ls = new List<Category>();
+
+            await Task.Run(() =>
+            {
+                List<string> distc = _stockProductFile.ServicesList
+                 .Select(p => p.Category)
+                 .Distinct()
+                 .OrderBy(c => c)
+                 .ToList();
+
+                foreach (var item in distc)
+                {
+                    id++;
+                    if (category.Equals(item)) {
+                        retid = id ;
+                    }
+                }
+            });
+            return retid;
         }
         #endregion
 

@@ -28,7 +28,6 @@
             <Setter Property="Margin" Value="0,0,0,10"/>
         </Style>
     </Window.Resources>
-
     <Grid Margin="15">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="343*"/>
@@ -39,7 +38,7 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        
+
         <Border Grid.Row="0" 
                 Style="{StaticResource SectionBorder}"
                 Margin="0,0,0,15" Grid.ColumnSpan="2">
@@ -147,7 +146,6 @@
                                        FontSize="12"/>
                         </Border>
 
-                        <!-- Tag Descripción -->
                         <Border x:Name="FilterProductTag" 
                                 Background="#E3F2FD" 
                                 CornerRadius="15" 
@@ -275,14 +273,14 @@
                                                     Background="#2196F3"
                                                     Foreground="White"
                                                     BorderThickness="0"
-                                                    Cursor="Hand"/>
+                                                    Cursor="Hand" Click="btnUpdate_Click"/>
                                             <Button Content="🗑" 
                                                     Width="30" Height="30"
                                                     Background="#F44336"
                                                     Foreground="White"
                                                     BorderThickness="0"
                                                     Cursor="Hand"
-                                                    Margin="5,0,0,0"/>
+                                                    Margin="5,0,0,0" Click="btnRemove_Click"/>
                                         </StackPanel>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>

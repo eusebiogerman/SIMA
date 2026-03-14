@@ -16,9 +16,9 @@ namespace SIMA.Infrastructure.Repositories
     public class StockProductServices : IContextservices<StockProduct>
     {
         private JsonFile<StockProduct> _stockProductFile;
-        private int _currentIdSave;
+        private int? _currentIdSave;
 
-        public int CurrentIdSave { get => _currentIdSave; }
+        public int? CurrentIdSave { get => _currentIdSave; }
 
         public StockProductServices()
         {
@@ -74,7 +74,7 @@ namespace SIMA.Infrastructure.Repositories
 
             return await _stockProductFile.SaveData();
         }
-        public async Task<int> Delete(int id)
+        public async Task<int> Delete(int? id)
         {
             var product = _stockProductFile.ServicesList.FirstOrDefault(p => p.IdStock == id);
 
@@ -116,7 +116,7 @@ namespace SIMA.Infrastructure.Repositories
         {
             return await Task.Run(() => _stockProductFile.ServicesList.Sum(p => p.Price * p.Stock));
         }
-        public async Task<int> GetNextId()
+        public async Task<int?> GetNextId()
         {
             return await Task.Run(() => _stockProductFile.ServicesList.Any() ? _stockProductFile.ServicesList.Max(p => p.IdStock) + 1 : 1);
         }

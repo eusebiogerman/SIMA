@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SIMA.Presentation.Views"
         mc:Ignorable="d"
-        Title="Stock Management" Height="388" Width="500"
+        Title="Stock Management" Height="400" Width="500"
         Background="#F5F5F5"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize" Closing="Window_Closing">
@@ -40,7 +40,7 @@
                 Margin="0,0,0,0">
 
             <StackPanel Grid.Row="0" 
-                    VerticalAlignment="Center">
+                    VerticalAlignment="Center" Height="243">
              
               <TextBlock Text="STOCK MANAGMENT" 
                           Style="{StaticResource Titleselection}"/>
@@ -62,13 +62,30 @@
                      Cursor="Hand" SelectionChanged="cmbProduct_SelectionChanged"/>
 
 
-                <!-- Stock actual (solo lectura) -->
                 <Label Content="Stock :" FontWeight="SemiBold"/>
                 <TextBox Name="txtStockActual" 
+                    Text="{Binding Stock, 
+                            UpdateSourceTrigger=PropertyChanged, 
+                            ValidatesOnNotifyDataErrors=True}"      
                      Height="35" 
                      Padding="5" 
                      Margin="0,0,0,2"
-                     Background="#F0F0F0"/>
+                     Background="#F0F0F0">
+                    <TextBox.Resources>
+                        <ControlTemplate x:Key="ErrorTemplate">
+                            <StackPanel>
+                                <AdornedElementPlaceholder Name="placeholder"/>
+                                <TextBlock Text="{Binding ElementName=placeholder, 
+                           Path=AdornedElement.(Validation.Errors)[0].ErrorContent}" 
+                           Foreground="Red" FontSize="10"/>
+                            </StackPanel>
+                        </ControlTemplate>
+                    </TextBox.Resources>
+
+                    <Validation.ErrorTemplate>
+                        <StaticResource ResourceKey="ErrorTemplate"/>
+                    </Validation.ErrorTemplate>
+                </TextBox>
             </StackPanel>
 
         </Border>

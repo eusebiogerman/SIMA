@@ -59,9 +59,9 @@ namespace SIMA.Presentation.Views
             bool priceval = false;
             decimal outvl ;
             priceval = decimal.TryParse(txtPrice.Text, out outvl) ? decimal.Parse(txtPrice.Text) > 0 : false;
-            valid = priceval && string.IsNullOrEmpty(txtProductName.Text);
+            valid = priceval && !string.IsNullOrEmpty(txtProductName.Text);
             if (!valid)
-                throw new CustomException("Form has Erros, Valid first before save");   
+                throw new CustomException("Form has Errors, Valid first before save");   
 
         } 
         private void Clear()
@@ -80,7 +80,7 @@ namespace SIMA.Presentation.Views
                 string _category = cmbCategory.SelectedItem.ToString();
                 var _prod = new Product
                 {
-                    IdProduct = _currentProduct.IdProduct,
+                    IdProduct = (_currentProduct == null) ? null : _currentProduct.IdProduct,
                     Category = _category,
                     Name = txtProductName.Text,
                     Price = decimal.Parse(txtPrice.Text),

@@ -7,54 +7,40 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SIMA.Presentation.Views
+namespace SIMA.Presentation.ViewModel
 {
-    internal class ProducValidation : INotifyDataErrorInfo, INotifyPropertyChanged
+    public class StockValidation
     {
-        private string _name;
-        private decimal _price;
+        private int? _stock;
         private readonly Dictionary<string, List<string>> _errors = new();
 
-        public string Name { get => _name; set
+        public int? Stock
+        {
+            get => _stock; set
             {
-                _name = value;
-                ValidateProductName();
-                OnPropertyChanged(nameof(Name));
-            } 
-        }
-        public decimal Price { get => _price; set
-            {
-                _price = value;
-                ValidatePrice();
-                OnPropertyChanged(nameof(Price));
+                _stock = value;
+                ValidateStock();
+                OnPropertyChanged(nameof(Stock));
             }
         }
-
 
         public bool HasErrors => _errors.Any();
         public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        private void ValidateProductName()
+        private void ValidateStock()
         {
-            ClearErrors(nameof(Name));
-            if (string.IsNullOrEmpty(Name))
-                AddError(nameof(Name), "Product Name cannot be empty.");
-        }
-        private void ValidatePrice()
-        {
-            decimal dout;
-            ClearErrors(nameof(Price));
-            if (!decimal.TryParse(Price.ToString(),out dout))
-                AddError(nameof(Price), "Invalid Price!!, Only Numbers accept .");
-            if (Price == null)
-                AddError(nameof(Price), "Price cannot be empty.");
-            if (Price < 0)
-                AddError(nameof(Price), "Invalid Price value.");
+            int dout;
+            ClearErrors(nameof(Stock));
+            if (!int.TryParse(Stock.ToString(), out dout))
+                AddError(nameof(Stock), "Invalid Stock!!, Only Numbers accept .");
+            if (Stock == null)
+                AddError(nameof(Stock), "Stock cannot be empty.");
+            if (Stock < 0)
+                AddError(nameof(Stock), "Invalid Stock value.");
 
 
         }
-
         private void AddError(string propertyName, string error)
         {
             if (!_errors.ContainsKey(propertyName))
@@ -72,7 +58,6 @@ namespace SIMA.Presentation.Views
         {
             ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
         }
-
         public IEnumerable GetErrors(string? propertyName)
         {
             return _errors.GetValueOrDefault(propertyName ?? string.Empty, new List<string>());
@@ -81,6 +66,5 @@ namespace SIMA.Presentation.Views
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-
     }
 }

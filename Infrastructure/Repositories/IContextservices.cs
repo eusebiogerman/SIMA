@@ -18,7 +18,7 @@ namespace SIMA.Infrastructure.Repositories
 
         Task<bool> Update(T entitiy);
 
-        Task<int> Delete(int id);
+        Task<int> Delete(int? id);
 
         Task<bool> Set(T entitiy);
 

@@ -13,9 +13,8 @@ namespace SIMA.Infrastructure.Repositories
     public class ProductServices : IContextservices<Product>
     {
         private JsonFile<Product> _ProductFile;
-        private int _currentIdSave;
-
-        public int CurrentIdSave { get => _currentIdSave; }
+        private int? _currentIdSave;
+        public int? CurrentIdSave { get => _currentIdSave; }
 
         public ProductServices()
         {
@@ -27,11 +26,10 @@ namespace SIMA.Infrastructure.Repositories
         private IEnumerable<Product> getProduct(Product param)
         {
             return _ProductFile.ServicesList.Where(p =>
-                               (param.IdProduct == 0 ||  p.IdProduct.Equals(param.IdProduct))
+                               (param.IdProduct == null ||  p.IdProduct.Equals(param.IdProduct))
                             && (param.Category == string.Empty || p.Category.Contains(param.Category, StringComparison.OrdinalIgnoreCase))
                             && (param.Name == string.Empty || p.Name.Contains(param.Name, StringComparison.OrdinalIgnoreCase)));
         }
-
 
         #region Abstractions
 
@@ -73,7 +71,7 @@ namespace SIMA.Infrastructure.Repositories
 
             return await _ProductFile.SaveData();
         }
-        public async Task<int> Delete(int id)
+        public async Task<int> Delete(int? id)
         {
             var product = _ProductFile.ServicesList.FirstOrDefault(p => p.IdProduct == id);
 
@@ -92,7 +90,6 @@ namespace SIMA.Infrastructure.Repositories
         }
         #endregion
 
-
         #region Util Function and Methods
         public async Task<IEnumerable<Product>> GetByFilter(Product param)
         {
@@ -108,12 +105,28 @@ namespace SIMA.Infrastructure.Repositories
         {
             throw new NotImplementedException();
         }
-        public async Task<int> GetNextId()
+        public async Task<int?> GetNextId()
         {
             return await Task.Run(() => _ProductFile.ServicesList.Any() ? _ProductFile.ServicesList.Max(p => p.IdProduct) + 1 : 1);
         }
-
-
+        public async Task<int> GetIdIndex(string category ,string name)
+        {
+            int id = 0;
+            int retid = 0;
+            await Task.Run(() =>
+            {
+            IEnumerable<Product> prod = getProduct(new Product { IdProduct = null, Category = category, Name = string.Empty });
+            foreach (var item in prod)
+                {
+                    id++;
+                    if (name.Equals(item.Name))
+                    {
+                        retid = id;
+                    }
+                }
+            });
+            return retid;
+        }
         #endregion
 
 

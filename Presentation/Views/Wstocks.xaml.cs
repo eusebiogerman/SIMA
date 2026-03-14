@@ -2,8 +2,10 @@
 using SIMA.ExtensionsHelper;
 using SIMA.Helper;
 using SIMA.Infrastructure.Repositories;
+using SIMA.Presentation.ViewModel;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography;
@@ -13,6 +15,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media.Animation;
 using static System.Net.Mime.MediaTypeNames;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SIMA.Presentation.Views
 {
@@ -33,8 +36,32 @@ namespace SIMA.Presentation.Views
 
         public Wstocks()
         {
+            InitializeAll();
+
+        }
+        public Wstocks(StockProduct paramStockProduct)
+        {
+
+            _currentStockProduct = paramStockProduct;
+            InitializeAll();
+            setValuesForm();
+        }
+
+        #region utils
+        private async void setValuesForm() {
+
+            int indexCat = await _Categoryervices.GetIdIndex(_currentStockProduct.Category);
+            int indexProd = await _Productervices.GetIdIndex(_currentStockProduct.Category, _currentStockProduct.Name);
+
+            cmbCategory.SelectedIndex = indexCat;
+            cmbProduct.SelectedIndex = indexProd;
+            txtStockActual.Text = _currentStockProduct.Stock.ToString();
+        }
+        private void InitializeAll()
+        {
             InitializeComponent();
             _util = new Util();
+            this.DataContext = new StockValidation();
             _util.Loading_spimmer(wloading, true);
             _isloadedCat = true;
             _StockProductservices = new StockProductServices();
@@ -42,10 +69,17 @@ namespace SIMA.Presentation.Views
             _Categoryervices = new CategoryServices();
             Fillcat();
             _util.Loading_spimmer(wloading, false);
+        }
+        private void validation(StockProduct prodparam)
+        {
+            int outvl;
+            bool validStock = (prodparam.Stock  > 0);
+            bool validCombobox = !string.IsNullOrEmpty(prodparam.Category) && !string.IsNullOrEmpty(prodparam.Name);
+            bool valid = (validStock && validCombobox);
+            if (!valid)
+                throw new CustomException("Form has Errors, Valid first before save");
 
         }
-
-        #region utils
         private void Clear()
         {
             _isloadedProd = true;
@@ -53,19 +87,64 @@ namespace SIMA.Presentation.Views
             cmbProduct.Items.Clear();
             cmbProduct.Items.Add(new ComboBoxItem { Content = "Select", Tag = "0" });
             cmbProduct.SelectedIndex = 0;
-            txtStockActual.Clear();
+            txtStockActual.Text = "0";
             _isloadedProd = false;
+        }
+        private async void SaveStock()
+        {
+
+            try
+            {
+                ComboBoxItem itemProd = ((ComboBoxItem)cmbProduct.SelectedItem);
+                ComboBoxItem itemCat = ((ComboBoxItem)cmbCategory.SelectedItem);
+
+                string _category = ((string)itemCat.Content).getDefaultEmptyCat();
+                int? _sequence = _currentStockProduct.IdStock;
+                IEnumerable<Product> prodc = await _Productervices.GetbyId((int)itemProd.Tag);
+                decimal _price = prodc.Single().Price;
+
+                var prod = new StockProduct
+                {
+                    IdStock = _sequence,
+                    Category = _category,
+                    Name = (string)itemProd.Content,
+                    Price = _price,
+                    Stock = int.Parse(txtStockActual.Text)
+                };
+
+                validation(prod);
+                bool isSaved = await _StockProductservices.Set(prod);
+                if (isSaved)
+                {
+                    Clear();
+                    MessageBox.Show(this, "Stock Sucessfully saved", "Save Stock", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                }
+            }
+            catch (CustomException cx)
+            {
+                MessageBox.Show(this, cx.Message, "Error Missing Values", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (InvalidOperationException xp)
+            {
+                MessageBox.Show(this, xp.Message, "Error Stock", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, "Error while saving the Stock, Invalid Valiues ", "Error Stock", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+
         }
         #endregion
 
         #region Filling Methods
         private async void Fillcat()
         {
+            int id = 0;
             cmbCategory.SelectedIndex = 0;
             Task<IEnumerable<Category>> cat = _Categoryervices.GetAll(_page);
             foreach (var ct in await cat)
             {
-                cmbCategory.Items.Add(ct.Name);
+                cmbCategory.Items.Add(new ComboBoxItem { Content = ct.Name, Tag = id++ });
             }
             _isloadedCat = false;
         }
@@ -84,39 +163,7 @@ namespace SIMA.Presentation.Views
             _isloadedProd = false;
 
         }
-        private async void SaveStock()
-        {
-
-            try
-            {
-                ComboBoxItem item = ((ComboBoxItem)cmbProduct.SelectedItem);
-                IEnumerable<Product> prodc = await _Productervices.GetbyId((int)item.Tag);
-                decimal _price = prodc.Single().Price;
-                int _sequence = _currentStockProduct.IdStock;
-                string _category = cmbCategory.SelectedItem.ToString();
-
-                await _StockProductservices.Set(new StockProduct
-                {
-                    IdStock = _sequence,
-                    Category = _category,
-                    Name = (string)item.Content,
-                    Price = _price,
-                    Stock = int.Parse(txtStockActual.Text)
-                });
-                Clear();
-                MessageBox.Show(this, "Stock Sucessfully saved", "Save Stock", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-
-            }
-            catch (InvalidOperationException xp)
-            {
-                MessageBox.Show(this, xp.Message, "Error Stock", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(this, "Error whilw saving the Stock ", "Error Stock", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-
-        }
+     
         #endregion
 
         #region Events
