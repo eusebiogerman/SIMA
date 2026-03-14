@@ -104,6 +104,11 @@ namespace SIMA.Presentation
 
 
         }
+        private void ClearFilters()
+        {
+            Fillcat();
+            txtSearch.Clear();
+        }
         #endregion
 
         #region Filling Methods
@@ -141,20 +146,21 @@ namespace SIMA.Presentation
             _page.parsePageData(total);
             pagingLabels(total);
         }
+        private void FilterbyText()
+        {
+            _page.resetPage();
+            StockProduct param = activeFilters();
+            FilterStock(param);
+        }
+
         #endregion
 
         #region Events
-        private void DataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-
-        }
         private void txtSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (!_isloaded)
             {
-                _page.resetPage();
-                StockProduct param = activeFilters();
-                FilterStock(param);
+                FilterbyText();
             }
 
 
@@ -185,8 +191,7 @@ namespace SIMA.Presentation
         }
         private void btnClear_Click(object sender, RoutedEventArgs e)
         {
-            Fillcat();
-            txtSearch.Clear();
+            ClearFilters();
         }
         private void btnNewStock_Click(object sender, RoutedEventArgs e)
         {
@@ -263,6 +268,24 @@ namespace SIMA.Presentation
                     FillStock();
                     MessageBox.Show(this, "Stock Succesfully removed", "Remove Stock", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
+            }
+
+        }
+        private void btnRefresh_Click(object sender, RoutedEventArgs e)
+        {
+            _util.Loading_spimmer(wloading, true);
+            try
+            {
+                _stockservices = null;
+                _stockservices = new StockProductServices();
+                gridProducts.ItemsSource = null;
+                gridProducts.Items.Clear();
+                FilterbyText();
+                _util.Loading_spimmer(wloading, false);
+            }
+            catch (Exception ex)
+            {
+                _util.Loading_spimmer(wloading, false);
             }
 
         }

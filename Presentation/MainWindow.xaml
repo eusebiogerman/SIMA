@@ -100,6 +100,7 @@
                                 Content="🗑 Clear" 
                                 Width="100" 
                                 Height="35" 
+                                Margin="10,0,0,0"
                                 Background="#FF5722" 
                                 Foreground="White" 
                                 FontWeight="Bold"
@@ -127,6 +128,18 @@
                                 FontWeight="Bold"
                                 BorderThickness="0"
                                 Cursor="Hand" Click="btnNuevoProducto_Click"/>
+                        
+                        <Button x:Name="btnRefresh" 
+                                Content="&#x1F504;"
+                                FontSize="25"
+                                Width="40" 
+                                Height="36"
+                                Margin="10,0,0,0"
+                                Background="#2531DB"
+                                Foreground="#F2F2F2"
+                                FontWeight="Bold"
+                                BorderThickness="0"
+                                Cursor="Hand" Click="btnRefresh_Click" />
 
                     </StackPanel>
 
