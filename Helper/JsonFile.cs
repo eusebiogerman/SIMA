@@ -42,17 +42,18 @@ namespace SIMA.Helper
             }
         }
 
-        public async Task SaveData()
+        public async  Task<bool> SaveData()
         {
             try
             {
                 string jsonContent = JsonConvert.SerializeObject(_servicesList, Newtonsoft.Json.Formatting.Indented);
                 await File.WriteAllTextAsync(FilePath, jsonContent);
+                return true;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error al guardar datos: {ex.Message}");
-                throw;
+                return false;
             }
         }
     }

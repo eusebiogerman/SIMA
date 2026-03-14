@@ -14,10 +14,13 @@ namespace SIMA.Infrastructure.Repositories
 
         Task<IEnumerable<T>> GetAll(Paging page);
 
-        Task Add(T entitiy);
+        Task<int> Add(T entitiy);
 
-        Task Update(T entitiy);
+        Task<bool> Update(T entitiy);
 
-        Task Delete(int id);
+        Task<int> Delete(int id);
+
+        Task<bool> Set(T entitiy);
+
     }
 }

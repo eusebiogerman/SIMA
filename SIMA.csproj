@@ -8,11 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Presentation\ViewModels\" />
-    <Folder Include="Presentation\Views\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
   
@@ -21,6 +16,9 @@
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </Content>
   <Content Include="Infrastructure\data\PageLimit.json">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </Content>
+  <Content Include="Infrastructure\data\Products.json">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </Content>
  

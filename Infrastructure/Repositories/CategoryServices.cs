@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace SIMA.Infrastructure.Repositories
 {
-    internal class CategoryServices : IContextservices<Category>
+    public class CategoryServices : IContextservices<Category>
     {
         private JsonFile<StockProduct> _stockProductFile;
 
@@ -20,17 +20,19 @@ namespace SIMA.Infrastructure.Repositories
         }
 
         #region Abstractions
-        public Task Add(Category entitiy)
+        public Task<int> Add(Category entitiy)
         {
             throw new NotImplementedException();
 
         }
-
-        public Task Delete(int id)
+        public Task<bool> Update(Category entitiy)
         {
             throw new NotImplementedException();
         }
-
+        public Task<int> Delete(int id)
+        {
+            throw new NotImplementedException();
+        }
         public async Task<IEnumerable<Category>> GetAll(Paging page)
         {
             int id = 0;
@@ -58,17 +60,14 @@ namespace SIMA.Infrastructure.Repositories
             return ls;
 
         }
-
         public Task<IEnumerable<Category>> GetbyId(int id)
         {
             throw new NotImplementedException();
         }
-
-        public Task Update(Category entitiy)
+        public Task<bool> Set(Category entitiy)
         {
             throw new NotImplementedException();
         }
-
         #endregion
 
     }

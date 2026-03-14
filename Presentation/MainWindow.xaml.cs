@@ -3,20 +3,11 @@ using SIMA.Infrastructure.Repositories;
 using SIMA.ExtensionsHelper;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Diagnostics.SymbolStore;
-using static System.Net.Mime.MediaTypeNames;
+using SIMA.Presentation.Views;
+using SIMA.Helper;
 
 namespace SIMA.Presentation
 {
@@ -26,19 +17,30 @@ namespace SIMA.Presentation
     public partial class MainWindow : Window
     {
         private StockProductServices _stockservices;
+        private CategoryServices _categoryservices;   
         private bool _isloaded;
         private Paging _page;
+        private Wstocks _windowStock;
+        private Wproduct _wproduct;
+        private Util _util;
+
+
 
         public MainWindow()
         {
             InitializeComponent();
+            _util = new Util();
+            _util.Loading_spimmer(wloading, true);
             _isloaded = true;
             _stockservices = new StockProductServices();
+            _categoryservices = new CategoryServices();
              _page = new Paging();
             txtoffset.Text = _page.Offset.ToString();
             FillLimitPageVal();
             Fillcat();
             FillStock();
+            _util.Loading_spimmer(wloading, false);
+
         }
 
         #region Utils
@@ -56,20 +58,17 @@ namespace SIMA.Presentation
                 Name = txtSearch.Text
             };
         }
-
         private string getResultMsgAsync(int total)
         {
             txtTotal.Text = total.ToString();
             return $"📊 Show {total} products found";
         }
-
         private bool isvalidPaging()
         {
             var total = int.Parse(txtTotal.Text);
             var ofsset = int.Parse(txtoffset.Text);
             return (ofsset > 0 && total > ofsset); 
         }
-
         private void pagingLabels(int total) {
             if (isvalidPaging())
             {
@@ -77,7 +76,6 @@ namespace SIMA.Presentation
                 txtPaging.Text = $"Page {_page.Pagenumber.ToString()} de {_page.TotalPage.ToString()}";
             }
         }
-        
         private void NavigationPage(DIRECTION direction )
         {
        
@@ -116,12 +114,11 @@ namespace SIMA.Presentation
             IEnumerable<string> lim = await _page.GetLimitPaging();
             cmbLimitPage.ItemsSource = lim;
         }
-
         private async void Fillcat()
         {
 
             cmbCategory.SelectedIndex = 0;
-            using (Task<IEnumerable<Category>> cat = new CategoryServices().GetAll(_page))
+            using (Task<IEnumerable<Category>> cat = _categoryservices.GetAll(_page))
             {
                 foreach (var ct in await cat)
                 {
@@ -130,7 +127,6 @@ namespace SIMA.Presentation
             }
             _isloaded = false;
         }
-
         private async void FillStock() {
             IEnumerable<StockProduct> prod = await _stockservices.GetAll(_page);
             int total = await _stockservices.GetTotalFound(activeFilters());
@@ -139,7 +135,6 @@ namespace SIMA.Presentation
             _page.parsePageData(total);
             pagingLabels(total);
         }
-
         private async void FilterStock(StockProduct param)
         {
             IEnumerable<StockProduct> prod = await _stockservices.GetByFilter(param, _page);
@@ -156,13 +151,6 @@ namespace SIMA.Presentation
         {
 
         }
-
-        private void btnClear_Click(object sender, RoutedEventArgs e)
-        {
-            Fillcat();
-            txtSearch.Clear();
-        }
-
         private void txtSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (!_isloaded)
@@ -174,7 +162,6 @@ namespace SIMA.Presentation
 
 
         }
-
         private void cmbCategory_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (!_isloaded)
@@ -188,7 +175,6 @@ namespace SIMA.Presentation
 
             }
         }
-
         private void cmbLimitPage_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (!_isloaded)
@@ -200,20 +186,48 @@ namespace SIMA.Presentation
 
 
         }
+        private void btnClear_Click(object sender, RoutedEventArgs e)
+        {
+            Fillcat();
+            txtSearch.Clear();
+        }
+        private void btnNewStock_Click(object sender, RoutedEventArgs e)
+        {
+            if (_windowStock == null)
+            {
+                _windowStock = new Wstocks();
+            }
+            _windowStock.Activate();
+            _windowStock.Show();
 
+        }
+        private void btnNuevoProducto_Click(object sender, RoutedEventArgs e)
+        {
+            if (_wproduct == null)
+            {
+                _wproduct = new Wproduct();
+            }
+            _wproduct.Activate();
+            _wproduct.Show();
+
+        }
         private void btnPrevious_Click(object sender, RoutedEventArgs e)
         {
             NavigationPage(DIRECTION.previous);
         }
-
         private void btnNext_Click(object sender, RoutedEventArgs e)
         {
             NavigationPage(DIRECTION.next);
 
         }
+        private void btnClose_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
 
+       }
 
         #endregion
+
 
     }
 }
