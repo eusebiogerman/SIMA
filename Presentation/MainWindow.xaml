@@ -9,7 +9,7 @@
         Width="1200"
         WindowStartupLocation="CenterScreen"
         Background="#F5F5F5"
-        ResizeMode="NoResize">
+        ResizeMode="NoResize" Loaded="Window_Loaded">
 
     <Window.Resources>
         <!-- Style Shared -->
@@ -69,7 +69,10 @@
                                    Margin="0,0,7,0"
                                    Foreground="#333333"/>
 
-                        <ComboBox x:Name="cmbCategory" 
+                        <ComboBox ItemsSource="{Binding Category}"
+                                  DisplayMemberPath="Name"
+                                  SelectedValuePath="Idcategory"
+                                  x:Name="cmbCategory" 
                                   Width="300" 
                                   Height="35" 
                                   FontSize="14"
@@ -205,7 +208,8 @@
                           BorderThickness="0"
                           ScrollViewer.VerticalScrollBarVisibility="Auto"
                           Width="auto"
-                          Cursor="Hand">
+                          Cursor="Hand"
+                          ItemsSource="{Binding StockProduct}">
 
 
                     <ListView.View>

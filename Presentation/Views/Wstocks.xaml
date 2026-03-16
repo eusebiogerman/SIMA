@@ -8,7 +8,7 @@
         Title="Stock Management" Height="400" Width="500"
         Background="#F5F5F5"
         WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize" Closing="Window_Closing">
+        ResizeMode="NoResize" Closing="Window_Closing" Loaded="Window_Loaded" DataContextChanged="Window_DataContextChanged" >
 
     <Window.Resources>
         <!-- Style Shared -->
@@ -47,20 +47,24 @@
 
 
                 <Label Content="Category:" FontWeight="SemiBold"/>
-                <ComboBox Name="cmbCategory" 
+                <ComboBox ItemsSource="{Binding Category}"
+                     DisplayMemberPath="Name"
+                     SelectedValuePath="Idcategory"
+                     x:Name="cmbCategoryStock" 
                      Height="35" 
                      Padding="5" 
                      Margin="0,0,0,5" 
-                     SelectionChanged="cmbCategory_SelectionChanged"
-                     Cursor="Hand"/>
+                     Cursor="Hand" SelectionChanged="cmbCategoryStock_SelectionChanged"/>
 
                 <Label Content="Product:" FontWeight="SemiBold" BorderThickness="0"/>
-                <ComboBox Name="cmbProduct" 
+                <ComboBox ItemsSource="{Binding Products}"
+                     DisplayMemberPath="Name"
+                     SelectedValuePath="IdProduct"
+                     Name="cmbProduct" 
                      Height="35" 
                      Padding="5" 
                      Margin="0,0,0,5"
                      Cursor="Hand" SelectionChanged="cmbProduct_SelectionChanged"/>
-
 
                 <Label Content="Stock :" FontWeight="SemiBold"/>
                 <TextBox Name="txtStockActual" 

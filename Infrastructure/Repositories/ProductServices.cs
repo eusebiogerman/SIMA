@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Markup;
+using SIMA.ExtensionsHelper;
 
 namespace SIMA.Infrastructure.Repositories
 {
@@ -15,6 +16,17 @@ namespace SIMA.Infrastructure.Repositories
         private JsonFile<Product> _ProductFile;
         private int? _currentIdSave;
         public int? CurrentIdSave { get => _currentIdSave; }
+
+        public Product DefeaultProduct
+        {
+            get => new Product
+            {
+                IdProduct = 0,
+                Category = "".defaultCategory(),
+                Name = "Select",
+                Price = 0
+            };
+        }
 
         public ProductServices()
         {
@@ -25,10 +37,16 @@ namespace SIMA.Infrastructure.Repositories
 
         private IEnumerable<Product> getProduct(Product param)
         {
-            return _ProductFile.ServicesList.Where(p =>
-                               (param.IdProduct == null ||  p.IdProduct.Equals(param.IdProduct))
-                            && (param.Category == string.Empty || p.Category.Contains(param.Category, StringComparison.OrdinalIgnoreCase))
-                            && (param.Name == string.Empty || p.Name.Contains(param.Name, StringComparison.OrdinalIgnoreCase)));
+            IEnumerable<Product> products =
+                _ProductFile.ServicesList
+                .Where(p => (param.IdProduct == null || p.IdProduct.Equals(param.IdProduct))
+                && (param.Category == string.Empty || p.Category.Contains(param.Category, StringComparison.OrdinalIgnoreCase))
+                && (param.Name == string.Empty || p.Name.Contains(param.Name, StringComparison.OrdinalIgnoreCase)));
+
+            IEnumerable<Product> productsret = products.Union(new List<Product> { DefeaultProduct });
+
+            return productsret.OrderBy(p => p.IdProduct);
+
         }
 
         #region Abstractions
@@ -37,9 +55,9 @@ namespace SIMA.Infrastructure.Repositories
         {
             throw new NotImplementedException();
         }
-        public async Task<IEnumerable<Product>> GetbyId(int id)
+        public async Task<IEnumerable<Product>> GetbyId(int? id)
         {
-            return await Task.Run(() => getProduct(new Product { IdProduct = id ,Category = string.Empty, Name = string.Empty }));
+            return await Task.Run(() => getProduct(new Product { IdProduct = id, Category = string.Empty, Name = string.Empty }));
         }
         public async Task<int> Add(Product entity)
         {
@@ -91,6 +109,12 @@ namespace SIMA.Infrastructure.Repositories
         #endregion
 
         #region Util Function and Methods
+
+        public IEnumerable<Product> DefeaultProductList()
+        {
+            return new List<Product> { DefeaultProduct };
+        }
+
         public async Task<IEnumerable<Product>> GetByFilter(Product param)
         {
             return await Task.Run(() => getProduct(param));
@@ -109,14 +133,14 @@ namespace SIMA.Infrastructure.Repositories
         {
             return await Task.Run(() => _ProductFile.ServicesList.Any() ? _ProductFile.ServicesList.Max(p => p.IdProduct) + 1 : 1);
         }
-        public async Task<int> GetIdIndex(string category ,string name)
+        public async Task<int> GetIdIndex(string category, string name)
         {
             int id = 0;
             int retid = 0;
             await Task.Run(() =>
             {
-            IEnumerable<Product> prod = getProduct(new Product { IdProduct = null, Category = category, Name = string.Empty });
-            foreach (var item in prod)
+                IEnumerable<Product> prod = getProduct(new Product { IdProduct = null, Category = category, Name = string.Empty });
+                foreach (var item in prod)
                 {
                     id++;
                     if (name.Equals(item.Name))

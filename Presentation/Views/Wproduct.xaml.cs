@@ -18,6 +18,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using static System.Net.Mime.MediaTypeNames;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SIMA.Presentation.Views
 {
@@ -37,19 +38,16 @@ namespace SIMA.Presentation.Views
         private bool _isloadedProd;
         private bool _isNewStock = false;
         
-
-
         public Wproduct()
         {
             InitializeComponent();
-            this.DataContext = new ProducValidation();
+            this.DataContext = new ProductViewModel();
             _util = new Util();
             _util.Loading_spimmer(wloading, true);
             _isloadedCat = true;
             _StockProductservices = new StockProductServices();
             _Productervices = new ProductServices();
             _Categoryervices = new CategoryServices();
-            Fillcat();
             _util.Loading_spimmer(wloading, false);
         }
 
@@ -58,10 +56,11 @@ namespace SIMA.Presentation.Views
             bool valid = false;
             bool priceval = false;
             decimal outvl ;
+            string category = ((Category)cmbCategory.SelectedItem).Name.getDefaultEmptyCat();
             priceval = decimal.TryParse(txtPrice.Text, out outvl) ? decimal.Parse(txtPrice.Text) > 0 : false;
-            valid = priceval && !string.IsNullOrEmpty(txtProductName.Text);
+            valid = priceval && !string.IsNullOrEmpty(txtProductName.Text) && !string.IsNullOrEmpty(category);
             if (!valid)
-                throw new CustomException("Form has Errors, Valid first before save");   
+                throw new CustomException("Form has Errors, Valid first(Invalid or Incompleted values) before save");
 
         } 
         private void Clear()
@@ -77,7 +76,7 @@ namespace SIMA.Presentation.Views
             try
             {
                 validation();
-                string _category = cmbCategory.SelectedItem.ToString();
+                string _category = ((Category)cmbCategory.SelectedItem).Name.getDefaultEmptyCat();
                 var _prod = new Product
                 {
                     IdProduct = (_currentProduct == null) ? null : _currentProduct.IdProduct,
@@ -85,7 +84,6 @@ namespace SIMA.Presentation.Views
                     Name = txtProductName.Text,
                     Price = decimal.Parse(txtPrice.Text),
                 };
-
 
                 if (await _Productervices.Set(_prod))
                 {
@@ -122,19 +120,6 @@ namespace SIMA.Presentation.Views
         }
         #endregion
 
-        #region Filling Methods
-        private async void Fillcat()
-        {
-            cmbCategory.SelectedIndex = 0;
-            Task<IEnumerable<Category>> cat = _Categoryervices.GetAll(_page);
-            foreach (var ct in await cat)
-            {
-                cmbCategory.Items.Add(ct.Name);
-            }
-            _isloadedCat = false;
-        }
-        #endregion
-
         #region Events
         private void btnSaveStock_Click(object sender, RoutedEventArgs e)
         {
@@ -148,7 +133,7 @@ namespace SIMA.Presentation.Views
         {
             this.Close();
         }
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void Window_Closing(object sender, CancelEventArgs e)
         {
             e.Cancel = true;
             this.Visibility = Visibility.Hidden;
@@ -173,7 +158,13 @@ namespace SIMA.Presentation.Views
             }
 
         }
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            cmbCategory.SelectedIndex = 0;
+
+        }
         #endregion
+
 
     }
 }

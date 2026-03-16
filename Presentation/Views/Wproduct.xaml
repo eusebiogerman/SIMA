@@ -8,7 +8,7 @@
         Title="Product Management" Height="388" Width="500"
         Background="#F5F5F5"
         WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize" Closing="Window_Closing">
+        ResizeMode="NoResize" Closing="Window_Closing" Loaded="Window_Loaded">
 
     <Window.Resources>
         <!-- Style Shared -->
@@ -47,18 +47,39 @@
 
 
                 <Label Content="Category:" FontWeight="SemiBold"/>
-                <ComboBox Name="cmbCategory" 
+                <ComboBox ItemsSource="{Binding Category}"
+                     DisplayMemberPath="Name"
+                     SelectedValuePath="Idcategory"
+                     Name="cmbCategory" 
                      Height="35" 
                      Padding="5" 
                      Margin="0,0,0,5" 
                      Cursor="Hand" SelectionChanged="cmbCategory_SelectionChanged"/>
 
                 <Label Content="Product Name:" FontWeight="SemiBold" BorderThickness="0"/>
-                <TextBox Name="txtProductName" 
+                <TextBox Text="{Binding Name, 
+                            UpdateSourceTrigger=PropertyChanged, 
+                            ValidatesOnNotifyDataErrors=True}"    
+                    Name="txtProductName" 
                      Height="35" 
                      Padding="5" 
                      Margin="0,0,0,5"
-                     Background="#F0F0F0"/>
+                     Background="#F0F0F0">
+                    <TextBox.Resources>
+                        <ControlTemplate x:Key="NameErrorTemplate">
+                            <StackPanel>
+                                <AdornedElementPlaceholder Name="placeholder"/>
+                                <TextBlock Text="{Binding ElementName=placeholder, 
+                           Path=AdornedElement.(Validation.Errors)[0].ErrorContent}" 
+                           Foreground="Red" FontSize="10"/>
+                            </StackPanel>
+                        </ControlTemplate>
+                    </TextBox.Resources>
+
+                    <Validation.ErrorTemplate>
+                        <StaticResource ResourceKey="NameErrorTemplate"/>
+                    </Validation.ErrorTemplate>
+                </TextBox>
 
                 <Label Content="Price :" FontWeight="SemiBold"/>
                 <TextBox Name="txtPrice"
@@ -70,7 +91,7 @@
                      Margin="0,0,0,2"
                      Background="#F0F0F0">
                     <TextBox.Resources>
-                        <ControlTemplate x:Key="ErrorTemplate">
+                        <ControlTemplate x:Key="priceErrorTemplate">
                             <StackPanel>
                                 <AdornedElementPlaceholder Name="placeholder"/>
                                 <TextBlock Text="{Binding ElementName=placeholder, 
@@ -81,7 +102,7 @@
                     </TextBox.Resources>
 
                     <Validation.ErrorTemplate>
-                        <StaticResource ResourceKey="ErrorTemplate"/>
+                        <StaticResource ResourceKey="priceErrorTemplate"/>
                     </Validation.ErrorTemplate>
                 </TextBox>
             </StackPanel>

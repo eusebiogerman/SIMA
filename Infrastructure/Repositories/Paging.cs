@@ -1,18 +1,17 @@
-﻿using SIMA.Domain.Models;
-using SIMA.Helper;
+﻿using SIMA.Helper;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Principal;
 using System.Threading.Tasks;
+using SIMA.ExtensionsHelper;
 
 namespace SIMA.Infrastructure.Repositories
 {
     public class Paging
     {
         private JsonFile<String> _jsonLimit;
-        private const int _defaulOffset = 50;
-        private const int _defaulLimit = 100;
+        private const int _defaulLimit = 10;
+        private const int _defaulOffset = 10;
         private int _offset = _defaulOffset;
         private int _limit = _defaulLimit;
         private int _pagenumber = 1;
@@ -24,6 +23,11 @@ namespace SIMA.Infrastructure.Repositories
             _jsonLimit.loadData();
         }
 
+        public enum DIRECTION
+        {
+            previous = 1,
+            next = 2
+        }
         public int DefaulOffset { get => _defaulOffset; }
         public int DefaulLimit { get => _defaulLimit; }
         public int Pagenumber { get => _pagenumber; set => _pagenumber = value; }
@@ -31,6 +35,9 @@ namespace SIMA.Infrastructure.Repositories
         public int Limit { get => _limit; set => _limit = value; }
         public int TotalPage { get => _totalPage; set => _totalPage = value; }
 
+        /// <summary>
+        /// Initialize the pagini values
+        /// </summary>
         public void resetPage()
         {
             _offset = _defaulOffset;
@@ -38,14 +45,51 @@ namespace SIMA.Infrastructure.Repositories
             _pagenumber = 1;
 
         }
-        public void parsePageData(int total)
+        /// <summary>
+        /// Verified and correct the Paging values given the Total of data rendered
+        /// </summary>
+        /// <param name="total"></param>
+        public void parsePageData(int total = -1)
         {
-            _offset = (total > _offset) ? _offset : 1;
-            int pagecount = (total / (_limit > 0 ? _limit : 1));
+            int pagecount = int.Clamp(total.isNone(_totalPage) / (_limit > 0 ? _limit : 1),1,99999999);
             _totalPage = pagecount > 0 ? pagecount : 1;
+            _pagenumber = _pagenumber <= pagecount ? _pagenumber : 1 ;
 
 
         }
+        /// <summary>
+        /// Control the Page number greater thatn 0 and lower thant Total data render
+        /// </summary>
+        /// <returns></returns>
+        public bool isvalidPaging()
+        {
+            return (_pagenumber > 0) && (_pagenumber <= _totalPage);
+        }
+        /// <summary>
+        /// Increase or Decrease the paging values given the DIRECTION
+        /// </summary>
+        /// <param name="direction"></param>
+        public void movePage(DIRECTION direction) {
+            switch (direction)
+            {
+                case DIRECTION.previous:
+                    _pagenumber = _pagenumber - 1;
+                    _offset     = _offset - _defaulOffset;
+                    break;
+                case DIRECTION.next:
+                    _pagenumber = _pagenumber + 1;
+                    _offset     = _offset  + _defaulOffset;
+                    break;
+                default:
+                    _pagenumber = 1;
+                    _offset     = _defaulOffset;
+                    break;
+            }
+        }
+        /// <summary>
+        /// returns the dynamic configuration of the posibles offset Values 
+        /// </summary>
+        /// <returns></returns>
         public async Task<IEnumerable<String>> GetLimitPaging()
         {
             return await Task.Run(() => _jsonLimit.ServicesList.Select(p => p).ToList());

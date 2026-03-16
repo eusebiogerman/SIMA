@@ -8,6 +8,9 @@ using System.Windows;
 using System.Windows.Controls;
 using SIMA.Presentation.Views;
 using SIMA.Helper;
+using SIMA.Presentation.ViewModel;
+using System.Linq;
+using System.Windows.Media;
 
 namespace SIMA.Presentation
 {
@@ -27,25 +30,25 @@ namespace SIMA.Presentation
         public MainWindow()
         {
             InitializeComponent();
+            _page = new Paging();
+            this.DataContext =  new MainViewModel(_page);
             _util = new Util();
             _util.Loading_spimmer(wloading, true);
             _isloaded = true;
             _stockservices = new StockProductServices();
             _categoryservices = new CategoryServices();
-             _page = new Paging();
-            txtoffset.Text = _page.Offset.ToString();
-            FillLimitPageVal();
-            Fillcat();
-            FillStock();
+             FillLimitPageVal();
+            // Fillcat();
+            //_isloaded = false;
             _util.Loading_spimmer(wloading, false);
 
         }
 
         #region Utils
-        private enum DIRECTION { 
-            previous = 1,
-            next = 2 
-        }
+        /// <summary>
+        /// Returns the object StockProduct with passing the values of the Active Filter controls 
+        /// </summary>
+        /// <returns></returns>
         private StockProduct activeFilters()
         {
             return new StockProduct
@@ -55,97 +58,106 @@ namespace SIMA.Presentation
                 Name = txtSearch.Text
             };
         }
+        /// <summary>
+        /// Return and Update the message of the render Stock length
+        /// </summary>
+        /// <param name="total"></param>
+        /// <returns></returns>
         private string getResultMsgAsync(int total)
         {
             txtTotal.Text = total.ToString();
             return $"📊 Show {total} products found";
         }
-        private bool isvalidPaging()
-        {
-            var total = int.Parse(txtTotal.Text);
-            var ofsset = int.Parse(txtoffset.Text);
-            return (ofsset > 0 && total > ofsset); 
-        }
+        /// <summary>
+        /// Update the Paging Labels given the cuurent Offset and Limit Values
+        /// </summary>
+        /// <param name="total"></param>
         private void pagingLabels(int total) {
-            if (isvalidPaging())
+            if (_page.isvalidPaging())
             {
                 txtTotal.Text = total.ToString();
                 txtPaging.Text = $"Page {_page.Pagenumber.ToString()} de {_page.TotalPage.ToString()}";
             }
         }
-        private void NavigationPage(DIRECTION direction )
+        /// <summary>
+        /// Control the Paging Previous and Next Page Number,Offset and Limit 
+        /// </summary>
+        /// <param name="direction"></param>
+        private void NavigationGrid(Paging.DIRECTION direction )
         {
        
-            if (isvalidPaging())
+            if (_page.isvalidPaging())
             {
-                switch (direction)
-                {
-                    case DIRECTION.previous:
-                        _page.Pagenumber -= 1;
-                        _page.Offset -= _page.DefaulOffset;
-                        break;
-                    case DIRECTION.next:
-                        _page.Pagenumber += 1;
-                        _page.Offset += _page.DefaulOffset;
-                        break;
-                    default:
-                        _page.Pagenumber = 1;
-                        _page.Offset = _page.DefaulOffset;
-                        break;
-                }
-                txtoffset.Text = _page.Offset.ToString();
-                FilterStock(new StockProduct
-                {
-                    Category = cmbCategory.Text.getDefaultEmptyCat()
-                   ,Name = txtSearch.Text
-                });
-
+                _page.movePage(direction);
+               // txtoffset.Text = _page.Offset.ToString();
+                FilterStock(activeFilters());
             }
 
 
         }
+        /// <summary>
+        /// Restore Initial set of Category and Stock  
+        /// </summary>
         private void ClearFilters()
         {
             Fillcat();
             txtSearch.Clear();
         }
+        private async void UpdatePaging(int total = 0)
+        {
+            int intotal = (total == 0) ? await _stockservices.GetTotalFound(activeFilters()) : total;
+            _page.parsePageData(intotal);
+            txtResults.Text = getResultMsgAsync(intotal);
+            pagingLabels(intotal);
+        }
+
         #endregion
 
         #region Filling Methods
+        /// <summary>
+        /// Fill the Page Limit Values
+        /// </summary>
         private async void FillLimitPageVal() {
             IEnumerable<string> lim = await _page.GetLimitPaging();
             cmbLimitPage.ItemsSource = lim;
+            //txtoffset.Text = cmbLimitPage.SelectedItem.ToString();
+            _page.Limit = int.Parse(cmbLimitPage.SelectedItem.ToString());
+
         }
+        /// <summary>
+        /// Fill the Category ComboBox
+        /// </summary>
         private async void Fillcat()
         {
-
-            cmbCategory.SelectedIndex = 0;
-            using (Task<IEnumerable<Category>> cat = _categoryservices.GetAll(_page))
-            {
-                foreach (var ct in await cat)
-                {
-                    cmbCategory.Items.Add(ct.Name);
-                }
-            }
+            IEnumerable<Category> cat = await _categoryservices.GetAll(_page);
+            cmbCategory.ItemsSource =cat;
             _isloaded = false;
+            cmbCategory.SelectedIndex = 0;
         }
-        private async void FillStock() {
+        /// <summary>
+        /// Filter the GridView given the activeFilters() : function
+        /// </summary>
+        private async void FilterStock()
+        {
             IEnumerable<StockProduct> prod = await _stockservices.GetAll(_page);
             int total = await _stockservices.GetTotalFound(activeFilters());
             gridProducts.ItemsSource = prod;
-            txtResults.Text = getResultMsgAsync(total);
-            _page.parsePageData(total);
-            pagingLabels(total);
+            UpdatePaging(total);
         }
+        /// <summary>
+        /// Filter the GridView given the Stock Product param
+        /// </summary>
+        /// <param name="param"></param>
         private async void FilterStock(StockProduct param)
         {
             IEnumerable<StockProduct> prod = await _stockservices.GetByFilter(param, _page);
-            int total = await _stockservices.GetTotalFound(activeFilters());
+            int total = await _stockservices.GetTotalFound(param);
             gridProducts.ItemsSource = prod;
-            txtResults.Text = getResultMsgAsync(total);
-            _page.parsePageData(total);
-            pagingLabels(total);
+            UpdatePaging(total);
         }
+        /// <summary>
+        /// Filter the GridView given the Description of product
+        /// </summary>
         private void FilterbyText()
         {
             _page.resetPage();
@@ -167,13 +179,13 @@ namespace SIMA.Presentation
         }
         private void cmbCategory_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (!_isloaded)
+            if (!_isloaded && e.AddedItems.Count > 0)
             {
-                _page.resetPage();
-                var param = new StockProduct { 
-                    Category = e.AddedItems[0].ToString().getDefaultEmptyCat()
+                var param = new StockProduct {
+                    Category = ((Category)e.AddedItems[0]).Name.getDefaultEmptyCat()
                    ,Name     = txtSearch.Text  
                 };
+                _page.resetPage();
                 FilterStock(param);
 
             }
@@ -182,9 +194,11 @@ namespace SIMA.Presentation
         {
             if (!_isloaded)
             {
+                _page.Offset = int.Parse(cmbLimitPage.SelectedItem.ToString());
                 _page.Limit = int.Parse(e.AddedItems[0].ToString());
                 StockProduct param = activeFilters();
                 FilterStock(param);
+                UpdatePaging();
             }
 
 
@@ -200,8 +214,11 @@ namespace SIMA.Presentation
                 _windowStock = new Wstocks();
             }
             _windowStock.Owner = this;
+            _windowStock.SupressEventComboBox();
             _windowStock.Activate();
             _windowStock.Show();
+            _windowStock.SupressEventComboBox(false);
+
 
         }
         private void btnNuevoProducto_Click(object sender, RoutedEventArgs e)
@@ -213,17 +230,19 @@ namespace SIMA.Presentation
                  _wproduct = new Wproduct();
              }
              _wproduct.Owner = this;
+             _windowStock.SupressEventComboBox();
              _wproduct.Activate();
              _wproduct.Show();
-            
+             _windowStock.SupressEventComboBox(false);
+
         }
         private void btnPrevious_Click(object sender, RoutedEventArgs e)
         {
-            NavigationPage(DIRECTION.previous);
+            NavigationGrid(Paging.DIRECTION.previous);
         }
         private void btnNext_Click(object sender, RoutedEventArgs e)
         {
-            NavigationPage(DIRECTION.next);
+            NavigationGrid(Paging.DIRECTION.next);
 
         }
         private void btnClose_Click(object sender, RoutedEventArgs e)
@@ -249,6 +268,7 @@ namespace SIMA.Presentation
 
                 _windowStock = new Wstocks(rowData);
                 _windowStock.Owner = this;
+                _windowStock.EditMode = true;
                 _windowStock.Activate();
                 _windowStock.Show();
             }
@@ -265,7 +285,7 @@ namespace SIMA.Presentation
                 bool valid = await _stockservices.Delete(rowData.IdStock) > 0;
                 if (valid)
                 {
-                    FillStock();
+                    FilterStock();
                     MessageBox.Show(this, "Stock Succesfully removed", "Remove Stock", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
@@ -289,8 +309,14 @@ namespace SIMA.Presentation
             }
 
         }
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            _page.Offset = int.Parse(cmbLimitPage.SelectedItem != null ? cmbLimitPage.SelectedItem.ToString() : _page.DefaulOffset.ToString());
+            UpdatePaging();
+            _isloaded = false;
+        }
         #endregion
 
-
     }
+
 }
