@@ -19,7 +19,6 @@ namespace SIMA.Infrastructure.Repositories
         private int? _currentIdSave;
 
         public int? CurrentIdSave { get => _currentIdSave; }
-
         public StockProductServices()
         {
             _stockProductFile = new JsonFile<StockProduct>();
@@ -33,9 +32,8 @@ namespace SIMA.Infrastructure.Repositories
                             && (param.Name == string.Empty || p.Name.Contains(param.Name, StringComparison.OrdinalIgnoreCase)));
         }
 
-
         #region Abstractions
-        public async Task<IEnumerable<StockProduct>> GetbyId(int id)
+        public async Task<IEnumerable<StockProduct>> GetbyId(int? id)
         {
             return await Task.Run(() => _stockProductFile.ServicesList.Where(p => p.IdStock == id));
         }
@@ -55,7 +53,7 @@ namespace SIMA.Infrastructure.Repositories
 
             _currentIdSave = entity.IdStock;
             _stockProductFile.ServicesList.Add(entity);
-            return await _stockProductFile.SaveData() ? 1: 0;
+            return await _stockProductFile.SaveData() ? 1 : 0;
         }
         public async Task<bool> Update(StockProduct entity)
         {
@@ -89,11 +87,11 @@ namespace SIMA.Infrastructure.Repositories
         public async Task<bool> Set(StockProduct entitiy)
         {
             var existingProduct = _stockProductFile.ServicesList.FirstOrDefault(p => p.IdStock == entitiy.IdStock);
-            return  ((existingProduct == null) ?  (await Add(entitiy) > 0) : await Update(entitiy));
+            return ((existingProduct == null) ? (await Add(entitiy) > 0) : await Update(entitiy));
         }
         #endregion
 
-       #region Util Function and Methods
+        #region Util Function and Methods
         public async Task<IEnumerable<StockProduct>> GetByFilter(StockProduct param, Paging page)
         {
             return await Task.Run(() =>
@@ -130,7 +128,7 @@ namespace SIMA.Infrastructure.Repositories
                     .ToList()
             );
         }
-       #endregion
+        #endregion
 
     }
 }

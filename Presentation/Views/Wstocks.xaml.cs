@@ -32,48 +32,63 @@ namespace SIMA.Presentation.Views
         private Util _util;
         private bool _isloadedCat;
         private bool _isloadedProd;
+        private bool _isSupressModel = false;
         private bool _isNewStock = false;
+        private bool _editMode = false;
+
+        public bool IsSupressModel { get => _isSupressModel; set => _isSupressModel = value; }
+        public bool EditMode { get => _editMode; set => _editMode = value; }
 
         public Wstocks()
         {
+            InitializeComponent();
+            this.DataContext = new StockViewModel();
             InitializeAll();
-
         }
         public Wstocks(StockProduct paramStockProduct)
         {
-
+            InitializeComponent();
+            this.DataContext = new StockViewModel();
             _currentStockProduct = paramStockProduct;
             InitializeAll();
             setValuesForm();
         }
 
         #region utils
-        private async void setValuesForm() {
+        public void SupressEventComboBox(bool val = true)
+        {
+            _isloadedCat = val;
+            _isloadedProd = val;
+            _isSupressModel = val;
+            ((StockViewModel)this.DataContext).IsSupressed = val;
+
+        }
+        private async void setValuesForm()
+        {
 
             int indexCat = await _Categoryervices.GetIdIndex(_currentStockProduct.Category);
             int indexProd = await _Productervices.GetIdIndex(_currentStockProduct.Category, _currentStockProduct.Name);
 
-            cmbCategory.SelectedIndex = indexCat;
-            cmbProduct.SelectedIndex = indexProd;
+            cmbCategoryStock.SelectedIndex = indexCat;
+            cmbProduct.SelectedIndex = indexProd-1;
             txtStockActual.Text = _currentStockProduct.Stock.ToString();
+
         }
         private void InitializeAll()
         {
-            InitializeComponent();
             _util = new Util();
-            this.DataContext = new StockValidation();
             _util.Loading_spimmer(wloading, true);
-            _isloadedCat = true;
             _StockProductservices = new StockProductServices();
             _Productervices = new ProductServices();
             _Categoryervices = new CategoryServices();
-            Fillcat();
             _util.Loading_spimmer(wloading, false);
+
+
         }
         private void validation(StockProduct prodparam)
         {
             int outvl;
-            bool validStock = (prodparam.Stock  > 0);
+            bool validStock = (prodparam.Stock > 0);
             bool validCombobox = !string.IsNullOrEmpty(prodparam.Category) && !string.IsNullOrEmpty(prodparam.Name);
             bool valid = (validStock && validCombobox);
             if (!valid)
@@ -82,35 +97,29 @@ namespace SIMA.Presentation.Views
         }
         private void Clear()
         {
-            _isloadedProd = true;
-            cmbCategory.SelectedIndex = 0;
-            cmbProduct.Items.Clear();
-            cmbProduct.Items.Add(new ComboBoxItem { Content = "Select", Tag = "0" });
+            cmbProduct.ItemsSource = _Productervices.DefeaultProductList();
+            cmbCategoryStock.SelectedIndex = 0;
             cmbProduct.SelectedIndex = 0;
             txtStockActual.Text = "0";
-            _isloadedProd = false;
         }
+
+
+
         private async void SaveStock()
         {
 
             try
             {
-                ComboBoxItem itemProd = ((ComboBoxItem)cmbProduct.SelectedItem);
-                ComboBoxItem itemCat = ((ComboBoxItem)cmbCategory.SelectedItem);
-
-                string _category = ((string)itemCat.Content).getDefaultEmptyCat();
-                int? _sequence = _currentStockProduct.IdStock;
-                IEnumerable<Product> prodc = await _Productervices.GetbyId((int)itemProd.Tag);
-                decimal _price = prodc.Single().Price;
-
+                string _category = ((Category)cmbCategoryStock.SelectedItem).Name;
+                Product prodc = ((Product)cmbProduct.SelectedItem);
                 var prod = new StockProduct
-                {
-                    IdStock = _sequence,
-                    Category = _category,
-                    Name = (string)itemProd.Content,
-                    Price = _price,
-                    Stock = int.Parse(txtStockActual.Text)
-                };
+                    {
+                        IdStock = _editMode ? _currentStockProduct.IdStock : null,
+                        Category = _category,
+                        Name = prodc.Name,
+                        Price = prodc.Price,
+                        Stock = int.Parse(txtStockActual.Text)
+                    };
 
                 validation(prod);
                 bool isSaved = await _StockProductservices.Set(prod);
@@ -137,59 +146,30 @@ namespace SIMA.Presentation.Views
         #endregion
 
         #region Filling Methods
-        private async void Fillcat()
-        {
-            int id = 0;
-            cmbCategory.SelectedIndex = 0;
-            Task<IEnumerable<Category>> cat = _Categoryervices.GetAll(_page);
-            foreach (var ct in await cat)
-            {
-                cmbCategory.Items.Add(new ComboBoxItem { Content = ct.Name, Tag = id++ });
-            }
-            _isloadedCat = false;
-        }
         private async void FillProd(Product param)
         {
-            _isloadedProd = true;
-            cmbProduct.Items.Clear();
-            cmbProduct.SelectedIndex = 0;
             IEnumerable<Product> prod = await _Productervices.GetByFilter(param);
-            cmbProduct.Items.Add(new ComboBoxItem { Content = "Select", Tag = 0 });
-
-            foreach (var ct in prod)
-            {
-                cmbProduct.Items.Add(new ComboBoxItem { Content = ct.Name, Tag = ct.IdProduct });
-            }
-            _isloadedProd = false;
-
+            cmbProduct.ItemsSource = prod;
+            if(!_editMode)
+                cmbProduct.SelectedIndex = 0;
         }
-     
+
         #endregion
 
         #region Events
-        private void cmbCategory_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void cmbCategoryStock_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             string Categ = string.Empty;
 
             try
             {
-                if (!_isloadedCat)
+                if (!_isloadedCat && !_isSupressModel)
                 {
-
-                    if (cmbCategory.SelectedItem is ComboBoxItem selectedItem)
-                    {
-                        Categ = (string)selectedItem.Content;
-                    }
-
-                    if (Categ.getDefaultEmptyCat() == string.Empty)
-                    {
-                        txtStockActual.Clear();
-                    }
-
-                    _util.Loading_spimmer(wloading, true);
+                    Categ = ((Category)(cmbCategoryStock.SelectedItem)).Name.getDefaultEmptyCat().isNull("1-1");
                     FillProd(new Product { Name = string.Empty, Category = Categ });
-                    _util.Loading_spimmer(wloading, false);
+
                 }
+
             }
             catch (Exception ex)
             {
@@ -201,18 +181,23 @@ namespace SIMA.Presentation.Views
         }
         private async void cmbProduct_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            int Idprod = 0;
+            int? Idprod = 0;
             try
             {
-                if (!_isloadedProd)
+                if (!_isloadedProd && !_isSupressModel && !_editMode)
                 {
+                    if (cmbProduct.SelectedItem != null)
+                    {
+                        Idprod = ((Product)(cmbProduct.SelectedItem)).IdProduct;
+                        IEnumerable<StockProduct> prodc = await _StockProductservices.GetbyId(Idprod);
+                        var hasElement = !_editMode && prodc.Any();
+                        _currentStockProduct = _editMode ? _currentStockProduct : (hasElement ? prodc.Single() : new StockProduct() );
+                        txtStockActual.Text = hasElement ? _currentStockProduct.Stock.ToString() : "0";
 
-                    if (cmbProduct.SelectedItem is ComboBoxItem selectedItem)
-                        Idprod = (int)selectedItem.Tag;
+                    }
+                    else
+                        txtStockActual.Text = "0";
 
-                    IEnumerable<StockProduct> prodc = await _StockProductservices.GetbyId(Idprod);
-                    _currentStockProduct = prodc.Single();
-                    txtStockActual.Text = prodc.Any() ? _currentStockProduct.Stock.ToString() : "0";
                 }
                 wloading.Visibility = Visibility.Hidden;
 
@@ -221,7 +206,7 @@ namespace SIMA.Presentation.Views
             {
                 wloading.Visibility = Visibility.Hidden;
             }
-      
+
         }
         private void btnClear_Click(object sender, RoutedEventArgs e)
         {
@@ -230,6 +215,7 @@ namespace SIMA.Presentation.Views
         }
         private void btnClose_Click(object sender, RoutedEventArgs e)
         {
+            Clear();
             this.Close();
         }
         private void btnSaveStock_Click(object sender, RoutedEventArgs e)
@@ -244,6 +230,18 @@ namespace SIMA.Presentation.Views
         {
             e.Cancel = true;
             this.Visibility = Visibility.Hidden;
+        }
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (!_editMode)
+            {
+                cmbCategoryStock.SelectedIndex = 0;
+                cmbProduct.SelectedIndex = 0;
+            }   
+        }
+        private void Window_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+
         }
         #endregion
 

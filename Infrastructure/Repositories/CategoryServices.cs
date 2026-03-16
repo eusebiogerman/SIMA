@@ -46,7 +46,7 @@ namespace SIMA.Infrastructure.Repositories
                  .OrderBy(c => c)
                  .ToList();
 
-                ls.Add(new Category { Idcategory = id++ , Name =  "".defaultCategory() });
+                ls.Add(new Category { Idcategory = id++, Name = "".defaultCategory() });
 
                 foreach (var item in distc)
                 {
@@ -56,11 +56,11 @@ namespace SIMA.Infrastructure.Repositories
                     ls.Add(cat);
                 }
             });
-            
+
             return ls;
 
         }
-        public Task<IEnumerable<Category>> GetbyId(int id)
+        public Task<IEnumerable<Category>> GetbyId(int? id)
         {
             throw new NotImplementedException();
         }
@@ -85,8 +85,9 @@ namespace SIMA.Infrastructure.Repositories
                 foreach (var item in distc)
                 {
                     id++;
-                    if (category.Equals(item)) {
-                        retid = id ;
+                    if (category.Equals(item))
+                    {
+                        retid = id;
                     }
                 }
             });
