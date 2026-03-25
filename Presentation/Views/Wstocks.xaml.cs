@@ -22,7 +22,7 @@ namespace SIMA.Presentation.Views
     /// <summary>
     /// Interaction logic for Wstocks.xaml
     /// </summary>
-    public partial class Wstocks : Window
+    public partial class Wstocks : Window, IUtilHandle
     {
         private ProductServices _Productervices;
         private CategoryServices _Categoryervices;

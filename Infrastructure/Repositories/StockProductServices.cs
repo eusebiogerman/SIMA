@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -7,14 +8,45 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Navigation;
 using System.Xml;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using SIMA.Domain.Models;
 using SIMA.Helper;
+using Dapper;
+using SIMA.Presentation.Views;
 
 namespace SIMA.Infrastructure.Repositories
 {
+    
+    public class StockProductParam
+    {
+        public int? idStock { get; set; } = null;
+        public int? idBrand { get; set; } = null;
+        public int? idProduct { get; set; } = null;
+        public int? idCategory { get; set; } = null;
+        public string? brands { get; set; } = null;
+        public string? products { get; set; } = null;
+        public string? categorys { get; set; } = null;
+        public decimal? price { get; set; } = null;
+        public int? stock { get; set; } = null;
+        public int? offset { get; set; } = 0;
+        public int? limit { get; set; } = 10;
+
+
+        public StockProductParam()
+        {
+        }
+
+        public StockProductParam(Paging page) {
+            offset = page.Offset;
+            limit = page.Limit;
+        }    
+
+    }
+
     public class StockProductServices : IContextservices<StockProduct>
     {
+        private readonly IConfiguration _config;
         private JsonFile<StockProduct> _stockProductFile;
         private int? _currentIdSave;
 
@@ -26,13 +58,32 @@ namespace SIMA.Infrastructure.Repositories
             _stockProductFile.loadData();
         }
 
+        public StockProductServices(IConfiguration config)
+        {
+            _config = config;   
+            _stockProductFile = new JsonFile<StockProduct>();
+            _stockProductFile.loadData();
+        }
+
         private IEnumerable<StockProduct> getStock(StockProduct param)
         {
-            return _stockProductFile.ServicesList.Where(p =>
+             return _stockProductFile.ServicesList.Where(p =>
                                (param.Category == string.Empty || p.Category.Contains(param.Category, StringComparison.OrdinalIgnoreCase))
                             && (param.Name == string.Empty || p.Name.Contains(param.Name, StringComparison.OrdinalIgnoreCase)));
         }
 
+<<<<<<< Updated upstream
+=======
+        private async Task<IEnumerable<StockProductView>> getStockView(StockProductParam param)
+        {
+            using var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
+
+            return await conn.QueryAsync<StockProductView>("[dbo].[getStock]", param, commandType : System.Data.CommandType.StoredProcedure);
+         }
+
+
+
+>>>>>>> Stashed changes
 
         #region Abstractions
         public async Task<IEnumerable<StockProduct>> GetbyId(int id)
@@ -43,6 +94,12 @@ namespace SIMA.Infrastructure.Repositories
         {
             return await Task.Run(() => _stockProductFile.ServicesList.AsEnumerable().Skip(page.Offset).Take(page.Limit));
         }
+
+        public async Task<IEnumerable<StockProductView>> GetAlltest(Paging page)
+        {
+            return await getStockView(new StockProductParam(page)); 
+        }
+
         public async Task<int> Add(StockProduct entity)
         {
             if (_stockProductFile.ServicesList.Any(p => p.IdStock == entity.IdStock))

@@ -205,12 +205,17 @@
                           BorderThickness="0"
                           ScrollViewer.VerticalScrollBarVisibility="Auto"
                           Width="auto"
+<<<<<<< Updated upstream
                           Cursor="Hand">
 
+=======
+                          Cursor="Hand"
+                          ItemsSource="{Binding StockProducts}">
+>>>>>>> Stashed changes
 
                     <ListView.View>
                         <GridView>
-                            <GridViewColumn Header="ID" Width="60">
+                            <GridViewColumn Header="ID" Width="70">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding IdStock}" 
@@ -220,20 +225,20 @@
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Header="Product" Width="400">
+                            <GridViewColumn Header="Category" Width="300">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" Margin="5">
                                             <TextBlock Text="{Binding Icono}" 
                                                        FontSize="16" 
                                                        Margin="0,0,8,0"/>
-                                            <TextBlock Text="{Binding Name}" 
+                                            <TextBlock Text="{Binding Categorys}" 
                                                        VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Header="Category" Width="270">
+                            <GridViewColumn Header="Product" Width="235">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border Background="#E0E0E0" 
@@ -241,14 +246,29 @@
                                                 Padding="8,3"
                                                 Margin="5"
                                                 HorizontalAlignment="Center">
-                                            <TextBlock Text="{Binding Category}" 
+                                            <TextBlock Text="{Binding Products}" 
                                                        HorizontalAlignment="Center"
                                                        FontSize="12"/>
                                         </Border>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Header="Price" Width="200" >
+                            <GridViewColumn Header="Brand" Width="215">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#E0E0E0" 
+                                                CornerRadius="12" 
+                                                Padding="8,3"
+                                                Margin="5"
+                                                HorizontalAlignment="Center">
+                                            <TextBlock Text="{Binding Brands}" 
+                                                       HorizontalAlignment="Center"
+                                                       FontSize="12"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="Price" Width="120" >
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding Price, StringFormat='${0:N2}'}" 
@@ -258,7 +278,7 @@
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Header="Stock" Width="100">
+                            <GridViewColumn Header="Stock" Width="120">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border Background="#4CAF50"

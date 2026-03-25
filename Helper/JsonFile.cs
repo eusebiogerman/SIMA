@@ -20,12 +20,42 @@ namespace SIMA.Helper
         public List<T> ServicesList => _servicesList;
 
         public JsonFile() {
+<<<<<<< Updated upstream
             _filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Infrastructure", "data", _filePath);
+=======
+            _filePath = parsePath(_fileName, "Infrastructure/data");
+>>>>>>> Stashed changes
         }
 
         public JsonFile(string filepath)
         {
+<<<<<<< Updated upstream
             _filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Infrastructure", "data", filepath);
+=======
+
+            _fileName = filename;
+            _filePath = parsePath(_fileName, "Infrastructure/data");
+        }
+
+        public JsonFile(string filename, string path)
+        {
+
+            _fileName = filename;
+            _filePath = parsePath(_fileName, path);
+        }
+
+
+        private string parsePath(string filename, string path) {
+            string rpath = string.Empty;
+            string[] sppath = path.Split('/');
+            if (!string.IsNullOrEmpty(path)) {
+                foreach (var item in sppath) {
+                    rpath = Path.Combine(rpath, item);
+                }
+            }
+
+            return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, rpath, filename);
+>>>>>>> Stashed changes
         }
 
         public void  loadData()

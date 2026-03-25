@@ -8,13 +8,20 @@ using System.Windows;
 using System.Windows.Controls;
 using SIMA.Presentation.Views;
 using SIMA.Helper;
+<<<<<<< Updated upstream
+=======
+using SIMA.Presentation.ViewModel;
+using System.Linq;
+using System.Windows.Media;
+using Microsoft.Extensions.Configuration;
+>>>>>>> Stashed changes
 
 namespace SIMA.Presentation
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, IUtilHandle 
     {
         private StockProductServices _stockservices;
         private CategoryServices _categoryservices;   
@@ -23,29 +30,59 @@ namespace SIMA.Presentation
         private Wstocks _windowStock;
         private Wproduct _wproduct;
         private Util _util;
+        private bool _isloadedCat;
+        private bool _isloadedStock;
+        private readonly IConfiguration _config;
 
         public MainWindow()
         {
             InitializeComponent();
+<<<<<<< Updated upstream
+=======
+            _page = new Paging();
+>>>>>>> Stashed changes
             _util = new Util();
+            _config = _util.CustomConfiguration();
+            this.DataContext =  new MainViewModel(_page, _config);
+
+            this.SupressEventComboBox();
             _util.Loading_spimmer(wloading, true);
-            _isloaded = true;
-            _stockservices = new StockProductServices();
+            _stockservices = new StockProductServices(_config);
             _categoryservices = new CategoryServices();
+<<<<<<< Updated upstream
              _page = new Paging();
             txtoffset.Text = _page.Offset.ToString();
             FillLimitPageVal();
             Fillcat();
             FillStock();
+=======
+             FillLimitPageVal();
+>>>>>>> Stashed changes
             _util.Loading_spimmer(wloading, false);
+            this.SupressEventComboBox(false);
 
         }
 
         #region Utils
+<<<<<<< Updated upstream
         private enum DIRECTION { 
             previous = 1,
             next = 2 
         }
+=======
+        public void SupressEventComboBox(bool val = true)
+        {
+            _isloadedCat = val;
+            _isloadedStock = val;
+            _isloaded = val;
+            ((MainViewModel)this.DataContext).IsSupressed = val;
+
+        }
+        /// <summary>
+        /// Returns the object StockProduct with passing the values of the Active Filter controls 
+        /// </summary>
+        /// <returns></returns>
+>>>>>>> Stashed changes
         private StockProduct activeFilters()
         {
             return new StockProduct
@@ -129,8 +166,18 @@ namespace SIMA.Presentation
             }
             _isloaded = false;
         }
+<<<<<<< Updated upstream
         private async void FillStock() {
             IEnumerable<StockProduct> prod = await _stockservices.GetAll(_page);
+=======
+        /// <summary>
+        /// Filter the GridView given the activeFilters() : function
+        /// </summary>
+        private async void FilterStock()
+        {
+           //IEnumerable<StockProduct> prod = await _stockservices.GetAll(_page);
+            IEnumerable<StockProductView> prod = await _stockservices.GetAlltest(_page);
+>>>>>>> Stashed changes
             int total = await _stockservices.GetTotalFound(activeFilters());
             gridProducts.ItemsSource = prod;
             txtResults.Text = getResultMsgAsync(total);
@@ -139,8 +186,14 @@ namespace SIMA.Presentation
         }
         private async void FilterStock(StockProduct param)
         {
+<<<<<<< Updated upstream
             IEnumerable<StockProduct> prod = await _stockservices.GetByFilter(param, _page);
             int total = await _stockservices.GetTotalFound(activeFilters());
+=======
+           // IEnumerable<StockProduct> prod = await _stockservices.GetByFilter(param, _page);
+            IEnumerable<StockProductView> prod = await _stockservices.GetAlltest(_page);
+            int total = await _stockservices.GetTotalFound(param);
+>>>>>>> Stashed changes
             gridProducts.ItemsSource = prod;
             txtResults.Text = getResultMsgAsync(total);
             _page.parsePageData(total);

@@ -11,8 +11,13 @@ namespace SIMA.Infrastructure.Repositories
     public class Paging
     {
         private JsonFile<String> _jsonLimit;
+<<<<<<< Updated upstream
         private const int _defaulOffset = 50;
         private const int _defaulLimit = 100;
+=======
+        private const int _defaulLimit = 10;
+        private const int _defaulOffset = 0;
+>>>>>>> Stashed changes
         private int _offset = _defaulOffset;
         private int _limit = _defaulLimit;
         private int _pagenumber = 1;
