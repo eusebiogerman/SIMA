@@ -1,4 +1,11 @@
-﻿using System;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using SIMA.Helper;
+using SIMA.Presentation;
+using SIMA.Presentation.ViewModel;
+using SIMA.Presentation.Views;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -13,5 +20,6 @@ namespace SIMA
     /// </summary>
     public partial class App : Application
     {
+
     }
 }

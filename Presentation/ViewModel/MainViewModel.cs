@@ -1,4 +1,5 @@
-﻿using SIMA.Domain.Models;
+﻿using Microsoft.Extensions.Configuration;
+using SIMA.Domain.Models;
 using SIMA.Infrastructure.Repositories;
 using System;
 using System.Collections.Generic;
@@ -8,6 +9,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace SIMA.Presentation.ViewModel
 {
@@ -17,36 +19,51 @@ namespace SIMA.Presentation.ViewModel
         private CategoryServices _categoryservices;
         private ObservableCollection<Category> _category;
         private Paging _page;
+        private IConfiguration _config;
+        private bool _isSupressed;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
         #region Observable Collection Property
-        public ObservableCollection<StockProduct> StockProduct { get; set; }
+        public ObservableCollection<StockProductView> StockProducts { get; set; }
         public ObservableCollection<Category> Category
         {
             get => _category;
             set { _category = value; OnPropertyChanged(nameof(Category)); }
         }
+        public bool IsSupressed { get => _isSupressed; set => _isSupressed = value; }
+
+        public event Action<string> ShowErrorFromModel;
         #endregion
 
         public MainViewModel()
         {
-            _page = new Paging();
-            _stockservices = new StockProductServices();
-            _categoryservices = new CategoryServices();
-            FillStock();
-            FillCat();
-
-
+            InitializeModel(new Paging(),new ConfigurationManager());
         }
         public MainViewModel(Paging page)
         {
-            _page = page;
-            _stockservices = new StockProductServices();
-            _categoryservices = new CategoryServices();
-            FillStock();
-            FillCat();
+            InitializeModel(page,new ConfigurationManager());
         }
+        public MainViewModel(Paging page,IConfiguration config)
+        {
+            InitializeModel(page,config);
+        }
+
+        #region Util
+        private void InitializeModel(Paging page, IConfiguration config) {
+
+            _isSupressed = true;
+            _page = page;
+            _config = config;
+            _stockservices = new StockProductServices(_config);
+            _categoryservices = new CategoryServices(_config);
+            FillCat();
+            FillStock();
+            _isSupressed = false;
+
+        }
+
+        #endregion
 
         #region fill Observable Collection 
         /// <summary>
@@ -54,18 +71,39 @@ namespace SIMA.Presentation.ViewModel
         /// </summary>
         private async void FillCat()
         {
+            try
+            {
+                IEnumerable<Category> cat = await _categoryservices.GetAll(_page);
+                Category = new ObservableCollection<Category>(cat);
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex)
+            {
+                ShowErrorFromModel?.Invoke("DataBase Error Failed");
+            }
+            catch (Exception)
+            {
+                ShowErrorFromModel?.Invoke("System Error Failed");
+            }
 
-            IEnumerable<Category> cat = await _categoryservices.GetAll(_page);
-            Category = new ObservableCollection<Category>(cat);
         }
         /// <summary>
         /// Get the Stock data given the paging configuration
         /// </summary>
         private async void FillStock()
         {
-
-            IEnumerable<StockProduct> instock = await _stockservices.GetAll(_page);
-            StockProduct = new ObservableCollection<StockProduct>(instock);
+            try
+            {
+                IEnumerable<StockProductView> instock = await _stockservices.GetViewAll(_page);
+                StockProducts = new ObservableCollection<StockProductView>(instock);
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex)
+            {
+                ShowErrorFromModel?.Invoke("DataBase Error Failed");
+            }
+            catch (Exception)
+            {
+                ShowErrorFromModel?.Invoke("System Error Failed");
+            }
         }
         #endregion
 

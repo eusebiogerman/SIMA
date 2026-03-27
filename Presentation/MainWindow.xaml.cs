@@ -11,59 +11,64 @@ using SIMA.Helper;
 using SIMA.Presentation.ViewModel;
 using System.Linq;
 using System.Windows.Media;
+using Microsoft.Extensions.Configuration;
+using System.Xml.Linq;
 
 namespace SIMA.Presentation
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, IUtilServices<StockProduct, StockProductParam>,IUtil
     {
         private StockProductServices _stockservices;
-        private CategoryServices _categoryservices;   
+        private CategoryServices _categoryservices;
         private bool _isloaded;
         private Paging _page;
         private Wstocks _windowStock;
         private Wproduct _wproduct;
+        private Wcategory _wcategory;
+        private Wbrand _wbrand;
         private Util _util;
+        private bool _isloadedCat;
+        private bool _isloadedStock;
+        private readonly IConfiguration _config;
 
         public MainWindow()
         {
             InitializeComponent();
             _page = new Paging();
-            this.DataContext =  new MainViewModel(_page);
             _util = new Util();
+            _config = _util.CustomConfiguration();
+            var Vm =  new MainViewModel(_page, _config);
+            this.DataContext = (MainViewModel)Vm;
+            Vm.ShowErrorFromModel += Vm_ShowErrorFromModel;
+
+      
+            _stockservices = new StockProductServices(_config);
+            _categoryservices = new CategoryServices(_config);
             _util.Loading_spimmer(wloading, true);
-            _isloaded = true;
-            _stockservices = new StockProductServices();
-            _categoryservices = new CategoryServices();
-             FillLimitPageVal();
-            // Fillcat();
-            //_isloaded = false;
-            _util.Loading_spimmer(wloading, false);
+            this.SupressEventComboBox();
+            FillLimitPageVal();
 
         }
 
         #region Utils
-        /// <summary>
-        /// Returns the object StockProduct with passing the values of the Active Filter controls 
-        /// </summary>
-        /// <returns></returns>
-        private StockProduct activeFilters()
+        public void SupressEventComboBox(bool val = true)
         {
-            return new StockProduct
-            {
-                Category = cmbCategory.Text.getDefaultEmptyCat()
-               ,
-                Name = txtSearch.Text
-            };
+            _isloadedCat = val;
+            _isloadedStock = val;
+            _isloaded = val;
+            if (this.DataContext != null)
+                ((MainViewModel)this.DataContext).IsSupressed = val;
+
         }
         /// <summary>
         /// Return and Update the message of the render Stock length
         /// </summary>
         /// <param name="total"></param>
         /// <returns></returns>
-        private string getResultMsgAsync(int total)
+        public string getResultMsgAsync(int total)
         {
             txtTotal.Text = total.ToString();
             return $"📊 Show {total} products found";
@@ -72,7 +77,8 @@ namespace SIMA.Presentation
         /// Update the Paging Labels given the cuurent Offset and Limit Values
         /// </summary>
         /// <param name="total"></param>
-        private void pagingLabels(int total) {
+        public void pagingLabels(int total)
+        {
             if (_page.isvalidPaging())
             {
                 txtTotal.Text = total.ToString();
@@ -83,14 +89,14 @@ namespace SIMA.Presentation
         /// Control the Paging Previous and Next Page Number,Offset and Limit 
         /// </summary>
         /// <param name="direction"></param>
-        private void NavigationGrid(Paging.DIRECTION direction )
+        public void NavigationGrid(Paging.DIRECTION direction)
         {
-       
+
             if (_page.isvalidPaging())
             {
                 _page.movePage(direction);
-               // txtoffset.Text = _page.Offset.ToString();
-                FilterStock(activeFilters());
+                // txtoffset.Text = _page.Offset.ToString();
+                Filter(activeFilters());
             }
 
 
@@ -98,73 +104,195 @@ namespace SIMA.Presentation
         /// <summary>
         /// Restore Initial set of Category and Stock  
         /// </summary>
-        private void ClearFilters()
+        public void ClearFilters()
         {
-            Fillcat();
+            FillCombobox();
             txtSearch.Clear();
         }
-        private async void UpdatePaging(int total = 0)
+       /// <summary>
+       /// Update the Total result of the rows and update the labels on the grid 
+       /// </summary>
+       /// <param name="total"></param>
+        public async void UpdatePaging(int total = 0)
         {
             int intotal = (total == 0) ? await _stockservices.GetTotalFound(activeFilters()) : total;
             _page.parsePageData(intotal);
             txtResults.Text = getResultMsgAsync(intotal);
             pagingLabels(intotal);
+            _util.Loading_spimmer(wloading, false);
         }
 
         #endregion
 
         #region Filling Methods
+        public StockProduct Result()
+        {
+            throw new NotImplementedException();
+        }
         /// <summary>
-        /// Fill the Page Limit Values
+        /// Returns the object StockProduct with passing the values of the Active Filter controls 
         /// </summary>
-        private async void FillLimitPageVal() {
-            IEnumerable<string> lim = await _page.GetLimitPaging();
-            cmbLimitPage.ItemsSource = lim;
-            //txtoffset.Text = cmbLimitPage.SelectedItem.ToString();
-            _page.Limit = int.Parse(cmbLimitPage.SelectedItem.ToString());
+        /// <returns></returns>
+        public StockProductParam activeFilters()
+        {
+            Category catcmb = ((Category)cmbCategory.SelectedItem);
+            return new StockProductParam
+            {
 
+                idCategory = catcmb != null ? catcmb.IdCategory : null,
+                offset = _page.Offset,
+                limit = _page.Limit
+                //,Name = txtSearch.Text
+            };
         }
         /// <summary>
         /// Fill the Category ComboBox
         /// </summary>
-        private async void Fillcat()
+        public async void FillCombobox(int? id = null)
         {
-            IEnumerable<Category> cat = await _categoryservices.GetAll(_page);
-            cmbCategory.ItemsSource =cat;
-            _isloaded = false;
-            cmbCategory.SelectedIndex = 0;
+            try
+            {
+                _util.Loading_spimmer(wloading, true,200);
+                IEnumerable<Category> cat = await _categoryservices.GetAll(_page);
+                cmbCategory.ItemsSource = cat;
+                _isloaded = false;
+                cmbCategory.SelectedIndex = 0;
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex) {
+
+                _util.Loading_spimmer(wloading, false);
+                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (Exception)
+            {
+                _util.Loading_spimmer(wloading, false);
+                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+        /// <summary>
+        /// Fill the stock
+        /// </summary>
+        public async void Fill()
+        {
+            try
+            {
+                _util.Loading_spimmer(wloading, true, 1000);
+                IEnumerable<StockProductView> prod = await _stockservices.GetViewAll(_page);
+                int total = await _stockservices.GetTotalFound(activeFilters());
+                gridProducts.ItemsSource = prod;
+                UpdatePaging(total);
+                _util.Loading_spimmer(wloading, false);
+
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex)
+            {
+                _util.Loading_spimmer(wloading, false);
+                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (Exception)
+            {
+                _util.Loading_spimmer(wloading, false);
+                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+
         }
         /// <summary>
         /// Filter the GridView given the activeFilters() : function
         /// </summary>
-        private async void FilterStock()
+        public async void Filter()
         {
-            IEnumerable<StockProduct> prod = await _stockservices.GetAll(_page);
-            int total = await _stockservices.GetTotalFound(activeFilters());
-            gridProducts.ItemsSource = prod;
-            UpdatePaging(total);
+            try
+            {
+                _util.Loading_spimmer(wloading, true, 1000);
+                IEnumerable<StockProductView> prod = await _stockservices.GetViewAll(_page);
+                int total = await _stockservices.GetTotalFound(activeFilters());
+                gridProducts.ItemsSource = prod;
+                UpdatePaging(total);
+                _util.Loading_spimmer(wloading, false);
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex)
+            {
+                _util.Loading_spimmer(wloading, false);
+                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (Exception)
+            {
+                _util.Loading_spimmer(wloading, false);
+                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
         /// <summary>
         /// Filter the GridView given the Stock Product param
         /// </summary>
         /// <param name="param"></param>
-        private async void FilterStock(StockProduct param)
+        public async void Filter(StockProductParam param)
         {
-            IEnumerable<StockProduct> prod = await _stockservices.GetByFilter(param, _page);
-            int total = await _stockservices.GetTotalFound(param);
-            gridProducts.ItemsSource = prod;
-            UpdatePaging(total);
+            try
+            {
+                _util.Loading_spimmer(wloading, true, 1000);
+                IEnumerable<StockProductView> prod = await _stockservices.GetViewAll(_page);
+                int total = await _stockservices.GetTotalFound(param);
+                gridProducts.ItemsSource = prod;
+                UpdatePaging(total);
+                _util.Loading_spimmer(wloading, false);
+
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex)
+            {
+                _util.Loading_spimmer(wloading, false);
+                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (Exception)
+            {
+                _util.Loading_spimmer(wloading, false);
+                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
         /// <summary>
         /// Filter the GridView given the Description of product
         /// </summary>
-        private void FilterbyText()
+        /// <param name="param"></param>
+        public void FilterbyText(StockProductParam param)
         {
-            _page.resetPage();
-            StockProduct param = activeFilters();
-            FilterStock(param);
-        }
+            try
+            {
+                _util.Loading_spimmer(wloading, true, 1000);
+                _page.resetPage();
+                Filter(param);
+                _util.Loading_spimmer(wloading, false);
 
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex)
+            {
+                _util.Loading_spimmer(wloading, false);
+                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (Exception)
+            {
+                _util.Loading_spimmer(wloading, false);
+                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+
+        }
+        /// <summary>
+        /// Fill the Page Limit Values
+        /// </summary>
+        public async void FillLimitPageVal()
+        {
+            IEnumerable<string> lim = await _page.GetLimitPaging();
+            cmbLimitPage.ItemsSource = lim;
+            _page.Limit = int.Parse(cmbLimitPage.SelectedItem.ToString());
+
+        }
+        /// <summary>
+        /// Open the Edit Form for the Stock select in th gridview
+        /// </summary>
+        /// <param name="param"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        public void Edit(StockProductParam param)
+        {
+            throw new NotImplementedException();
+        }
         #endregion
 
         #region Events
@@ -172,21 +300,22 @@ namespace SIMA.Presentation
         {
             if (!_isloaded)
             {
-                FilterbyText();
+                FilterbyText(activeFilters());
             }
 
 
         }
+        /// Incomplited <<<<<<<<<<<<<<-------*******
         private void cmbCategory_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (!_isloaded && e.AddedItems.Count > 0)
             {
-                var param = new StockProduct {
-                    Category = ((Category)e.AddedItems[0]).Name.getDefaultEmptyCat()
-                   ,Name     = txtSearch.Text  
+                var param = new StockProductParam
+                {
+                    idCategory = ((Category)e.AddedItems[0]).IdCategory
                 };
                 _page.resetPage();
-                FilterStock(param);
+                Filter(param);
 
             }
         }
@@ -196,8 +325,7 @@ namespace SIMA.Presentation
             {
                 _page.Offset = int.Parse(cmbLimitPage.SelectedItem.ToString());
                 _page.Limit = int.Parse(e.AddedItems[0].ToString());
-                StockProduct param = activeFilters();
-                FilterStock(param);
+                Filter(activeFilters());
                 UpdatePaging();
             }
 
@@ -221,19 +349,44 @@ namespace SIMA.Presentation
 
 
         }
-        private void btnNuevoProducto_Click(object sender, RoutedEventArgs e)
+        private void btnProduct_Click(object sender, RoutedEventArgs e)
         {
-            // Programmatically change what the frame is showing
+            if (_wproduct == null)
+            {
+                _wproduct = new Wproduct();
+            }
+            _wproduct.Owner = this;
+            _wproduct.SupressEventComboBox();
+            _wproduct.Activate();
+            _wproduct.Show();
+            _wproduct.SupressEventComboBox(false);
 
-             if (_wproduct == null)
-             {
-                 _wproduct = new Wproduct();
-             }
-             _wproduct.Owner = this;
-             _windowStock.SupressEventComboBox();
-             _wproduct.Activate();
-             _wproduct.Show();
-             _windowStock.SupressEventComboBox(false);
+        }
+        private void btnBrand_Click(object sender, RoutedEventArgs e)
+        {
+            if (_wbrand == null)
+            {
+                _wbrand = new Wbrand();
+            }
+            _wbrand.Owner = this;
+            _wbrand.SupressEventComboBox();
+            _wbrand.Activate();
+            _wbrand.Show();
+            _wbrand.SupressEventComboBox(false);
+
+
+        }
+        private void btnCategory_Click(object sender, RoutedEventArgs e)
+        {
+            if (_wcategory == null)
+            {
+                _wcategory = new Wcategory();
+            }
+            _wcategory.Owner = this;
+            _wcategory.SupressEventComboBox();
+            _wcategory.Activate();
+            _wcategory.Show();
+            _wcategory.SupressEventComboBox(false);
 
         }
         private void btnPrevious_Click(object sender, RoutedEventArgs e)
@@ -249,11 +402,11 @@ namespace SIMA.Presentation
         {
             this.Close();
 
-       }
+        }
         private void btnUpdate_Click(object sender, RoutedEventArgs e)
         {
             Button btn = sender as Button;
-            StockProduct rowData = (StockProduct)btn.DataContext;
+            StockProductView rowData = (StockProductView)btn.DataContext;
 
             if (rowData != null)
             {
@@ -276,19 +429,21 @@ namespace SIMA.Presentation
         }
         private async void btnRemove_Click(object sender, RoutedEventArgs e)
         {
-          MessageBoxResult result = MessageBox.Show(this, "Confirm remove Stock ?", "Remove Stock", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+            MessageBoxResult result = MessageBox.Show(this, "Confirm remove Stock ?", "Remove Stock", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
 
+            _util.Loading_spimmer(wloading, true,1000);
             if (result == MessageBoxResult.Yes)
             {
                 Button btn = sender as Button;
-                StockProduct rowData = (StockProduct)btn.DataContext;
+                StockProductView rowData = (StockProductView)btn.DataContext;
                 bool valid = await _stockservices.Delete(rowData.IdStock) > 0;
                 if (valid)
                 {
-                    FilterStock();
+                    Filter();
                     MessageBox.Show(this, "Stock Succesfully removed", "Remove Stock", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
+            _util.Loading_spimmer(wloading, false,100);
 
         }
         private void btnRefresh_Click(object sender, RoutedEventArgs e)
@@ -300,7 +455,7 @@ namespace SIMA.Presentation
                 _stockservices = new StockProductServices();
                 gridProducts.ItemsSource = null;
                 gridProducts.Items.Clear();
-                FilterbyText();
+                FilterbyText(activeFilters());
                 _util.Loading_spimmer(wloading, false);
             }
             catch (Exception ex)
@@ -311,9 +466,22 @@ namespace SIMA.Presentation
         }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            _util.Loading_spimmer(wloading,true);
             _page.Offset = int.Parse(cmbLimitPage.SelectedItem != null ? cmbLimitPage.SelectedItem.ToString() : _page.DefaulOffset.ToString());
             UpdatePaging();
-            _isloaded = false;
+            _util.Loading_spimmer(wloading, false);
+            this.SupressEventComboBox(false);
+
+        }
+        private void Window_Initialized(object sender, EventArgs e)
+        {
+            this.SupressEventComboBox();
+       
+        }
+        private void Vm_ShowErrorFromModel(string mensaje)
+        {
+            _util.Loading_spimmer(wloading, false);
+            MessageBox.Show(this, mensaje, "Model Error", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         #endregion
 

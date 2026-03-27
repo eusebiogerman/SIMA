@@ -1,6 +1,6 @@
-﻿using SIMA.Domain.Models;
+﻿using Microsoft.Extensions.Configuration;
+using SIMA.Domain.Models;
 using SIMA.Infrastructure.Repositories;
-using SIMA.Presentation.Views;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,26 +11,28 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SIMA.Presentation.ViewModel
+namespace SIMA.Presentation.Views
 {
-    public class StockViewModel : INotifyDataErrorInfo, INotifyPropertyChanged
-    {
-        private decimal _stock;
-        private ObservableCollection<Category> _category;
-        private ObservableCollection<Product> _product;
-        private CategoryServices _categoryservices;
-        private ProductServices _Productervices;
-        private Paging _page;
-        private bool _isSupressed;
-        private readonly Dictionary<string, List<string>> _errors = new();
-
-        public decimal Stock
+        internal class StockViewModel : INotifyDataErrorInfo, INotifyPropertyChanged
         {
-            get => _stock; set
+        private int? _stockcount;
+        private ObservableCollection<ProductView> _product;
+        private ObservableCollection<StockProductView> _stockproduct;
+        private ObservableCollection<ProductView> _brand;
+        private StockProductServices _stockservices;
+        private ProductServices _productservices;
+        private IConfiguration _config;
+        private Paging _page;
+        private readonly Dictionary<string, List<string>> _errors = new();
+        private bool _isSupressed;
+
+        public int? StockCount
+        {
+            get => _stockcount; set
             {
-                _stock = value;
+                _stockcount = value;
                 ValidateStock();
-                OnPropertyChanged(nameof(Stock));
+                OnPropertyChanged(nameof(StockCount));
             }
         }
 
@@ -38,47 +40,61 @@ namespace SIMA.Presentation.ViewModel
         public bool HasErrors => _errors.Any();
         public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
         public event PropertyChangedEventHandler? PropertyChanged;
+        public bool IsSupressed { get => _isSupressed; set => _isSupressed = value; }
         #endregion
 
         #region Observable Collection Properties
-        public ObservableCollection<Category> Category
-        {
-            get => _category;
-            set { _category = value; OnPropertyChanged(nameof(Category)); }
-        }
-
-        public ObservableCollection<Product> Products
+        public ObservableCollection<ProductView> Product
         {
             get => _product;
-            set { _product = value; OnPropertyChanged(nameof(Products)); }
+            set { _product = value; OnPropertyChanged(nameof(Product)); }
         }
-
-        public bool IsSupressed { get => _isSupressed; set => _isSupressed = value; }
+        public ObservableCollection<ProductView> Brand
+        {
+            get => _brand;
+            set { _brand = value; OnPropertyChanged(nameof(Brand)); }
+        }
+        public ObservableCollection<StockProductView> StockProducts
+        {
+            get => _stockproduct;
+            set { _stockproduct = value; OnPropertyChanged(nameof(Brand)); }
+        }
+      
         #endregion
 
 
         public StockViewModel()
         {
-            _isSupressed = true;
-            _page = new Paging();
-            _categoryservices = new CategoryServices();
-            _Productervices = new ProductServices();
-            FillCat();
-            //  FillProd();
-            _isSupressed = false;
+           _page = new Paging();
+           _stockservices = new StockProductServices();
+           _productservices = new ProductServices();
+            FillProd();
+            FillStock();
         }
+
+
+        public StockViewModel(Paging page, IConfiguration config)
+        {
+            _config = config;
+            _page = page ?? new Paging();
+            _stockservices = new StockProductServices(_config);
+            _productservices = new ProductServices(_config);
+            FillProd();
+            FillStock();
+        }
+
 
         #region Validation Errors Methods
         private void ValidateStock()
         {
-            decimal dout;
-            ClearErrors(nameof(Stock));
-            if (!decimal.TryParse(Stock.ToString(), out dout))
-                AddError(nameof(Stock), "Invalid Stock!!, Only Numbers accept .");
-            if (Stock == null)
-                AddError(nameof(Stock), "Stock cannot be empty.");
-            if (Stock < 0)
-                AddError(nameof(Stock), "Invalid Stock value.");
+            int dout;
+            ClearErrors(nameof(StockCount));
+            if (!int.TryParse(StockCount.ToString(), out dout))
+                AddError(nameof(StockCount), "Invalid Price!!, Only Numbers accept .");
+            if (StockCount == null)
+                AddError(nameof(StockCount), "Price cannot be empty.");
+            if (StockCount < 0)
+                AddError(nameof(StockCount), "Invalid Price value.");
 
 
         }
@@ -88,22 +104,23 @@ namespace SIMA.Presentation.ViewModel
         /// <summary>
         /// get the Category data
         /// </summary>
-        private async void FillCat()
+        private async void FillProd()
         {
-            IEnumerable<Category> cat = await _categoryservices.GetAll(_page);
-            Category = new ObservableCollection<Category>(cat);
 
+            IEnumerable<ProductView> prod = await _productservices.GetViewAll(_page);
+            Product = new ObservableCollection<ProductView>(prod);
         }
+
         /// <summary>
-        /// 
+        /// get the Brand data
         /// </summary>
-        private void FillProd()
+        private async void FillStock()
         {
-            _isSupressed = true;
-            IEnumerable<Product> prod = _Productervices.DefeaultProductList();
-            Products = new ObservableCollection<Product>(prod);
-            _isSupressed = false;
+
+            IEnumerable<StockProductView> st = await _stockservices.GetViewAll(_page);
+            StockProducts = new ObservableCollection<StockProductView>(st);
         }
+
         #endregion
 
         #region Handler Errors Methods 

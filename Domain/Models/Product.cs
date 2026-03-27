@@ -11,7 +11,7 @@ namespace SIMA.Domain.Models
     {
         public int? IdProduct { get; set; }
         public string Name { get; set; }
-        public string Category { get; set; }
+        public int? IdCategory { get; set; }
         public decimal Price { get; set; }
     }
 }

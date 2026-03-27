@@ -28,63 +28,42 @@ namespace SIMA.Presentation.Views
     /// <summary>
     /// Interaction logic for Wbrand.xaml
     /// </summary>
-    public partial class Wstocks : Window, IUtilServices<StockProduct, StockProductParam>, IUtil
+    public partial class Wbrand : Window, IUtilServices<Brand, BrandParam>, IUtil
     {
 
-        private StockProductServices _stockservices;
-        private BrandServices _brandsrervices;
+        private BrandServices _Brandservices;
+        private ProductServices _productervices;
         private Paging _page;
         private Util _util;
         private CancellationTokenSource _cts;
-        private IConfiguration _config;
+        private readonly IConfiguration _config;
         private bool _isloaded;
+        private bool _isNewStock = false;
         private bool _editmode = false;
 
-        public Wstocks()
+        public Wbrand()
         {
+
             InitializeComponent();
-            InitializeWstock();
 
-        }
-
-        public Wstocks(StockProductView rowData)
-        {
-            InitializeComponent();
-            InitializeWstock(rowData);
-        }
-
-        #region Util
-
-        private void InitializeWstock(StockProductView rowData = null) {
-
+            //this.ContentRendered += (s, e) => { _isloaded = true; };
             FormBrand.Visibility = Visibility.Hidden;
             _page = new Paging();
             _util = new Util();
             _config = _util.CustomConfiguration();
-            this.DataContext = new StockViewModel(_page, _config);
+            this.DataContext = new BrandViewModel(_page, _config);
+
+
 
             _util.Loading_spimmer(wloading, true);
-            _stockservices = new StockProductServices(_config);
-            _brandsrervices = new BrandServices(_config);
+            _Brandservices = new BrandServices(_config);
+            _productervices = new ProductServices(_config);
             this.SupressEventComboBox();
             FillLimitPageVal();
-
-            if (rowData != null) {
-                _editmode = true;
-                Edit(new StockProductParam
-                {
-                    idStock = rowData.IdStock,
-                    idProduct = rowData.IdProduct,
-                    idBrand = rowData.IdBrand,
-                    stock = rowData.Stock,
-                });
-
-            }
             _util.Loading_spimmer(wloading, false);
+        }
 
-
-        } 
-
+        #region Util
         /// <summary>
         /// 
         /// </summary>
@@ -93,7 +72,7 @@ namespace SIMA.Presentation.Views
         {
             _isloaded = val;
             if (this.DataContext != null)
-                ((StockViewModel)this.DataContext).IsSupressed = val;
+                ((BrandViewModel)this.DataContext).IsSupressed = val;
 
         }
         /// <summary>
@@ -130,10 +109,11 @@ namespace SIMA.Presentation.Views
         /// </summary>
         public void ClearFilters()
         {
-            txtIdStock.Text = string.Empty;
-            txtStock.Text = "0";
+            txtIdBrand.Text = string.Empty;
+            txtName.Text = string.Empty;
+            txtPrice.Text = string.Empty;
             txtSearch.Text = string.Empty;
-            cmbPropduct.SelectedIndex = 0;
+            cmbCategory.SelectedIndex = 0;
             FormBrand.Visibility = Visibility.Hidden;
         }
         /// <summary>
@@ -142,7 +122,7 @@ namespace SIMA.Presentation.Views
         /// <param name="total"></param>
         public async void UpdatePaging(int total = 0)
         {
-            int intotal = (total == 0) ? await _stockservices.GetTotalFound(activeFilters()) : total;
+            int intotal = (total == 0) ? await _Brandservices.GetTotalFound(activeFilters()) : total;
             _page.parsePageData(intotal);
             txtResults.Text = getResultMsgAsync(intotal);
             pagingLabels(intotal);
@@ -155,7 +135,7 @@ namespace SIMA.Presentation.Views
         /// </summary>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public StockProduct Result()
+        public Brand Result()
         {
             throw new NotImplementedException();
         }
@@ -163,20 +143,13 @@ namespace SIMA.Presentation.Views
         /// Returns the object CategoryParam with passing values of the Active Filter controls 
         /// </summary>
         /// <returns></returns>
-        public StockProductParam activeFilters()
+        public BrandParam activeFilters()
         {
-            int? idprod   = cmbPropduct.SelectedItem != null ? ((ProductView)cmbPropduct.SelectedItem).IdProduct : null ;
-            int? idbrand  = cmbBrand.SelectedItem != null ? ((Brand)cmbBrand.SelectedItem).IdBrand : null;
-            int? didstock = !string.IsNullOrEmpty(txtIdStock.Text) ? int.Parse(txtIdStock.Text.ToString()) : null ;
-            int? dstock   = !string.IsNullOrEmpty(txtStock.Text)  ? int.Parse(txtStock.Text.ToString()) : null;
-            return new StockProductParam
+            return new BrandParam
             {
-                idStock = didstock, 
-                idProduct = idprod,
-                idBrand = idbrand,
-                stock = dstock,
-                offset = 0,
-                limit = 10
+                name = txtSearch.Text,
+                offset = _page.Offset,
+                limit = _page.Limit
             };
 
         }
@@ -185,23 +158,20 @@ namespace SIMA.Presentation.Views
         /// </summary>
         public async void FillCombobox(int? id = null)
         {
-
-
             wloading.Visibility = Visibility.Hidden;
             try
             {
                 _util.Loading_spimmer(wloading, true, 1500);
-                int? cmbid = cmbPropduct.SelectedItem != null ? ((ProductView)cmbPropduct.SelectedItem).IdProduct : 0;
-                int? idprod = id.HasValue ? id : cmbid;  
-                int? dummy = (idprod == 0 || !idprod.HasValue) ? -1 : null;
-                var param = new BrandParam { idProduct = idprod,idBrand = dummy };
-                IEnumerable<BrandView> cat = await _brandsrervices.GetByFilter(param);
-                cmbBrand.ItemsSource = cat;
+                int? idcat = ((Category)cmbCategory.SelectedItem).IdCategory;
+                int? dummy = (idcat == 0 || !idcat.HasValue) ? -1 : null;
+                var param = new ProductParam { idCategory = idcat, idProduct = dummy};
+                IEnumerable<ProductView> cat = await _productervices.GetByFilter(param);
+                cmbPropduct.ItemsSource = cat;
                 if (!_editmode)
                 {
-                    cmbBrand.SelectedIndex = 0;
+                    cmbPropduct.SelectedIndex = 0;
                 }
-                _util.Loading_spimmer(wloading, false);
+               _util.Loading_spimmer(wloading, false);
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
@@ -234,12 +204,12 @@ namespace SIMA.Presentation.Views
         /// Filter the GridView given the Stock Category param
         /// </summary>
         /// <param name="param"></param>
-        public async void Filter(StockProductParam param)
+        public async void Filter(BrandParam param)
         {
             try
             {
                 _util.Loading_spimmer(wloading, true, 1000);
-                IEnumerable<StockProductView> cat = await _stockservices.GetByFilter(param);
+                IEnumerable<BrandView> cat = await _Brandservices.GetByFilter(param);
                 gridBrands.ItemsSource = cat.Where(p => p.IdBrand != null);
                 UpdatePaging();
                 _util.Loading_spimmer(wloading, false);
@@ -262,12 +232,12 @@ namespace SIMA.Presentation.Views
         /// Filter the GridView given the Search text description
         /// </summary>
         /// <param name="param"></param>
-        public async void FilterbyText(StockProductParam param)
+        public async void FilterbyText(BrandParam param)
         {
             try
             {
                 _util.Loading_spimmer(wloading, true, 1000);
-                IEnumerable<StockProductView> cat = await _stockservices.GetByFilter(param);
+                IEnumerable<BrandView> cat = await _Brandservices.GetByFilter(param);
                 gridBrands.ItemsSource = cat.Where(p => p.IdBrand != null);
                 UpdatePaging();
                 _util.Loading_spimmer(wloading, false);
@@ -300,19 +270,19 @@ namespace SIMA.Presentation.Views
         /// Open the Edit Form for the Stock select in th gridview
         /// </summary>
         /// <param name="param"></param>
-        public void Edit(StockProductParam param)
+        public void Edit(BrandParam param)
         {
 
             FormBrand.Visibility = Visibility.Visible;
-            txtIdStock.Text = param.idStock.ToString();
-            txtStock.Text = param.stock.ToString();
+            txtIdBrand.Text = param.idBrand.ToString();
+            txtName.Text = param.name;
+            var itemCat = cmbCategory.Items.Cast<Category>().FirstOrDefault(p => p.IdCategory == param.idCategory);
+            cmbCategory.SelectedItem = itemCat;
+            txtPrice.Text = param.price.ToString();
             var itemProd = cmbPropduct.Items.Cast<ProductView>().FirstOrDefault(p => p.IdProduct == param.idProduct);
             cmbPropduct.SelectedItem = itemProd;
-            FillCombobox(itemProd.IdProduct);
-            var itemBrand = cmbBrand.Items.Cast<BrandView>().FirstOrDefault(p => p.IdBrand == param.idBrand);
-            cmbPropduct.SelectedItem = itemBrand;
-
-       }
+            _editmode = false;
+        }
         #endregion
 
 
@@ -320,31 +290,32 @@ namespace SIMA.Presentation.Views
         private async void btnsSaveBrand_Click(object sender, RoutedEventArgs e)
         {
             _util.Loading_spimmer(wloading, true, 1000);
-            int? id = string.IsNullOrEmpty(txtIdStock.Text) ? null : int.Parse(txtIdStock.Text.ToString());
-            int? idbrand = ((BrandView)cmbBrand.SelectedItem).IdBrand;
+            int? id = string.IsNullOrEmpty(txtIdBrand.Text) ? null : int.Parse(txtIdBrand.Text);
+            int? idprod = ((ProductView)cmbPropduct.SelectedItem).IdProduct;
             try
             {
 
-                bool isset = await _stockservices.Set(new StockProduct
+                bool isset = await _Brandservices.Set(new Brand
                 {
-                    IdStock = id,
-                    IdBrand = idbrand,
-                    Stock = int.Parse(txtStock.Text.ToString())
+                    IdBrand = id,
+                    IdProduct = idprod,
+                    Name = txtName.Text,
+                    Price = decimal.Parse(txtPrice.Text)
                 });
 
                 if (isset)
                 {
-                    MessageBox.Show(this, "Stock Sucessfully saved", "Save Stock", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    MessageBox.Show(this, "Brand Sucessfully saved", "Save Brand", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                     ClearFilters();
                     Filter(activeFilters());
                 }
                 else
                 {
-                    MessageBox.Show(this, "Error Saving Stock", "Save Stock", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    MessageBox.Show(this, "Error Saving Brand", "Save Brand", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 }
                 _util.Loading_spimmer(wloading, false);
 
-            }
+            } 
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
                 _util.Loading_spimmer(wloading, false);
@@ -358,7 +329,7 @@ namespace SIMA.Presentation.Views
         }
         private void btnNewBrand_Click(object sender, RoutedEventArgs e)
         {
-            Edit(new StockProductParam());
+            Edit(new BrandParam { idBrand = null, name = null, idCategory = null, categorys = null });
         }
         private void btnsClear_Click(object sender, RoutedEventArgs e)
         {
@@ -381,14 +352,15 @@ namespace SIMA.Presentation.Views
         {
             if (!_isloaded)
             {
+                //_page.Offset = int.Parse(cmbLimitPage.SelectedItem.ToString());
                 _page.Limit = int.Parse(e.AddedItems[0].ToString());
                 Filter(activeFilters());
                 UpdatePaging();
             }
         }
-        private void cmbPropduct_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void cmbCategory_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (!_isloaded && !_editmode)
+            if (!_isloaded)
             {
                 FillCombobox();
             }
@@ -409,34 +381,33 @@ namespace SIMA.Presentation.Views
             }
             catch (TaskCanceledException)
             {
-                //Cancel
+                // Ignorar: se canceló porque el usuario siguió escribiendo
             }
 
         }
         private async void btnRemove_Click(object sender, RoutedEventArgs e)
         {
-            MessageBoxResult result = MessageBox.Show(this, "Confirm remove Stock ?", "Remove Stock", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+            MessageBoxResult result = MessageBox.Show(this, "Confirm remove Brand ?", "Remove Brand", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
             try
             {
                 if (result == MessageBoxResult.Yes)
                 {
                     _util.Loading_spimmer(wloading, true, 1000);
                     Button btn = sender as Button;
-                    StockProductView rowData = (StockProductView)btn.DataContext;
-                    bool valid = await _stockservices.Delete(rowData.IdStock) > 0;
+                    BrandView rowData = (BrandView)btn.DataContext;
+                    bool valid = await _Brandservices.Delete(rowData.IdBrand) > 0;
                     if (valid)
                     {
                         Filter(activeFilters());
-                        MessageBox.Show(this, "Stock Succesfully removed", "Remove Stock", MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBox.Show(this, "Brand Succesfully removed", "Brand Stock", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     else
                     {
-                        MessageBox.Show(this, "Error removing the Brand", "Remove Stock", MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBox.Show(this, "Error removing the Brand", "Brand Stock", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     _util.Loading_spimmer(wloading, false, 100);
 
                 }
-
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
@@ -458,23 +429,24 @@ namespace SIMA.Presentation.Views
             try
             {
                 Button btn = sender as Button;
-                StockProductView rowData = (StockProductView)btn.DataContext;
+                BrandView rowData = (BrandView)btn.DataContext;
                 _util.Loading_spimmer(wloading, true, 1000);
                 _editmode = true;
-                Edit(new StockProductParam
+                Edit(new BrandParam
                 {
-                    idStock = rowData.IdStock,
-                    idProduct = rowData.IdProduct,
                     idBrand = rowData.IdBrand,
-                    stock = rowData.Stock,
+                    idCategory = rowData.IdCategory,
+                    idProduct = rowData.IdProduct,
+                    name = rowData.Name,
+                    categorys = rowData.Categorys,
+                    products = rowData.Products,
+                    price = rowData.Price
                 });
-                _editmode = false;
                 _util.Loading_spimmer(wloading, false);
 
             }
             catch (Exception)
             {
-                _editmode = false;
                 _util.Loading_spimmer(wloading, false);
             }
 
@@ -500,7 +472,6 @@ namespace SIMA.Presentation.Views
             this.SupressEventComboBox(false);
 
         }
-
 
         #endregion
 

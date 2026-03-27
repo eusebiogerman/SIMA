@@ -7,14 +7,47 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Navigation;
 using System.Xml;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using Microsoft.Data.SqlClient;
 using SIMA.Domain.Models;
 using SIMA.Helper;
+using Dapper;
+using SIMA.Presentation.Views;
+using static Dapper.SqlMapper;
 
 namespace SIMA.Infrastructure.Repositories
 {
+    
+    public class StockProductParam
+    {
+        public int? idStock { get; set; } = null;
+        public int? idBrand { get; set; } = null;
+        public int? idProduct { get; set; } = null;
+        public int? idCategory { get; set; } = null;
+        public string? brands { get; set; } = null;
+        public string? products { get; set; } = null;
+        public string? categorys { get; set; } = null;
+        public decimal? price { get; set; } = null;
+        public int? stock { get; set; } = null;
+        public int? offset { get; set; } = 0;
+        public int? limit { get; set; } = 10;
+
+
+        public StockProductParam()
+        {
+        }
+
+        public StockProductParam(Paging page) {
+            offset = page.Offset;
+            limit = page.Limit;
+        }    
+
+    }
+
     public class StockProductServices : IContextservices<StockProduct>
     {
+        private readonly IConfiguration _config;
         private JsonFile<StockProduct> _stockProductFile;
         private int? _currentIdSave;
 
@@ -25,108 +58,85 @@ namespace SIMA.Infrastructure.Repositories
             _stockProductFile.loadData();
         }
 
-        private IEnumerable<StockProduct> getStock(StockProduct param)
+        public StockProductServices(IConfiguration config)
         {
-            return _stockProductFile.ServicesList.Where(p =>
-                               (param.Category == string.Empty || p.Category.Contains(param.Category, StringComparison.OrdinalIgnoreCase))
-                            && (param.Name == string.Empty || p.Name.Contains(param.Name, StringComparison.OrdinalIgnoreCase)));
+            _config = config;   
+            _stockProductFile = new JsonFile<StockProduct>();
+            _stockProductFile.loadData();
+        }
+
+        private async Task<IEnumerable<StockProductView>> getStock(StockProductParam param)
+        {
+            using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
+            {
+                return await conn.QueryAsync<StockProductView>("[dbo].[getStock]", param, commandType: System.Data.CommandType.StoredProcedure);
+            }
+        }
+        private async Task<int> setStock(StockProduct param)
+        {
+
+            using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
+            {
+                return await conn.ExecuteScalarAsync<int>("[dbo].[setStock]", param, commandType: System.Data.CommandType.StoredProcedure);
+            }
+
         }
 
         #region Abstractions
-        public async Task<IEnumerable<StockProduct>> GetbyId(int? id)
+        public async Task<int> Add(StockProduct entitiy)
         {
-            return await Task.Run(() => _stockProductFile.ServicesList.Where(p => p.IdStock == id));
-        }
-        public async Task<IEnumerable<StockProduct>> GetAll(Paging page)
-        {
-            return await Task.Run(() => _stockProductFile.ServicesList.AsEnumerable().Skip(page.Offset).Take(page.Limit));
-        }
-        public async Task<int> Add(StockProduct entity)
-        {
-            if (_stockProductFile.ServicesList.Any(p => p.IdStock == entity.IdStock))
-            {
-                throw new InvalidOperationException($"The Stock exists with the ID {entity.IdStock}");
-            }
-            else
-                entity.IdStock = await GetNextId();
-
-
-            _currentIdSave = entity.IdStock;
-            _stockProductFile.ServicesList.Add(entity);
-            return await _stockProductFile.SaveData() ? 1 : 0;
+            return await setStock(entitiy);
         }
         public async Task<bool> Update(StockProduct entity)
         {
-            var existingProduct = _stockProductFile.ServicesList.FirstOrDefault(p => p.IdStock == entity.IdStock);
-
-            if (existingProduct == null)
-            {
-                throw new InvalidOperationException($"Stock Not found with ID {entity.IdStock}");
-            }
-
-            _currentIdSave = entity.IdStock;
-            existingProduct.Name = entity.Name;
-            existingProduct.Category = entity.Category;
-            existingProduct.Price = entity.Price;
-            existingProduct.Stock = entity.Stock;
-
-            return await _stockProductFile.SaveData();
-        }
-        public async Task<int> Delete(int? id)
-        {
-            var product = _stockProductFile.ServicesList.FirstOrDefault(p => p.IdStock == id);
-
-            if (product == null)
-            {
-                throw new InvalidOperationException($"Stock Not found with ID {id}");
-            }
-
-            _stockProductFile.ServicesList.Remove(product);
-            return await _stockProductFile.SaveData() ? 1 : 0;
+            return (await setStock(entity) > 0);
         }
         public async Task<bool> Set(StockProduct entitiy)
         {
-            var existingProduct = _stockProductFile.ServicesList.FirstOrDefault(p => p.IdStock == entitiy.IdStock);
-            return ((existingProduct == null) ? (await Add(entitiy) > 0) : await Update(entitiy));
+            return (await setStock(entitiy) > 0);
+        }
+        public async Task<int> Delete(int? id)
+        {
+            using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
+            {
+                return await conn.ExecuteScalarAsync<int>("[dbo].[delStock]", new { IdStock = id }, commandType: System.Data.CommandType.StoredProcedure);
+            }
+        }
+        public async Task<IEnumerable<StockProductView>> GetViewAll(Paging page)
+        {
+            return await getStock(new StockProductParam(page));
+        }
+        public async Task<IEnumerable<StockProduct>> GetAll(Paging page)
+        {
+            throw new NotImplementedException();
+        }
+        public async Task<IEnumerable<StockProduct>> GetbyId(int? id)
+        {
+            throw new NotImplementedException();
         }
         #endregion
 
         #region Util Function and Methods
-        public async Task<IEnumerable<StockProduct>> GetByFilter(StockProduct param, Paging page)
+        public async Task<IEnumerable<StockProductView>> GetByFilter(StockProductParam param)
         {
-            return await Task.Run(() =>
-              {
-                  IEnumerable<StockProduct> stock = getStock(param).Skip(page.Offset).Take(page.Limit);
-                  return stock.Any() ? stock : getStock(param).Skip(1).Take(page.Limit);
-              });
-
+            return await getStock(param);
 
         }
-        public async Task<IEnumerable<StockProduct>> GetLowStock(int threshold = 10)
+        public async Task<int> GetTotalFound(StockProductParam param)
         {
-            return await Task.Run(() => _stockProductFile.ServicesList.Where(p => p.Stock <= threshold));
-        }
-        public async Task<int> GetTotalFound(StockProduct param)
-        {
-            return await Task.Run(() => getStock(param).Count());
+            param.offset = 0;
+            param.limit = 1000;
+            IEnumerable<StockProductView> res = await getStock(param);
+            return res.Where(p => p.IdBrand != null).Count();
+  
         }
         public async Task<decimal> GetTotalValue()
         {
-            return await Task.Run(() => _stockProductFile.ServicesList.Sum(p => p.Price * p.Stock));
+            throw new NotImplementedException();
         }
         public async Task<int?> GetNextId()
         {
-            return await Task.Run(() => _stockProductFile.ServicesList.Any() ? _stockProductFile.ServicesList.Max(p => p.IdStock) + 1 : 1);
-        }
-        public async Task<IEnumerable<string>> GetUniqueCategories()
-        {
-            return await Task.Run(() =>
-                _stockProductFile.ServicesList
-                    .Select(p => p.Category)
-                    .Distinct()
-                    .OrderBy(c => c)
-                    .ToList()
-            );
+            throw new NotImplementedException();
         }
         #endregion
 

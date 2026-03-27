@@ -1,37 +1,35 @@
 ﻿using SIMA.Domain.Models;
+using SIMA.ExtensionsHelper;
 using SIMA.Helper;
-using SIMA.Presentation.Views;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Markup;
-using SIMA.ExtensionsHelper;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Dapper;
-using static Dapper.SqlMapper;
 
 namespace SIMA.Infrastructure.Repositories
 {
-
-    public class ProductParam
+    public class BrandParam
     {
+        public int? idBrand { get; set; } = null;
         public int? idProduct { get; set; } = null;
         public int? idCategory { get; set; } = null;
         public string? name { get; set; } = null;
+        public string? products { get; set; } = null;
         public string? categorys { get; set; } = null;
         public decimal? price { get; set; } = null;
         public int? offset { get; set; } = 0;
         public int? limit { get; set; } = 10;
 
 
-         public ProductParam()
+        public BrandParam()
         {
         }
 
-        public ProductParam(Paging page)
+        public BrandParam(Paging page)
         {
             offset = page.Offset;
             limit = page.Limit;
@@ -40,7 +38,7 @@ namespace SIMA.Infrastructure.Repositories
     }
 
 
-    public class ProductServices : IContextservices<Product>
+    public class BrandServices : IContextservices<Brand>
     {
         private readonly IConfiguration _config;
         private JsonFile<Product> _ProductFile;
@@ -48,93 +46,88 @@ namespace SIMA.Infrastructure.Repositories
         public int? CurrentIdSave { get => _currentIdSave; }
 
 
-        public ProductServices()
+        public BrandServices()
         {
-            _ProductFile = new JsonFile<Product>("Products.json");
+            _ProductFile = new JsonFile<Product>("Brands.json");
             _ProductFile.loadData();
 
         }
-        public ProductServices(IConfiguration config)
+        public BrandServices(IConfiguration config)
         {
             _config = config;
         }
 
-        private async Task<IEnumerable<ProductView>> getProduct(ProductParam param)
+        private async Task<IEnumerable<BrandView>> getBrand(BrandParam param)
         {
             using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
             {
-                return await conn.QueryAsync<ProductView>("[dbo].[getProduct]", param, commandType: System.Data.CommandType.StoredProcedure);
+                return await conn.QueryAsync<BrandView>("[dbo].[getBrand]", param, commandType: System.Data.CommandType.StoredProcedure);
             }
 
-       }
-        private async Task<int> setProduct(Product param)
+        }
+        private async Task<int> setBrand(Brand param)
         {
 
             using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
             {
-                return await conn.ExecuteScalarAsync<int>("[dbo].[setProduct]", param, commandType: System.Data.CommandType.StoredProcedure);
+                return await conn.ExecuteScalarAsync<int>("[dbo].[setBrand]", param, commandType: System.Data.CommandType.StoredProcedure);
             }
 
         }
 
         #region Abstractions
-        public async Task<int> Add(Product entitiy)
+        public async Task<int> Add(Brand entitiy)
         {
-            return await setProduct(entitiy);
+            return await setBrand(entitiy);
         }
-        public async Task<bool> Update(Product entity)
+        public async Task<bool> Update(Brand entity)
         {
-            return (await setProduct(entity) > 0);
+            return (await setBrand(entity) > 0);
+        }
+        public async Task<bool> Set(Brand entity)
+        {
+            return (await setBrand(entity) > 0);
         }
         public async Task<int> Delete(int? id)
         {
             using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
             {
-                return await conn.ExecuteScalarAsync<int>("[dbo].[delProduct]", new { IdProduct = id }, commandType: System.Data.CommandType.StoredProcedure);
+                return await conn.ExecuteScalarAsync<int>("[dbo].[delBrand]", new { IdProduct = id }, commandType: System.Data.CommandType.StoredProcedure);
             }
         }
-        public async Task<IEnumerable<ProductView>> GetViewAll(Paging page)
+        public async Task<IEnumerable<BrandView>> GetViewAll(Paging page)
         {
-            return await getProduct(new ProductParam(page));
+            return await getBrand(new BrandParam(page));
         }
-        public async Task<IEnumerable<Product>> GetAll(Paging page)
-        {
-            throw new NotImplementedException();
-        }
-        public async Task<IEnumerable<Product>> GetbyId(int? id)
+        public async Task<IEnumerable<Brand>> GetAll(Paging page)
         {
             throw new NotImplementedException();
         }
-  
-        public async Task<bool> Set(Product entity)
+        public async Task<IEnumerable<Brand>> GetbyId(int? id)
         {
-            return (await setProduct(entity) > 0);
+            throw new NotImplementedException();
         }
+        
 
         #endregion
 
         #region Util Function and Methods
 
-        public async Task<IEnumerable<ProductView>> GetByFilter(ProductParam param)
+        public async Task<IEnumerable<BrandView>> GetByFilter(BrandParam param)
         {
-            return await getProduct(param);
+            return await getBrand(param);
         }
-        public async Task<int> GetTotalFound(ProductParam param)
+        public async Task<int> GetTotalFound(BrandParam param)
         {
             param.offset = 0;
             param.limit = 1000;
-            IEnumerable<ProductView> res = await getProduct(param);
-            return res.Where(p => p.IdProduct != null).Count();
+            IEnumerable<BrandView> res = await getBrand(param);
+            return res.Where(p => p.IdBrand != null).Count();
         }
         public async Task<decimal> GetTotalValue()
         {
             throw new NotImplementedException();
         }
-
-
-
         #endregion
-
-
     }
 }

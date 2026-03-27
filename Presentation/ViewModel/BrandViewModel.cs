@@ -13,19 +13,20 @@ using System.Threading.Tasks;
 
 namespace SIMA.Presentation.Views
 {
-    internal class ProductViewModel : INotifyDataErrorInfo, INotifyPropertyChanged
+    internal class BrandViewModel : INotifyDataErrorInfo, INotifyPropertyChanged
     {
         private string _name;
         private decimal _price;
         private ObservableCollection<Category> _category;
         private ObservableCollection<ProductView> _product;
+        private ObservableCollection<BrandView> _brand;
         private CategoryServices _categoryservices;
         private ProductServices _productservices;
+        private BrandServices _brandservices;
         private IConfiguration _config;
         private Paging _page;
         private readonly Dictionary<string, List<string>> _errors = new();
         private bool _isSupressed;
-
 
         public string Name
         {
@@ -65,26 +66,36 @@ namespace SIMA.Presentation.Views
             set { _product = value; OnPropertyChanged(nameof(Product)); }
         }
 
+
+        public ObservableCollection<BrandView> Brand
+        {
+            get => _brand;
+            set { _brand = value; OnPropertyChanged(nameof(Brand)); }
+        }
+
+
         public bool IsSupressed { get => _isSupressed; set => _isSupressed = value; }
         #endregion
 
 
-        public ProductViewModel()
+        public BrandViewModel()
         {
             _page = new Paging();
             _categoryservices = new CategoryServices();
             FillCat();
+            FillBrand();
         }
 
 
-        public ProductViewModel(Paging page, IConfiguration config)
+        public BrandViewModel(Paging page, IConfiguration config)
         {
             _config = config;
-            _page = new Paging();
+            _page = page ?? new Paging();
             _categoryservices = new CategoryServices(_config);
             _productservices = new ProductServices(_config);
+            _brandservices = new BrandServices(_config);
             FillCat();
-            FillProduct();
+            FillBrand();
         }
 
 
@@ -121,15 +132,18 @@ namespace SIMA.Presentation.Views
             Category = new ObservableCollection<Category>(cat);
         }
 
+
+
         /// <summary>
-        /// get the Product data
+        /// get the Brand data
         /// </summary>
-        private async void FillProduct()
+        private async void FillBrand()
         {
 
-            IEnumerable<ProductView> cat = await _productservices.GetViewAll(_page);
-            Product = new ObservableCollection<ProductView>(cat);
+            IEnumerable<BrandView> br = await _brandservices.GetViewAll(_page);
+            Brand = new ObservableCollection<BrandView>(br);
         }
+
         #endregion
 
         #region Handler Errors Methods 

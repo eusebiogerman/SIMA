@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using SIMA.Domain.Models;
 using SIMA.Infrastructure.Repositories;
+using SIMA.Presentation.Views;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,40 +12,18 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SIMA.Presentation.Views
+namespace SIMA.Presentation.ViewModel
 {
-    internal class ProductViewModel : INotifyDataErrorInfo, INotifyPropertyChanged
+    public class CategoryViewModel : INotifyDataErrorInfo, INotifyPropertyChanged
     {
-        private string _name;
-        private decimal _price;
         private ObservableCollection<Category> _category;
-        private ObservableCollection<ProductView> _product;
+        private ObservableCollection<Category> _categoryCombo;
         private CategoryServices _categoryservices;
-        private ProductServices _productservices;
-        private IConfiguration _config;
         private Paging _page;
-        private readonly Dictionary<string, List<string>> _errors = new();
+        private IConfiguration _config;
         private bool _isSupressed;
+        private readonly Dictionary<string, List<string>> _errors = new();
 
-
-        public string Name
-        {
-            get => _name; set
-            {
-                _name = value;
-                ValidateProductName();
-                OnPropertyChanged(nameof(Name));
-            }
-        }
-        public decimal Price
-        {
-            get => _price; set
-            {
-                _price = value;
-                ValidatePrice();
-                OnPropertyChanged(nameof(Price));
-            }
-        }
 
         #region Event Validation Properties
         public bool HasErrors => _errors.Any();
@@ -53,82 +32,71 @@ namespace SIMA.Presentation.Views
         #endregion
 
         #region Observable Collection Properties
-        public ObservableCollection<Category> Category
+        public ObservableCollection<Category> Categorys
         {
             get => _category;
-            set { _category = value; OnPropertyChanged(nameof(Category)); }
+            set { _category = value; OnPropertyChanged(nameof(Categorys)); }
         }
 
-        public ObservableCollection<ProductView> Product
+        public ObservableCollection<Category> CategoryCombo
         {
-            get => _product;
-            set { _product = value; OnPropertyChanged(nameof(Product)); }
+            get => _categoryCombo;
+            set { _categoryCombo = value; OnPropertyChanged(nameof(CategoryCombo)); }
         }
+
 
         public bool IsSupressed { get => _isSupressed; set => _isSupressed = value; }
         #endregion
 
 
-        public ProductViewModel()
+        public CategoryViewModel()
         {
-            _page = new Paging();
-            _categoryservices = new CategoryServices();
-            FillCat();
+            InitializeModel(new Paging(), new ConfigurationManager());
         }
 
-
-        public ProductViewModel(Paging page, IConfiguration config)
+        public CategoryViewModel(Paging page, IConfiguration config)
         {
+            InitializeModel(page, config);
+        }
+
+        #region Util
+        private void InitializeModel(Paging page, IConfiguration config)
+        {
+
+            _isSupressed = true;
+            _page = page;
             _config = config;
-            _page = new Paging();
             _categoryservices = new CategoryServices(_config);
-            _productservices = new ProductServices(_config);
             FillCat();
-            FillProduct();
-        }
-
-
-        #region Validation Errors Methods
-        private void ValidateProductName()
-        {
-            ClearErrors(nameof(Name));
-            if (string.IsNullOrEmpty(Name))
-                AddError(nameof(Name), "Product Name cannot be empty.");
-        }
-        private void ValidatePrice()
-        {
-            decimal dout;
-            ClearErrors(nameof(Price));
-            if (!decimal.TryParse(Price.ToString(), out dout))
-                AddError(nameof(Price), "Invalid Price!!, Only Numbers accept .");
-            if (Price == null)
-                AddError(nameof(Price), "Price cannot be empty.");
-            if (Price < 0)
-                AddError(nameof(Price), "Invalid Price value.");
-
+            FillCatCombo();
+            _isSupressed = false;
 
         }
+
         #endregion
 
+
+
         #region fill Observable Collection 
+
+        /// <summary>
+        /// get the Category data
+        /// </summary>
+        private async void FillCatCombo()
+        {
+            IEnumerable<Category> cat = await _categoryservices.GetAll(_page);
+            CategoryCombo = new ObservableCollection<Category>(cat);
+
+        }
+
         /// <summary>
         /// get the Category data
         /// </summary>
         private async void FillCat()
         {
-
             IEnumerable<Category> cat = await _categoryservices.GetAll(_page);
-            Category = new ObservableCollection<Category>(cat);
-        }
+            Categorys = new ObservableCollection<Category>(cat.Where(p => p.IdCategory != null));
 
-        /// <summary>
-        /// get the Product data
-        /// </summary>
-        private async void FillProduct()
-        {
-
-            IEnumerable<ProductView> cat = await _productservices.GetViewAll(_page);
-            Product = new ObservableCollection<ProductView>(cat);
         }
         #endregion
 
@@ -162,6 +130,7 @@ namespace SIMA.Presentation.Views
             ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
         }
         #endregion
+
 
     }
 }

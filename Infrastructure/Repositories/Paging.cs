@@ -11,7 +11,7 @@ namespace SIMA.Infrastructure.Repositories
     {
         private JsonFile<String> _jsonLimit;
         private const int _defaulLimit = 10;
-        private const int _defaulOffset = 10;
+        private const int _defaulOffset = 0;
         private int _offset = _defaulOffset;
         private int _limit = _defaulLimit;
         private int _pagenumber = 1;
