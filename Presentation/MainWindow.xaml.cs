@@ -421,6 +421,7 @@ namespace SIMA.Presentation
 
                 _windowStock = new Wstocks(rowData);
                 _windowStock.Owner = this;
+                _windowStock.EditMode = true;
                 _windowStock.Activate();
                 _windowStock.Show();
             }
@@ -483,7 +484,6 @@ namespace SIMA.Presentation
             MessageBox.Show(this, mensaje, "Model Error", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         #endregion
-
 
     }
 
