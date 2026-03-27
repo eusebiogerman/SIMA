@@ -1,31 +1,17 @@
-﻿<Window x:Class="SIMA.Presentation.Views.Wproduct"
-     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<Window x:Class="SIMA.Presentation.Views.Wcategory"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SIMA.Presentation.Views"
         mc:Ignorable="d"
-        Title="Product Management" Height="750" Width="820"
+        Title="Category Management" Height="750" Width="520"
         Background="#F5F5F5"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize" Closing="Window_Closing" Loaded="Window_Loaded" Initialized="Window_Initialized">
 
     <Window.Resources>
         <!-- Style Shared -->
-
-        <Style x:Key="PanelFields" TargetType="StackPanel">
-            <Setter Property="Orientation" Value="Horizontal"/>
-            <Setter Property="Margin" Value="0,0,0,2"/>
-        </Style>
-
-
-        <Style x:Key="LabelFields" TargetType="Label">
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Width" Value="Auto"/>
-        </Style>
-
-
         <Style x:Key="SectionBorder" TargetType="Border">
             <Setter Property="Background" Value="White"/>
             <Setter Property="CornerRadius" Value="8"/>
@@ -87,9 +73,6 @@
             <Setter Property="Height" Value="43"/>
         </Style>
 
-
-
-
     </Window.Resources>
 
 
@@ -109,50 +92,37 @@
                 Margin="0,0,0,0">
 
             <StackPanel Grid.Row="1" >
-                <StackPanel >
-                    <TextBlock Text="PRODUCT MANAGMENT" 
+                <StackPanel>
+                    <TextBlock Text="CATEGORY MANAGMENT" 
                                Style="{StaticResource Titleselection}"
                                TextAlignment="Center"/>
                 </StackPanel>
-                <StackPanel x:Name="FormProduct">
-                    <StackPanel  Style="{StaticResource PanelFields}">
+                <StackPanel x:Name="FormCategory">
+                    <StackPanel Orientation="Horizontal">
                         <Label Content="ID:" 
-                               Margin="5,0,37,0"
-                               Style="{StaticResource LabelFields}"/>
-                        <TextBox Name="txtIdProduct" 
-                             Width="100"
-                             Height="25"    
-                             Background="#F0F0F0"
-                             IsReadOnly="True"/>
-                    </StackPanel>
-                    <StackPanel  Style="{StaticResource PanelFields}">
-                        <Label Content="Category:" 
-                               Margin="5,0,0,0"
-                               Style="{StaticResource LabelFields}"/>
-                        <ComboBox ItemsSource="{Binding Category}"
-                                  DisplayMemberPath="Name"
-                                  SelectedValuePath="Idcategory"
-                                  x:Name="cmbCategory" 
-                                  Width="300" 
-                                  Height="25" 
-                                  FontSize="14"
-                                  BorderBrush="#CCCCCC"
-                                  SelectedIndex="0"
-                                  Cursor="Hand" />
-                    </StackPanel>
-
-                    <StackPanel  Style="{StaticResource PanelFields}">
+                           FontWeight="SemiBold" 
+                           BorderThickness="0"
+                           Margin="30,0,45,0"/>
                         <Label Content="Name:" 
-                               Margin="5,0,17,0"
-                               Style="{StaticResource LabelFields}"/>
+                           FontWeight="SemiBold" 
+                           BorderThickness="0"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBox Text="{Binding IdCategory}"    
+                     Name="txtIdCategory" 
+                     Width="100"
+                     Height="35" 
+                     Padding="2" 
+                     Background="#F0F0F0"/>
 
                         <TextBox Text="{Binding Name, 
                             UpdateSourceTrigger=PropertyChanged, 
-                            ValidatesOnNotifyDataErrors=True}" 
-                             Name="txtName" 
-                             Width="400"
-                             Height="25"    
-                             Background="#F0F0F0">
+                            ValidatesOnNotifyDataErrors=True}"    
+                    Name="txtName" 
+                     Width="320"
+                     Height="35" 
+                     Padding="5" 
+                     Background="#F0F0F0">
                             <TextBox.Resources>
                                 <ControlTemplate x:Key="NameErrorTemplate">
                                     <StackPanel>
@@ -168,47 +138,17 @@
                                 <StaticResource ResourceKey="NameErrorTemplate"/>
                             </Validation.ErrorTemplate>
                         </TextBox>
+                        <Button Name="btnsSaveCategory" 
+                    Content="&#x1F4BE; Save" 
+                    Width="60" 
+                    Height="35"
+                    Background="#377d0c"
+                    Foreground="White"
+                    FontWeight="Bold"
+                    BorderThickness="0"
+                    Cursor="Hand" Click="btnsSaveCategory_Click" />
+
                     </StackPanel>
-                    <StackPanel  Style="{StaticResource PanelFields}">
-                        <Label Content="Price:" 
-                               Margin="5,0,24,0"
-                               Style="{StaticResource LabelFields}"/>
-
-                        <TextBox Text="{Binding Price, 
-                            UpdateSourceTrigger=PropertyChanged, 
-                            ValidatesOnNotifyDataErrors=True}" 
-                             Name="txtPrice" 
-                             Width="150"
-                             Height="25"    
-                             Background="#F0F0F0">
-                            <TextBox.Resources>
-                                <ControlTemplate x:Key="NameErrorTemplate">
-                                    <StackPanel>
-                                        <AdornedElementPlaceholder Name="placeholder"/>
-                                        <TextBlock Text="{Binding ElementName=placeholder, 
-                           Path=AdornedElement.(Validation.Errors)[0].ErrorContent}" 
-                           Foreground="Red" FontSize="10"/>
-                                    </StackPanel>
-                                </ControlTemplate>
-                            </TextBox.Resources>
-
-                            <Validation.ErrorTemplate>
-                                <StaticResource ResourceKey="NameErrorTemplate"/>
-                            </Validation.ErrorTemplate>
-                        </TextBox>
-                        <Button Name="btnsSaveProduct" 
-                                Content="&#x1F4BE; Save" 
-                                Width="60" 
-                                Height="25"
-                                 Margin="5,0"
-                                Background="#377d0c"
-                                Foreground="White"
-                                FontWeight="Bold"
-                                BorderThickness="0"
-                                Cursor="Hand" 
-                                Click="btnsSaveProduct_Click" />
-                    </StackPanel>
-
                 </StackPanel>
             </StackPanel>
         </Border>
@@ -226,12 +166,14 @@
                            VerticalAlignment="Center"/>
 
 
-                <TextBox Name="txtSearch" 
-                         Width="430"
-                         Height="35" 
-                         Padding="5" 
-                         Background="#F0F0F0" 
-                         TextChanged="txtSearch_TextChanged"/>
+                <TextBox Text="{Binding Name, 
+                            UpdateSourceTrigger=PropertyChanged, 
+                            ValidatesOnNotifyDataErrors=True}"    
+                    Name="txtSearch" 
+                     Width="430"
+                     Height="35" 
+                     Padding="5" 
+                     Background="#F0F0F0" TextChanged="txtSearch_TextChanged"/>
             </StackPanel>
 
 
@@ -261,34 +203,21 @@
                           Height="335" 
                           VerticalAlignment="Top"
                           Cursor="Hand"
-                          ItemsSource="{Binding Product}" >
+                          ItemsSource="{Binding Categorys}" >
 
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn Header="ID" Width="70">
+                        <GridViewColumn Header="ID" Width="100">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding IdProduct}" 
+                                    <TextBlock Text="{Binding IdCategory}" 
                                                    Margin="10,0" 
                                                    VerticalAlignment="Center"
                                                    FontWeight="SemiBold"/>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn Header="Category" Width="300">
-                            <GridViewColumn.CellTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" Margin="5">
-                                        <TextBlock Text="{Binding Icono}" 
-                                                       FontSize="16" 
-                                                       Margin="0,0,8,0"/>
-                                        <TextBlock Text="{Binding Categorys}" 
-                                                       VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
-                        <GridViewColumn Header="Product" Width="220">
+                        <GridViewColumn Header="Name" Width="300">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" Margin="5">
@@ -298,16 +227,6 @@
                                         <TextBlock Text="{Binding Name}" 
                                                        VerticalAlignment="Center"/>
                                     </StackPanel>
-                                </DataTemplate>
-                            </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
-                        <GridViewColumn Header="Price" Width="120" >
-                            <GridViewColumn.CellTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Price, StringFormat='${0:N2}'}" 
-                                                   FontWeight="Bold"
-                                                   Foreground="#2196F3"
-                                                   TextAlignment="Right"/>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
@@ -344,7 +263,7 @@
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="380" />
+                    <ColumnDefinition Width="100" />
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
@@ -372,7 +291,7 @@
                             Click="btnNext_Click"/>
                 </StackPanel>
 
-
+                
                 <StackPanel Grid.Column="2" Orientation="Horizontal">
                     <TextBlock Text="Items per page:" 
                                Style="{StaticResource NavigationText}"/>
@@ -403,13 +322,13 @@
                 <StackPanel Grid.Row="1" 
                     Style="{StaticResource ShortButtonStackPanel}">
 
-                    <Button Name="btnNewProduct" 
+                   <Button Name="btnNewStock" 
                     Content="➕ New" 
                     Style="{StaticResource ShortButtonPanel}"        
-                    Margin="0,0,440,0"
+                    Margin="0,0,167,0"
                     Background="#5069AA"
                     Foreground="White"
-                    Click="btnNewProduct_Click" />
+                    Click="btnNewStock_Click" />
 
                     <Button Name="btnsClear" 
                     Content="Clear" 

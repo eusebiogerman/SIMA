@@ -9,15 +9,15 @@ namespace SIMA.Domain.Models
 {
     public class StockProductView
     {
-        public int IdStock { get; set; }
-        public int IdBrand { get; set; }
+        public int? IdStock { get; set; }
+        public int? IdBrand { get; set; }
         public string Brands { get; set; }
-        public int IdProduct { get; set; }
+        public int? IdProduct { get; set; }
         public string Products { get; set; }
-        public int IdCategory { get; set; }
+        public int? IdCategory { get; set; }
         public string Categorys { get; set; }
         public decimal Price { get; set; }
-        public int Stock { get; set; }
+        public int? Stock { get; set; }
 
 
     }

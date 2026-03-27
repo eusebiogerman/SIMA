@@ -8,7 +8,7 @@ namespace SIMA.Domain.Models
 {
     public class Category
     {
-        public int Idcategory { get; set; }
-        public string Name { get; set; } = string.Empty;
+        public int? IdCategory { get; set; } = null;
+        public string? Name { get; set; } = null;
     }
 }

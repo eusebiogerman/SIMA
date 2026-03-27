@@ -1,13 +1,10 @@
 ﻿using Microsoft.Extensions.Configuration;
 using SIMA.Domain.Models;
-using SIMA.ExtensionsHelper;
 using SIMA.Helper;
 using SIMA.Infrastructure.Repositories;
 using SIMA.Presentation.ViewModel;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -20,48 +17,36 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using static System.Net.Mime.MediaTypeNames;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SIMA.Presentation.Views
 {
     /// <summary>
-    /// Interaction logic for Wproduct.xaml
+    /// Interaction logic for Wcategory.xaml
     /// </summary>
-    public partial class Wproduct : Window, IUtilServices<Product, ProductParam>, IUtil
+    public partial class Wcategory : Window, IUtilServices<Category, CategoryParam>, IUtil
     {
-
-        private ProductServices _productservices;
-        private CategoryServices _categoryervices;
-        private StockProductServices _StockProductservices;
-        private Product _currentProduct;
+        private CategoryServices _categoryservices;
         private Paging _page;
         private Util _util;
         private CancellationTokenSource _cts;
         private readonly IConfiguration _config;
         private bool _isloaded;
-        private bool _isNewStock = false;
 
-        public Wproduct()
+        public Wcategory()
         {
-
             InitializeComponent();
-            
-           //this.ContentRendered += (s, e) => { _isloaded = true; };
-            FormProduct.Visibility = Visibility.Hidden;
+            FormCategory.Visibility = Visibility.Hidden;
             _page = new Paging();
             _util = new Util();
             _config = _util.CustomConfiguration();
-            this.DataContext = new ProductViewModel(_page, _config);
-
-
+            this.DataContext = new CategoryViewModel(_page, _config);
 
             _util.Loading_spimmer(wloading, true);
-            _productservices = new ProductServices(_config);
-            _categoryervices = new CategoryServices(_config);
+            _categoryservices = new CategoryServices(_config);
             this.SupressEventComboBox();
             FillLimitPageVal();
             _util.Loading_spimmer(wloading, false);
+
         }
 
         #region Util
@@ -73,8 +58,7 @@ namespace SIMA.Presentation.Views
         {
             _isloaded = val;
             if (this.DataContext != null)
-                ((ProductViewModel)this.DataContext).IsSupressed = val;
-       
+                ((CategoryViewModel)this.DataContext).IsSupressed = val;
         }
         /// <summary>
         /// Return and Update the message of the render Category result
@@ -83,7 +67,7 @@ namespace SIMA.Presentation.Views
         public string getResultMsgAsync(int total)
         {
             txtTotal.Text = total.ToString();
-            return $"📊 Show {total} Products found";
+            return $"📊 Show {total} Categories found";
         }
         /// <summary>
         /// Update the Paging Labels given the cuurent Offset and Limit Values
@@ -110,12 +94,10 @@ namespace SIMA.Presentation.Views
         /// </summary>
         public void ClearFilters()
         {
-            txtIdProduct.Text = string.Empty;
+            txtIdCategory.Text = string.Empty;
             txtName.Text = string.Empty;
-            txtPrice.Text = string.Empty;
             txtSearch.Text = string.Empty;
-            cmbCategory.SelectedIndex = 0;
-            FormProduct.Visibility = Visibility.Hidden;
+            FormCategory.Visibility = Visibility.Hidden;
         }
         /// <summary>
         /// Update the Total result of the rows and update the labels on the grid 
@@ -123,7 +105,7 @@ namespace SIMA.Presentation.Views
         /// <param name="total"></param>
         public async void UpdatePaging(int total = 0)
         {
-            int intotal = (total == 0) ? await _productservices.GetTotalFound(activeFilters()) : total;
+            int intotal = (total == 0) ? await _categoryservices.GetTotalFound(activeFilters()) : total;
             _page.parsePageData(intotal);
             txtResults.Text = getResultMsgAsync(intotal);
             pagingLabels(intotal);
@@ -136,7 +118,7 @@ namespace SIMA.Presentation.Views
         /// </summary>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public Product Result()
+        public Category Result()
         {
             throw new NotImplementedException();
         }
@@ -144,11 +126,11 @@ namespace SIMA.Presentation.Views
         /// Returns the object CategoryParam with passing values of the Active Filter controls 
         /// </summary>
         /// <returns></returns>
-        public ProductParam activeFilters()
+        public CategoryParam activeFilters()
         {
-            return new ProductParam
+            return new CategoryParam
             {
-                name = txtSearch.Text,
+                Name = txtSearch.Text,
                 offset = _page.Offset,
                 limit = _page.Limit
             };
@@ -180,13 +162,13 @@ namespace SIMA.Presentation.Views
         /// Filter the GridView given the Stock Category param
         /// </summary>
         /// <param name="param"></param>
-        public async void Filter(ProductParam param)
+        public async void Filter(CategoryParam param)
         {
             try
             {
                 _util.Loading_spimmer(wloading, true, 1000);
-                IEnumerable<ProductView> cat = await _productservices.GetByFilter(param);
-                gridProducts.ItemsSource = cat.Where(p => p.IdProduct != null);
+                IEnumerable<Category> cat = await _categoryservices.GetByFilter(param);
+                gridProducts.ItemsSource = cat.Where(p => p.IdCategory != null);
                 UpdatePaging();
                 _util.Loading_spimmer(wloading, false);
 
@@ -208,13 +190,13 @@ namespace SIMA.Presentation.Views
         /// Filter the GridView given the Search text description
         /// </summary>
         /// <param name="param"></param>
-        public async void FilterbyText(ProductParam param)
+        public async void FilterbyText(CategoryParam param)
         {
             try
             {
                 _util.Loading_spimmer(wloading, true, 1000);
-                IEnumerable<ProductView> cat = await _productservices.GetByFilter(param);
-                gridProducts.ItemsSource = cat.Where(p => p.IdProduct != null);
+                IEnumerable<Category> cat = await _categoryservices.GetByFilter(param);
+                gridProducts.ItemsSource = cat.Where(p => p.IdCategory != null);
                 UpdatePaging();
                 _util.Loading_spimmer(wloading, false);
 
@@ -246,43 +228,37 @@ namespace SIMA.Presentation.Views
         /// Open the Edit Form for the Stock select in th gridview
         /// </summary>
         /// <param name="param"></param>
-        public void Edit(ProductParam param)
+        public void Edit(CategoryParam param)
         {
-            FormProduct.Visibility = Visibility.Visible;
-            txtIdProduct.Text = param.idProduct.ToString();
-            txtName.Text = param.name;
-            var itemCat = cmbCategory.Items.Cast<Category>().FirstOrDefault(p => p.IdCategory == param.idCategory);
-            cmbCategory.SelectedItem = itemCat;
-            txtPrice.Text = param.price.ToString(); 
+            FormCategory.Visibility = Visibility.Visible;
+            txtIdCategory.Text = param.IdCategory.ToString();
+            txtName.Text = param.Name;
         }
         #endregion
 
-
         #region Events
-        private async void btnsSaveProduct_Click(object sender, RoutedEventArgs e)
+        private async void btnsSaveCategory_Click(object sender, RoutedEventArgs e)
         {
-            _util.Loading_spimmer(wloading, true, 1000);
-            int? id = string.IsNullOrEmpty(txtIdProduct.Text) ? null : int.Parse(txtIdProduct.Text);
-            int? idcat = ((Category)cmbCategory.SelectedItem).IdCategory;
-            bool isset = await _productservices.Set(new Product
+            _util.Loading_spimmer(wloading, true,1000);
+            int? id = string.IsNullOrEmpty(txtIdCategory.Text) ? null : int.Parse(txtIdCategory.Text);
+            bool isset = await _categoryservices.Set(new Category
             {
-                IdProduct = id,
-                IdCategory = idcat,
-                Name = txtName.Text,
-                Price = decimal.Parse(txtPrice.Text) 
+                IdCategory = id
+                      ,
+                Name = txtName.Text
             });
 
             try
             {
                 if (isset)
                 {
-                    MessageBox.Show(this, "Product Sucessfully saved", "Save Product", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    MessageBox.Show(this, "Category Sucessfully saved", "Save Category", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                     ClearFilters();
                     Filter(activeFilters());
                 }
                 else
                 {
-                    MessageBox.Show(this, "Error Saving Product", "Save Product", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    MessageBox.Show(this, "Error Saving Category", "Save Category", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 }
                 _util.Loading_spimmer(wloading, false);
 
@@ -297,10 +273,7 @@ namespace SIMA.Presentation.Views
                 _util.Loading_spimmer(wloading, false);
                 MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
-        }
-        private void btnNewProduct_Click(object sender, RoutedEventArgs e)
-        {
-            Edit(new ProductParam { idProduct = null, name = null, idCategory = null,categorys = null});
+    
         }
         private void btnsClear_Click(object sender, RoutedEventArgs e)
         {
@@ -310,6 +283,36 @@ namespace SIMA.Presentation.Views
         {
             ClearFilters();
             this.Close();
+        }
+        private void btnUpdate_Click(object sender, RoutedEventArgs e)
+        {
+            Button btn = sender as Button;
+            Category rowData = (Category)btn.DataContext;
+            Edit(new CategoryParam { IdCategory = rowData.IdCategory, Name = rowData.Name });
+
+        }
+        private void btnRemove_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+        private void btnNewStock_Click(object sender, RoutedEventArgs e)
+        {
+            Edit(new CategoryParam { IdCategory = null, Name = null });
+        }
+        private async void txtSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            _cts?.Cancel();
+            _cts = new CancellationTokenSource();
+
+            try
+            {
+                await Task.Delay(300, _cts.Token);
+                FilterbyText(activeFilters());
+            }
+            catch (TaskCanceledException)
+            {
+                // Ignorar: se canceló porque el usuario siguió escribiendo
+            }
         }
         private void btnPrevious_Click(object sender, RoutedEventArgs e)
         {
@@ -323,92 +326,17 @@ namespace SIMA.Presentation.Views
         {
             if (!_isloaded)
             {
-                //_page.Offset = int.Parse(cmbLimitPage.SelectedItem.ToString());
+                _page.Offset = int.Parse(cmbLimitPage.SelectedItem.ToString());
                 _page.Limit = int.Parse(e.AddedItems[0].ToString());
                 Filter(activeFilters());
                 UpdatePaging();
             }
         }
-        private async void txtSearch_TextChanged(object sender, TextChangedEventArgs e)
-        {
-
-            _cts?.Cancel();
-            _cts = new CancellationTokenSource();
-
-            try
-            {
-                if (!_isloaded)
-                {
-                    await Task.Delay(300, _cts.Token);
-                    FilterbyText(activeFilters());
-                }
-            }
-            catch (TaskCanceledException)
-            {
-                // Ignorar: se canceló porque el usuario siguió escribiendo
-            }
-
-        }
-        private async void btnRemove_Click(object sender, RoutedEventArgs e)
-        {
-            MessageBoxResult result = MessageBox.Show(this, "Confirm remove Product ?", "Remove Product", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
-            try
-            {
-                if (result == MessageBoxResult.Yes)
-                {
-                    _util.Loading_spimmer(wloading, true, 1000);
-                    Button btn = sender as Button;
-                    ProductView rowData = (ProductView)btn.DataContext;
-                    bool valid = await _productservices.Delete(rowData.IdProduct) > 0;
-                    if (valid)
-                    {
-                        Filter(activeFilters());
-                        MessageBox.Show(this, "Product Succesfully removed", "Product Stock", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-                    else
-                    {
-                        MessageBox.Show(this, "Error removing the Product", "Product Stock", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-                    _util.Loading_spimmer(wloading, false, 100);
-
-                }
-            }
-            catch (Microsoft.Data.SqlClient.SqlException ex)
-            {
-                _util.Loading_spimmer(wloading, false);
-                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-            catch (Exception)
-            {
-                _util.Loading_spimmer(wloading, false);
-                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-
-
-
-
-        }
-        private void btnUpdate_Click(object sender, RoutedEventArgs e)
-        {
-            Button btn = sender as Button;
-            ProductView rowData = (ProductView)btn.DataContext;
-            Edit(new ProductParam 
-            { idProduct = rowData.IdProduct
-            , idCategory = rowData.IdCategory
-            , name = rowData.Name 
-            , categorys = rowData.Categorys
-            , price = rowData.Price
-            });
-
-        }
-        private void Window_Initialized(object sender, EventArgs e)
-        {
-            this.SupressEventComboBox();
-        }
-        private void Window_Closing(object sender, CancelEventArgs e)
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             e.Cancel = true;
             this.Visibility = Visibility.Hidden;
+
         }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -417,10 +345,12 @@ namespace SIMA.Presentation.Views
             UpdatePaging();
             _util.Loading_spimmer(wloading, false);
             this.SupressEventComboBox(false);
-
+        }
+        private void Window_Initialized(object sender, EventArgs e)
+        {
+            this.SupressEventComboBox();
         }
         #endregion
-
 
     }
 }

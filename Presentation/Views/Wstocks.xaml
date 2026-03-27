@@ -5,17 +5,31 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SIMA.Presentation.Views"
         mc:Ignorable="d"
-        Title="Stock Management" Height="400" Width="500"
+       Title="Stock Management" Height="750" Width="820"
         Background="#F5F5F5"
         WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize" Closing="Window_Closing">
+        ResizeMode="NoResize" Closing="Window_Closing" Loaded="Window_Loaded" Initialized="Window_Initialized">
 
     <Window.Resources>
         <!-- Style Shared -->
+
+        <Style x:Key="PanelFields" TargetType="StackPanel">
+            <Setter Property="Orientation" Value="Horizontal"/>
+            <Setter Property="Margin" Value="0,0,0,2"/>
+        </Style>
+
+
+        <Style x:Key="LabelFields" TargetType="Label">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Width" Value="Auto"/>
+        </Style>
+
+
         <Style x:Key="SectionBorder" TargetType="Border">
             <Setter Property="Background" Value="White"/>
             <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Padding" Value="15"/>
+            <Setter Property="Padding" Value="10"/>
             <Setter Property="BorderBrush" Value="#E0E0E0"/>
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
@@ -26,71 +40,354 @@
             <Setter Property="Foreground" Value="#2196F3"/>
             <Setter Property="Margin" Value="0,0,0,5"/>
         </Style>
+
+
+        <Style x:Key="TitleselectionBottom" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#2196F3"/>
+            <Setter Property="Margin" Value="0,0,0,5"/>
+        </Style>
+
+        <Style x:Key="NavigationButton" TargetType="Button">
+            <Setter Property="FontSize" Value="25"/>
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="Height" Value="35"/>
+            <Setter Property="Margin" Value="5,0,0,0"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="#333333"/>
+            <Setter Property="BorderBrush" Value="#CCCCCC"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <Style x:Key="NavigationText" TargetType="TextBlock">
+            <Setter Property="Margin" Value="10,0"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="#666666"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="ShortButtonPanel" TargetType="Button">
+            <Setter Property="Width" Value="100"/>
+            <Setter Property="Height" Value="35"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <Style x:Key="ShortButtonStackPanel" TargetType="StackPanel">
+            <Setter Property="Orientation" Value="Horizontal"/>
+            <Setter Property="VerticalAlignment" Value="Top"/>
+            <Setter Property="Margin" Value="0,0,0,0"/>
+            <Setter Property="Width" Value="Auto"/>
+            <Setter Property="Height" Value="43"/>
+        </Style>
+
+        <Style x:Key="GVText" TargetType="Border">
+            <Setter Property="Background" Value="#E0E0E0"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="8,3"/>
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="GVNumericBadge" TargetType="Border">
+            <Setter Property="Background" Value="#4CAF50"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Height" Value="25"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+        </Style>
+
     </Window.Resources>
+
 
     <Grid >
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" 
                 Style="{StaticResource SectionBorder}"
                 Margin="0,0,0,0">
 
-            <StackPanel Grid.Row="0" 
-                    VerticalAlignment="Center" Height="243">
-             
-              <TextBlock Text="STOCK MANAGMENT" 
-                          Style="{StaticResource Titleselection}"/>
+            <StackPanel Grid.Row="1" >
+                <StackPanel >
+                    <TextBlock Text="STOCK MANAGMENT" 
+                               Style="{StaticResource Titleselection}"
+                               TextAlignment="Center"/>
+                </StackPanel>
+                <StackPanel x:Name="FormBrand">
+                    <StackPanel  Style="{StaticResource PanelFields}">
+                        <Label Content="ID:" 
+                               Margin="5,0,37,0"
+                               Style="{StaticResource LabelFields}"/>
+                        <TextBox Name="txtIdStock" 
+                             Width="100"
+                             Height="25"    
+                             Background="#F0F0F0"
+                             IsReadOnly="True"/>
+                    </StackPanel>
+                    <StackPanel  Style="{StaticResource PanelFields}">
+                        <Label Content="Product:" 
+                               Margin="5,0,6,0"
+                               Style="{StaticResource LabelFields}"/>
+                        <ComboBox ItemsSource="{Binding Product}"
+                                  DisplayMemberPath="Name"
+                                  SelectedValuePath="IdProduct"
+                                  x:Name="cmbPropduct" 
+                                  Width="300" 
+                                  Height="25" 
+                                  FontSize="14"
+                                  BorderBrush="#CCCCCC"
+                                  SelectedIndex="0"
+                                  Cursor="Hand" 
+                                  SelectionChanged="cmbPropduct_SelectionChanged" />
 
+                        <Label Content="Brand :" 
+                               Margin="5,0,0,0"
+                               Style="{StaticResource LabelFields}"/>
+                        <ComboBox ItemsSource="{Binding Brand}"
+                                  DisplayMemberPath="Name"
+                                  SelectedValuePath="IdBrand"
+                                  x:Name="cmbBrand" 
+                                  Width="300" 
+                                  Height="25" 
+                                  FontSize="14"
+                                  BorderBrush="#CCCCCC"
+                                  SelectedIndex="0"
+                                  Cursor="Hand" />
 
-                <Label Content="Category:" FontWeight="SemiBold"/>
-                <ComboBox Name="cmbCategory" 
-                     Height="35" 
-                     Padding="5" 
-                     Margin="0,0,0,5" 
-                     SelectionChanged="cmbCategory_SelectionChanged"
-                     Cursor="Hand"/>
-
-                <Label Content="Product:" FontWeight="SemiBold" BorderThickness="0"/>
-                <ComboBox Name="cmbProduct" 
-                     Height="35" 
-                     Padding="5" 
-                     Margin="0,0,0,5"
-                     Cursor="Hand" SelectionChanged="cmbProduct_SelectionChanged"/>
-
-
-                <Label Content="Stock :" FontWeight="SemiBold"/>
-                <TextBox Name="txtStockActual" 
-                    Text="{Binding Stock, 
+                    </StackPanel>
+                    
+                    <StackPanel  Style="{StaticResource PanelFields}">
+                        <Label Content="Stock:" 
+                               Margin="5,0,19,0"
+                               Style="{StaticResource LabelFields}"/>
+                        <TextBox Text="{Binding StockCount, 
                             UpdateSourceTrigger=PropertyChanged, 
-                            ValidatesOnNotifyDataErrors=True}"      
-                     Height="35" 
-                     Padding="5" 
-                     Margin="0,0,0,2"
-                     Background="#F0F0F0">
-                    <TextBox.Resources>
-                        <ControlTemplate x:Key="ErrorTemplate">
-                            <StackPanel>
-                                <AdornedElementPlaceholder Name="placeholder"/>
-                                <TextBlock Text="{Binding ElementName=placeholder, 
-                           Path=AdornedElement.(Validation.Errors)[0].ErrorContent}" 
+                            ValidatesOnNotifyDataErrors=True}" 
+                                 Name="txtStock" 
+                                 Width="150"
+                                 Height="25"    
+                                 Background="#F0F0F0">
+                            <TextBox.Resources>
+                                <ControlTemplate x:Key="NameErrorTemplate">
+                                    <StackPanel>
+                                        <AdornedElementPlaceholder Name="placeholder"/>
+                                        <TextBlock Text="{Binding ElementName=placeholder, 
+                                            Path=AdornedElement.(Validation.Errors)[0].ErrorContent}" 
                            Foreground="Red" FontSize="10"/>
-                            </StackPanel>
-                        </ControlTemplate>
-                    </TextBox.Resources>
+                                    </StackPanel>
+                                </ControlTemplate>
+                            </TextBox.Resources>
+                            
+                            <Validation.ErrorTemplate>
+                                <StaticResource ResourceKey="NameErrorTemplate"/>
+                            </Validation.ErrorTemplate>
+                        </TextBox>
+                        <Button Name="btnsSaveBrand" 
+                                Content="&#x1F4BE; Save" 
+                                Width="60" 
+                                Height="25"
+                                 Margin="5,0"
+                                Background="#377d0c"
+                                Foreground="White"
+                                FontWeight="Bold"
+                                BorderThickness="0"
+                                Cursor="Hand" 
+                                Click="btnsSaveBrand_Click" />
+                    </StackPanel>
 
-                    <Validation.ErrorTemplate>
-                        <StaticResource ResourceKey="ErrorTemplate"/>
-                    </Validation.ErrorTemplate>
-                </TextBox>
+                </StackPanel>
             </StackPanel>
-
         </Border>
 
         <Border Grid.Row="1" 
+                Style="{StaticResource SectionBorder}" 
+                Margin="0,0,0,0">
+            <StackPanel Grid.Row="0" 
+                                Grid.Column="0"
+                                Orientation="Horizontal" Grid.ColumnSpan="4">
+                <TextBlock Text="Search:" 
+                           FontWeight="SemiBold" 
+                           Margin="0,0,29,0"
+                           Foreground="#333333"
+                           VerticalAlignment="Center"/>
+
+
+                <TextBox Name="txtSearch" 
+                         Width="430"
+                         Height="35" 
+                         Padding="5" 
+                         Background="#F0F0F0" 
+                         TextChanged="txtSearch_TextChanged"/>
+            </StackPanel>
+
+
+        </Border>
+
+        <Border Grid.Row="2" 
+                    Style="{StaticResource SectionBorder}"
+                    Margin="0,0,0,10">
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                <TextBlock x:Name="txtResults" 
+                               Text="📊 Show 12 Brand found" 
+                               FontSize="12" 
+                               FontWeight="SemiBold"
+                               Foreground="#333333"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="3" 
+                    Style="{StaticResource SectionBorder}"
+                    Padding="0">
+                  <ListView x:Name="gridBrands" 
+                            Background="Transparent"
+                            BorderThickness="0"
+                            ScrollViewer.VerticalScrollBarVisibility="Auto"
+                            Width="auto"
+                            Height="335"  
+                            Cursor="Hand"
+                            ItemsSource="{Binding StockProducts}"
+                            VerticalAlignment="Top">
+
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="ID" Width="80">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding IdStock}" 
+                                                   Margin="10,0" 
+                                                   VerticalAlignment="Center"
+                                                   FontWeight="SemiBold"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="Product" Width="250">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                    <Border Style="{StaticResource GVText}">
+                                            <TextBlock Text="{Binding Products}" 
+                                                       HorizontalAlignment="Center"
+                                                       FontSize="12"/>
+                                     </Border>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="Brand" Width="250">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                    <Border Style="{StaticResource GVText}">
+                                        <TextBlock Text="{Binding Brands}" 
+                                                       HorizontalAlignment="Center"
+                                                       FontSize="12"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="Stock" Width="120">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                    <Border Style="{StaticResource GVNumericBadge}" Width="50">
+                                        <TextBlock Text="{Binding Stock}" 
+                                                    Foreground="White" 
+                                                    FontWeight="Bold"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="Acciones" Width="auto">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" 
+                                                    HorizontalAlignment="Center"
+                                                    Margin="0,5">
+                                            <Button Content="✎" 
+                                                    Width="30" Height="30"
+                                                    Background="#2196F3"
+                                                    Foreground="White"
+                                                    BorderThickness="0"
+                                                    Cursor="Hand" Click="btnUpdate_Click"/>
+                                            <Button Content="🗑" 
+                                                    Width="30" Height="30"
+                                                    Background="#F44336"
+                                                    Foreground="White"
+                                                    BorderThickness="0"
+                                                    Cursor="Hand"
+                                                    Margin="5,0,0,0" Click="btnRemove_Click"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+        </Border>
+
+        <Border Grid.Row="4">
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="380" />
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <TextBlock Text="📌 ACCIONES" 
+                               Style="{StaticResource TitleselectionBottom}"
+                              Margin="0,0,0,0"
+                              VerticalAlignment="Center"/>
+
+                    <Button x:Name="btnPrevious" 
+                            Content="←"
+                            Style="{StaticResource NavigationButton}"
+                            Click="btnPrevious_Click"/>
+                    <TextBlock x:Name="txtoffset" Text=""  Visibility="Hidden"/>
+                    <TextBlock x:Name="txtTotal" Text="" Visibility="Hidden"/>
+
+
+                    <TextBlock x:Name="txtPaging" 
+                               Text="Page 1 de 5" 
+                               Style="{StaticResource NavigationText}"/>
+
+                    <Button x:Name="btnNext" 
+                            Content="→" 
+                            Style="{StaticResource NavigationButton}"
+                            Click="btnNext_Click"/>
+                </StackPanel>
+
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <TextBlock Text="Items per page:" 
+                               Style="{StaticResource NavigationText}"/>
+
+
+                    <ComboBox x:Name="cmbLimitPage" 
+                              Width="80" 
+                              Height="35"
+                              BorderBrush="#CCCCCC"
+                              Cursor="Hand"
+                              SelectedIndex="0" SelectionChanged="cmbLimitPage_SelectionChanged">
+                    </ComboBox>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="5" 
                 Style="{StaticResource SectionBorder}" 
                 Margin="0,0,0,0">
 
@@ -102,69 +399,48 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Row="1" 
-                    Orientation="Horizontal"
-                    VerticalAlignment="Top"
-                    Margin="0,0,0,0"
-                    Width="auto" 
-                    Height="53">
+                    Style="{StaticResource ShortButtonStackPanel}">
 
-                    <Button Name="btnSaveStock" 
-                    Content="✔️ Save" 
-                    Width="100" 
-                    Height="35"
-                    Margin="5,0,5,0"
-                    Background="#4CAF50"
-                    Foreground="White"
-                    FontWeight="Bold"
-                    BorderThickness="0"
-                    Cursor="Hand" Click="btnSaveStock_Click"/>
-
-                    <Button Name="btnNewStock" 
+                    <Button Name="btnNewBrand" 
                     Content="➕ New" 
-                    Width="60" 
-                    Height="35"
-                    Margin="0,0,70,0"
+                    Style="{StaticResource ShortButtonPanel}"        
+                    Margin="0,0,440,0"
                     Background="#5069AA"
                     Foreground="White"
-                    FontWeight="Bold"
-                    BorderThickness="0"
-                    Cursor="Hand" Click="btnNewStock_Click" />
+                    Click="btnNewBrand_Click" />
 
-                    <Button Name="btnClear" 
+                    <Button Name="btnsClear" 
                     Content="Clear" 
-                    Width="100" 
-                    Height="40"
-                    Cursor="Hand"
-                    Click="btnClear_Click"/>
+                    Style="{StaticResource ShortButtonPanel}"                                    
+                    Click="btnsClear_Click" />
 
-                    <Button Name="btnClose" 
+                    <Button Name="btnsClose" 
                     Content="Close" 
-                    Width="100" 
-                    Height="40"
+                    Style="{StaticResource ShortButtonPanel}"        
                     Margin="5,0,10,0"
-                    Cursor="Hand" Click="btnClose_Click"/>
+                    Click="btnsClose_Click" />
                 </StackPanel>
             </Grid>
         </Border>
-            <StackPanel>
-                <Ellipse x:Name="wloading" Width="50" Height="50" Stroke="DodgerBlue" StrokeThickness="5" 
+        <StackPanel>
+            <Ellipse x:Name="wloading" Width="50" Height="50" Stroke="DodgerBlue" StrokeThickness="5" 
          StrokeDashArray="3, 1" RenderTransformOrigin="0.5,0.5">
-                    <Ellipse.RenderTransform>
-                        <RotateTransform x:Name="noFreezeRotate" Angle="0" />
-                    </Ellipse.RenderTransform>
-                    <Ellipse.Triggers>
-                        <EventTrigger RoutedEvent="Loaded">
-                            <BeginStoryboard>
-                                <Storyboard>
-                                    <DoubleAnimation Storyboard.TargetName="noFreezeRotate"
+                <Ellipse.RenderTransform>
+                    <RotateTransform x:Name="noFreezeRotate" Angle="0" />
+                </Ellipse.RenderTransform>
+                <Ellipse.Triggers>
+                    <EventTrigger RoutedEvent="Loaded">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetName="noFreezeRotate"
                                      Storyboard.TargetProperty="Angle"
                                      From="0" To="360" Duration="0:0:1"
                                      RepeatBehavior="Forever" />
-                                </Storyboard>
-                            </BeginStoryboard>
-                        </EventTrigger>
-                    </Ellipse.Triggers>
-                </Ellipse>
-            </StackPanel>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                </Ellipse.Triggers>
+            </Ellipse>
+        </StackPanel>
     </Grid>
 </Window>

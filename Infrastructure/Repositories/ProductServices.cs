@@ -7,14 +7,46 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Markup;
+using SIMA.ExtensionsHelper;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
+using Dapper;
+using static Dapper.SqlMapper;
 
 namespace SIMA.Infrastructure.Repositories
 {
+
+    public class ProductParam
+    {
+        public int? idProduct { get; set; } = null;
+        public int? idCategory { get; set; } = null;
+        public string? name { get; set; } = null;
+        public string? categorys { get; set; } = null;
+        public decimal? price { get; set; } = null;
+        public int? offset { get; set; } = 0;
+        public int? limit { get; set; } = 10;
+
+
+         public ProductParam()
+        {
+        }
+
+        public ProductParam(Paging page)
+        {
+            offset = page.Offset;
+            limit = page.Limit;
+        }
+
+    }
+
+
     public class ProductServices : IContextservices<Product>
     {
+        private readonly IConfiguration _config;
         private JsonFile<Product> _ProductFile;
         private int? _currentIdSave;
         public int? CurrentIdSave { get => _currentIdSave; }
+
 
         public ProductServices()
         {
@@ -22,111 +54,85 @@ namespace SIMA.Infrastructure.Repositories
             _ProductFile.loadData();
 
         }
-
-        private IEnumerable<Product> getProduct(Product param)
+        public ProductServices(IConfiguration config)
         {
-            return _ProductFile.ServicesList.Where(p =>
-                               (param.IdProduct == null ||  p.IdProduct.Equals(param.IdProduct))
-                            && (param.Category == string.Empty || p.Category.Contains(param.Category, StringComparison.OrdinalIgnoreCase))
-                            && (param.Name == string.Empty || p.Name.Contains(param.Name, StringComparison.OrdinalIgnoreCase)));
+            _config = config;
+        }
+
+        private async Task<IEnumerable<ProductView>> getProduct(ProductParam param)
+        {
+            using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
+            {
+                return await conn.QueryAsync<ProductView>("[dbo].[getProduct]", param, commandType: System.Data.CommandType.StoredProcedure);
+            }
+
+       }
+        private async Task<int> setProduct(Product param)
+        {
+
+            using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
+            {
+                return await conn.ExecuteScalarAsync<int>("[dbo].[setProduct]", param, commandType: System.Data.CommandType.StoredProcedure);
+            }
+
         }
 
         #region Abstractions
-
-        public Task<IEnumerable<Product>> GetAll(Paging page)
+        public async Task<int> Add(Product entitiy)
         {
-            throw new NotImplementedException();
-        }
-        public async Task<IEnumerable<Product>> GetbyId(int id)
-        {
-            return await Task.Run(() => getProduct(new Product { IdProduct = id ,Category = string.Empty, Name = string.Empty }));
-        }
-        public async Task<int> Add(Product entity)
-        {
-            if (_ProductFile.ServicesList.Any(p => p.IdProduct == entity.IdProduct))
-            {
-                throw new InvalidOperationException($"The product exists with the ID {entity.IdProduct}");
-            }
-            else
-                entity.IdProduct = await GetNextId();
-
-            _currentIdSave = entity.IdProduct;
-            _ProductFile.ServicesList.Add(entity);
-            return await _ProductFile.SaveData() ? 1 : 0;
+            return await setProduct(entitiy);
         }
         public async Task<bool> Update(Product entity)
         {
-            var existingProduct = _ProductFile.ServicesList.FirstOrDefault(p => p.IdProduct == entity.IdProduct);
-
-            if (existingProduct == null)
-            {
-                throw new InvalidOperationException($"Product Not found with ID {entity.IdProduct}");
-            }
-
-            // Actualizar propiedades
-            _currentIdSave = entity.IdProduct;
-            existingProduct.Name = entity.Name;
-            existingProduct.Category = entity.Category;
-            existingProduct.Price = entity.Price;
-
-            return await _ProductFile.SaveData();
+            return (await setProduct(entity) > 0);
         }
         public async Task<int> Delete(int? id)
         {
-            var product = _ProductFile.ServicesList.FirstOrDefault(p => p.IdProduct == id);
-
-            if (product == null)
+            using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
             {
-                throw new InvalidOperationException($"Product Not found with ID  {id}");
+                return await conn.ExecuteScalarAsync<int>("[dbo].[delProduct]", new { IdProduct = id }, commandType: System.Data.CommandType.StoredProcedure);
             }
-
-            _ProductFile.ServicesList.Remove(product);
-            return await _ProductFile.SaveData() ? 1 : 0;
         }
+        public async Task<IEnumerable<ProductView>> GetViewAll(Paging page)
+        {
+            return await getProduct(new ProductParam(page));
+        }
+        public async Task<IEnumerable<Product>> GetAll(Paging page)
+        {
+            throw new NotImplementedException();
+        }
+        public async Task<IEnumerable<Product>> GetbyId(int? id)
+        {
+            throw new NotImplementedException();
+        }
+  
         public async Task<bool> Set(Product entity)
         {
-            var existingProduct = _ProductFile.ServicesList.FirstOrDefault(p => p.IdProduct == entity.IdProduct);
-            return ((existingProduct == null) ? (await Add(entity) > 0) : await Update(entity));
+            return (await setProduct(entity) > 0);
         }
+
         #endregion
 
         #region Util Function and Methods
-        public async Task<IEnumerable<Product>> GetByFilter(Product param)
+
+        public async Task<IEnumerable<ProductView>> GetByFilter(ProductParam param)
         {
-            return await Task.Run(() => getProduct(param));
-
-
+            return await getProduct(param);
         }
-        public async Task<int> GetTotalFound(Product param)
+        public async Task<int> GetTotalFound(ProductParam param)
         {
-            throw new NotImplementedException();
+            param.offset = 0;
+            param.limit = 1000;
+            IEnumerable<ProductView> res = await getProduct(param);
+            return res.Where(p => p.IdProduct != null).Count();
         }
         public async Task<decimal> GetTotalValue()
         {
             throw new NotImplementedException();
         }
-        public async Task<int?> GetNextId()
-        {
-            return await Task.Run(() => _ProductFile.ServicesList.Any() ? _ProductFile.ServicesList.Max(p => p.IdProduct) + 1 : 1);
-        }
-        public async Task<int> GetIdIndex(string category ,string name)
-        {
-            int id = 0;
-            int retid = 0;
-            await Task.Run(() =>
-            {
-            IEnumerable<Product> prod = getProduct(new Product { IdProduct = null, Category = category, Name = string.Empty });
-            foreach (var item in prod)
-                {
-                    id++;
-                    if (name.Equals(item.Name))
-                    {
-                        retid = id;
-                    }
-                }
-            });
-            return retid;
-        }
+
+
+
         #endregion
 
 

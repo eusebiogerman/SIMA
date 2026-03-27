@@ -10,7 +10,7 @@ namespace SIMA.Infrastructure.Repositories
     public interface IContextservices<T> 
     {
 
-        Task<IEnumerable<T>> GetbyId(int id);
+        Task<IEnumerable<T>> GetbyId(int? id);
 
         Task<IEnumerable<T>> GetAll(Paging page);
 

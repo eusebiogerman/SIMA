@@ -1,7 +1,11 @@
-﻿using SIMA.Domain.Models;
+﻿using Dapper;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
+using SIMA.Domain.Models;
 using SIMA.ExtensionsHelper;
 using SIMA.Helper;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,8 +13,30 @@ using System.Threading.Tasks;
 
 namespace SIMA.Infrastructure.Repositories
 {
+
+    public class CategoryParam
+    {
+        public int? IdCategory { get; set; } = null;
+        public string? Name { get; set; } = null;
+        public int? offset { get; set; } = 0;
+        public int? limit { get; set; } = 10;
+
+
+        public CategoryParam()
+        {
+        }
+
+        public CategoryParam(Paging page)
+        {
+            offset = page.Offset;
+            limit = page.Limit;
+        }
+
+    }
+
     public class CategoryServices : IContextservices<Category>
     {
+        private readonly IConfiguration _config;
         private JsonFile<StockProduct> _stockProductFile;
 
         public CategoryServices()
@@ -19,80 +45,80 @@ namespace SIMA.Infrastructure.Repositories
             _stockProductFile.loadData();
         }
 
-        #region Abstractions
-        public Task<int> Add(Category entitiy)
-        {
-            throw new NotImplementedException();
+        public CategoryServices(IConfiguration config) {
+            _config = config;
+            _stockProductFile = new JsonFile<StockProduct>();
+            _stockProductFile.loadData();
+        }
 
-        }
-        public Task<bool> Update(Category entitiy)
+
+        private async Task<IEnumerable<Category>> getCategory(CategoryParam param)
         {
-            throw new NotImplementedException();
+            using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
+            {
+                return await conn.QueryAsync<Category>("[dbo].[getCategory]", param, commandType: System.Data.CommandType.StoredProcedure);
+            }
         }
-        public Task<int> Delete(int? id)
+
+        private async Task<int> setCategory(Category param) {
+
+            using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
+            {
+                return await conn.ExecuteScalarAsync<int>("[dbo].[setCategory]", param, commandType: System.Data.CommandType.StoredProcedure);
+            }
+           
+        }
+
+        #region Abstractions
+        public async Task<int> Add(Category entitiy)
         {
-            throw new NotImplementedException();
+            return await setCategory(entitiy);
+        }
+        public async Task<bool> Update(Category entitiy)
+        {
+            return (await setCategory(entitiy) > 0);
+        }
+        public async Task<int> Delete(int? id)
+        {
+            using var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
+            return await conn.ExecuteScalarAsync<int>("[dbo].[delCategory]", new { IdCategory = id } , commandType: System.Data.CommandType.StoredProcedure);
         }
         public async Task<IEnumerable<Category>> GetAll(Paging page)
         {
-            int id = 0;
-            List<Category> ls = new List<Category>();
-
-            await Task.Run(() =>
-            {
-                List<string> distc = _stockProductFile.ServicesList
-                 .Select(p => p.Category)
-                 .Distinct()
-                 .OrderBy(c => c)
-                 .ToList();
-
-                ls.Add(new Category { Idcategory = id++ , Name =  "".defaultCategory() });
-
-                foreach (var item in distc)
-                {
-                    var cat = new Category();
-                    cat.Idcategory = id++;
-                    cat.Name = item;
-                    ls.Add(cat);
-                }
-            });
+            return await getCategory(new CategoryParam(page));
+        }
+        public async Task<IEnumerable<Category>> GetbyId(int? id)
+        {
+            return await getCategory(new CategoryParam { IdCategory = id });
+        }
+        public async Task<bool> Set(Category entitiy)
+        {
+          return (await setCategory(entitiy) > 0);
             
-            return ls;
-
-        }
-        public Task<IEnumerable<Category>> GetbyId(int id)
-        {
-            throw new NotImplementedException();
-        }
-        public Task<bool> Set(Category entitiy)
-        {
-            throw new NotImplementedException();
-        }
-        public async Task<int> GetIdIndex(string category)
-        {
-            int id = 0;
-            int retid = 0;
-            List<Category> ls = new List<Category>();
-
-            await Task.Run(() =>
-            {
-                List<string> distc = _stockProductFile.ServicesList
-                 .Select(p => p.Category)
-                 .Distinct()
-                 .OrderBy(c => c)
-                 .ToList();
-
-                foreach (var item in distc)
-                {
-                    id++;
-                    if (category.Equals(item)) {
-                        retid = id ;
-                    }
-                }
-            });
-            return retid;
         }
         #endregion
 
+
+        #region Util Function and Methods
+        public async Task<IEnumerable<Category>> GetByFilter(CategoryParam param)
+        {
+            return await getCategory(param);
+
+        }
+        public async Task<int> GetTotalFound(CategoryParam param)
+        {
+            param.offset = 0;
+            param.limit  = 1000;
+            IEnumerable<Category> res = await getCategory(param);
+            return res.Where(p=> p.IdCategory != null).Count();
+        }
+
+        public async Task<int?> GetNextId()
+        {
+            throw new NotImplementedException();
+        }
+
+
+        #endregion
     }
 }

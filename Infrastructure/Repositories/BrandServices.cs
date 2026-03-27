@@ -6,68 +6,128 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
+using Dapper;
 
 namespace SIMA.Infrastructure.Repositories
 {
+    public class BrandParam
+    {
+        public int? idBrand { get; set; } = null;
+        public int? idProduct { get; set; } = null;
+        public int? idCategory { get; set; } = null;
+        public string? name { get; set; } = null;
+        public string? products { get; set; } = null;
+        public string? categorys { get; set; } = null;
+        public decimal? price { get; set; } = null;
+        public int? offset { get; set; } = 0;
+        public int? limit { get; set; } = 10;
+
+
+        public BrandParam()
+        {
+        }
+
+        public BrandParam(Paging page)
+        {
+            offset = page.Offset;
+            limit = page.Limit;
+        }
+
+    }
+
+
     public class BrandServices : IContextservices<Brand>
     {
-        private JsonFile<StockProduct> _stockProductFile;
+        private readonly IConfiguration _config;
+        private JsonFile<Product> _ProductFile;
+        private int? _currentIdSave;
+        public int? CurrentIdSave { get => _currentIdSave; }
 
-        public BrandServices() {
-            _stockProductFile = new JsonFile<StockProduct>();
-            _stockProductFile.loadData();
-        }
 
-        public Task<int> Add(Brand entitiy)
+        public BrandServices()
         {
-            throw new System.NotImplementedException();
-        }
+            _ProductFile = new JsonFile<Product>("Brands.json");
+            _ProductFile.loadData();
 
-        public Task<int> Delete(int? id)
+        }
+        public BrandServices(IConfiguration config)
         {
-            throw new System.NotImplementedException();
+            _config = config;
         }
 
+        private async Task<IEnumerable<BrandView>> getBrand(BrandParam param)
+        {
+            using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
+            {
+                return await conn.QueryAsync<BrandView>("[dbo].[getBrand]", param, commandType: System.Data.CommandType.StoredProcedure);
+            }
+
+        }
+        private async Task<int> setBrand(Brand param)
+        {
+
+            using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
+            {
+                return await conn.ExecuteScalarAsync<int>("[dbo].[setBrand]", param, commandType: System.Data.CommandType.StoredProcedure);
+            }
+
+        }
+
+        #region Abstractions
+        public async Task<int> Add(Brand entitiy)
+        {
+            return await setBrand(entitiy);
+        }
+        public async Task<bool> Update(Brand entity)
+        {
+            return (await setBrand(entity) > 0);
+        }
+        public async Task<bool> Set(Brand entity)
+        {
+            return (await setBrand(entity) > 0);
+        }
+        public async Task<int> Delete(int? id)
+        {
+            using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
+            {
+                return await conn.ExecuteScalarAsync<int>("[dbo].[delBrand]", new { IdProduct = id }, commandType: System.Data.CommandType.StoredProcedure);
+            }
+        }
+        public async Task<IEnumerable<BrandView>> GetViewAll(Paging page)
+        {
+            return await getBrand(new BrandParam(page));
+        }
         public async Task<IEnumerable<Brand>> GetAll(Paging page)
         {
-            int id = 0;
-            List<Brand> ls = new List<Brand>();
-
-            await Task.Run(() =>
-            {
-                List<string> distc = _stockProductFile.ServicesList
-                 .Select(p => p.Name)
-                 .Distinct()
-                 .OrderBy(c => c)
-                 .ToList();
-
-                ls.Add(new Brand { IdBrand = id++, Name = "" });
-
-                foreach (var item in distc)
-                {
-                    var cat = new Brand();
-                    cat.IdBrand = id++;
-                    cat.Name = item;
-                    ls.Add(cat);
-                }
-            });
-
-            return ls;
+            throw new NotImplementedException();
         }
-
-        public Task<IEnumerable<Brand>> GetbyId(int? id)
+        public async Task<IEnumerable<Brand>> GetbyId(int? id)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
+        
 
-        public Task<bool> Set(Brand entitiy)
-        {
-            throw new System.NotImplementedException();
-        }
+        #endregion
 
-        public Task<bool> Update(Brand entitiy)
+        #region Util Function and Methods
+
+        public async Task<IEnumerable<BrandView>> GetByFilter(BrandParam param)
         {
-            throw new System.NotImplementedException();
+            return await getBrand(param);
         }
+        public async Task<int> GetTotalFound(BrandParam param)
+        {
+            param.offset = 0;
+            param.limit = 1000;
+            IEnumerable<BrandView> res = await getBrand(param);
+            return res.Where(p => p.IdBrand != null).Count();
+        }
+        public async Task<decimal> GetTotalValue()
+        {
+            throw new NotImplementedException();
+        }
+        #endregion
     }
 }
