@@ -4,6 +4,17 @@
              xmlns:local="clr-namespace:SIMA"
              StartupUri="/Presentation/MainWindow.xaml">
     <Application.Resources>
-         
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles/Controls/Buttons.xaml"/>
+                <ResourceDictionary Source="Styles/Controls/TextBlocks.xaml"/>
+                <ResourceDictionary Source="Styles/Controls/StackPanels.xaml"/>
+                <ResourceDictionary Source="Styles/Controls/Borders.xaml"/>
+                <ResourceDictionary Source="Styles/Controls/Labels.xaml"/>
+                <ResourceDictionary Source="Styles/Controls/ComboBoxs.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Application.Resources>
+
 </Application>
+

@@ -39,6 +39,7 @@ namespace SIMA.Presentation.Views
         private IConfiguration _config;
         private bool _isloaded;
         private bool _editmode = false;
+        private StockProductView _rowData;
 
         public Wstocks()
         {
@@ -62,27 +63,8 @@ namespace SIMA.Presentation.Views
             _util = new Util();
             _config = _util.CustomConfiguration();
             this.DataContext = new StockViewModel(_page, _config);
-
-            _util.Loading_spimmer(wloading, true);
             _stockservices = new StockProductServices(_config);
             _brandsrervices = new BrandServices(_config);
-            this.SupressEventComboBox();
-            FillLimitPageVal();
-
-            if (rowData != null) {
-                _editmode = true;
-                Edit(new StockProductParam
-                {
-                    idStock = rowData.IdStock,
-                    idProduct = rowData.IdProduct,
-                    idBrand = rowData.IdBrand,
-                    stock = rowData.Stock,
-                });
-
-            }
-            _util.Loading_spimmer(wloading, false);
-
-
         } 
 
         /// <summary>
@@ -102,8 +84,8 @@ namespace SIMA.Presentation.Views
         /// <returns></returns>
         public string getResultMsgAsync(int total)
         {
-            txtTotal.Text = total.ToString();
-            return $"📊 Show {total} Brands found";
+            pageControl.TotalFound = total;
+            return $"📊 Show {total} products found";
         }
         /// <summary>
         /// Update the Paging Labels given the cuurent Offset and Limit Values
@@ -113,8 +95,8 @@ namespace SIMA.Presentation.Views
         {
             if (_page.isvalidPaging())
             {
-                txtTotal.Text = total.ToString();
-                txtPaging.Text = $"Page {_page.Pagenumber.ToString()} of {_page.TotalPage.ToString()}";
+                pageControl.TotalFound = total;
+                pageControl.PageNumber = _page.Pagenumber;
             }
         }
         /// <summary>
@@ -293,8 +275,12 @@ namespace SIMA.Presentation.Views
         public async void FillLimitPageVal()
         {
             IEnumerable<string> lim = await _page.GetLimitPaging();
-            cmbLimitPage.ItemsSource = lim;
-            _page.Limit = int.Parse(cmbLimitPage.SelectedItem.ToString());
+            pageControl.SetItemsPerPageSource(lim);
+            var selected = pageControl.GetSelectedItemsPerPage();
+            var cmblimit = selected != null
+                ? int.Parse(selected.ToString())
+                : _page.DefaulLimit;
+            _page.Limit = cmblimit;
         }
         /// <summary>
         /// Open the Edit Form for the Stock select in th gridview
@@ -369,19 +355,19 @@ namespace SIMA.Presentation.Views
             ClearFilters();
             this.Close();
         }
-        private void btnPrevious_Click(object sender, RoutedEventArgs e)
+        private void PagePrevious_Click(object sender, RoutedEventArgs e)
         {
             NavigationGrid(Paging.DIRECTION.previous);
         }
-        private void btnNext_Click(object sender, RoutedEventArgs e)
+        private void PageNext_Click(object sender, RoutedEventArgs e)
         {
             NavigationGrid(Paging.DIRECTION.next);
         }
-        private void cmbLimitPage_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
         {
             if (!_isloaded)
             {
-                _page.Limit = int.Parse(e.AddedItems[0].ToString());
+                _page.Limit = (int)pageControl.GetSelectedItemsPerPage();
                 Filter(activeFilters());
                 UpdatePaging();
             }
@@ -494,8 +480,23 @@ namespace SIMA.Presentation.Views
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             _util.Loading_spimmer(wloading, true);
-            _page.Offset = int.Parse(cmbLimitPage.SelectedItem != null ? cmbLimitPage.SelectedItem.ToString() : _page.DefaulOffset.ToString());
+            _page.Offset = (int?)pageControl.GetSelectedItemsPerPage() ?? _page.DefaulOffset;
             UpdatePaging();
+            this.SupressEventComboBox();
+            FillLimitPageVal();
+
+            if (_rowData != null)
+            {
+                _editmode = true;
+                Edit(new StockProductParam
+                {
+                    idStock = _rowData.IdStock,
+                    idProduct = _rowData.IdProduct,
+                    idBrand = _rowData.IdBrand,
+                    stock = _rowData.Stock,
+                });
+
+            }
             _util.Loading_spimmer(wloading, false);
             this.SupressEventComboBox(false);
 

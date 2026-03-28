@@ -13,6 +13,7 @@ using System.Linq;
 using System.Windows.Media;
 using Microsoft.Extensions.Configuration;
 using System.Xml.Linq;
+using SIMA.Templates;
 
 namespace SIMA.Presentation
 {
@@ -43,13 +44,8 @@ namespace SIMA.Presentation
             var Vm =  new MainViewModel(_page, _config);
             this.DataContext = (MainViewModel)Vm;
             Vm.ShowErrorFromModel += Vm_ShowErrorFromModel;
-
-      
             _stockservices = new StockProductServices(_config);
             _categoryservices = new CategoryServices(_config);
-            _util.Loading_spimmer(wloading, true);
-            this.SupressEventComboBox();
-            FillLimitPageVal();
 
         }
 
@@ -70,7 +66,7 @@ namespace SIMA.Presentation
         /// <returns></returns>
         public string getResultMsgAsync(int total)
         {
-            txtTotal.Text = total.ToString();
+            pageControl.TotalFound = total;
             return $"📊 Show {total} products found";
         }
         /// <summary>
@@ -81,8 +77,8 @@ namespace SIMA.Presentation
         {
             if (_page.isvalidPaging())
             {
-                txtTotal.Text = total.ToString();
-                txtPaging.Text = $"Page {_page.Pagenumber.ToString()} de {_page.TotalPage.ToString()}";
+                pageControl.TotalFound = total;
+                pageControl.PageNumber = _page.Pagenumber;
             }
         }
         /// <summary>
@@ -95,7 +91,7 @@ namespace SIMA.Presentation
             if (_page.isvalidPaging())
             {
                 _page.movePage(direction);
-                // txtoffset.Text = _page.Offset.ToString();
+                pageControl.ItemsPerPage = _page.Offset;
                 Filter(activeFilters());
             }
 
@@ -280,8 +276,12 @@ namespace SIMA.Presentation
         public async void FillLimitPageVal()
         {
             IEnumerable<string> lim = await _page.GetLimitPaging();
-            cmbLimitPage.ItemsSource = lim;
-            _page.Limit = int.Parse(cmbLimitPage.SelectedItem.ToString());
+            pageControl.SetItemsPerPageSource(lim);
+            var selected = pageControl.GetSelectedItemsPerPage();
+            var cmblimit = selected != null
+                ? int.Parse(selected.ToString())
+                : _page.DefaulLimit;
+            _page.Limit = cmblimit;
 
         }
         /// <summary>
@@ -319,17 +319,14 @@ namespace SIMA.Presentation
 
             }
         }
-        private void cmbLimitPage_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
         {
             if (!_isloaded)
             {
-                _page.Offset = int.Parse(cmbLimitPage.SelectedItem.ToString());
-                _page.Limit = int.Parse(e.AddedItems[0].ToString());
+                _page.Limit = (int)pageControl.GetSelectedItemsPerPage();
                 Filter(activeFilters());
                 UpdatePaging();
             }
-
-
         }
         private void btnClear_Click(object sender, RoutedEventArgs e)
         {
@@ -389,11 +386,11 @@ namespace SIMA.Presentation
             _wcategory.SupressEventComboBox(false);
 
         }
-        private void btnPrevious_Click(object sender, RoutedEventArgs e)
+        private void PagePrevious_Click(object sender, RoutedEventArgs e)
         {
             NavigationGrid(Paging.DIRECTION.previous);
         }
-        private void btnNext_Click(object sender, RoutedEventArgs e)
+        private void PageNext_Click(object sender, RoutedEventArgs e)
         {
             NavigationGrid(Paging.DIRECTION.next);
 
@@ -466,7 +463,9 @@ namespace SIMA.Presentation
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             _util.Loading_spimmer(wloading,true);
-            _page.Offset = int.Parse(cmbLimitPage.SelectedItem != null ? cmbLimitPage.SelectedItem.ToString() : _page.DefaulOffset.ToString());
+            _page.Offset =  (int?)pageControl.GetSelectedItemsPerPage() ?? _page.DefaulOffset;
+            this.SupressEventComboBox();
+            FillLimitPageVal();
             UpdatePaging();
             _util.Loading_spimmer(wloading, false);
             this.SupressEventComboBox(false);
