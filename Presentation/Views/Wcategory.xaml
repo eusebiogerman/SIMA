@@ -3,78 +3,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:SIMA.Presentation.Views"
+        xmlns:ctrl="clr-namespace:SIMA.Templates"
         mc:Ignorable="d"
-        Title="Category Management" Height="750" Width="520"
+        Title="Category Management" 
+        Height="710" 
+        Width="560"
         Background="#F5F5F5"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize" Closing="Window_Closing" Loaded="Window_Loaded" Initialized="Window_Initialized">
-
-    <Window.Resources>
-        <!-- Style Shared -->
-        <Style x:Key="SectionBorder" TargetType="Border">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Padding" Value="10"/>
-            <Setter Property="BorderBrush" Value="#E0E0E0"/>
-            <Setter Property="BorderThickness" Value="1"/>
-        </Style>
-
-        <Style x:Key="Titleselection" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="16"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="#2196F3"/>
-            <Setter Property="Margin" Value="0,0,0,5"/>
-        </Style>
-
-
-        <Style x:Key="TitleselectionBottom" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="8"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="#2196F3"/>
-            <Setter Property="Margin" Value="0,0,0,5"/>
-        </Style>
-
-        <Style x:Key="NavigationButton" TargetType="Button">
-            <Setter Property="FontSize" Value="25"/>
-            <Setter Property="Width" Value="30"/>
-            <Setter Property="Height" Value="35"/>
-            <Setter Property="Margin" Value="5,0,0,0"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="Foreground" Value="#333333"/>
-            <Setter Property="BorderBrush" Value="#CCCCCC"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-
-        <Style x:Key="NavigationText" TargetType="TextBlock">
-            <Setter Property="Margin" Value="10,0"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="Foreground" Value="#666666"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
-
-        <Style x:Key="ShortButtonPanel" TargetType="Button">
-            <Setter Property="Width" Value="100"/>
-            <Setter Property="Height" Value="35"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-
-        <Style x:Key="ShortButtonStackPanel" TargetType="StackPanel">
-            <Setter Property="Orientation" Value="Horizontal"/>
-            <Setter Property="VerticalAlignment" Value="Top"/>
-            <Setter Property="Margin" Value="0,0,0,0"/>
-            <Setter Property="Width" Value="Auto"/>
-            <Setter Property="Height" Value="43"/>
-        </Style>
-
-    </Window.Resources>
-
 
     <Grid >
         <Grid.RowDefinitions>
@@ -111,7 +47,6 @@
                         <TextBox Text="{Binding IdCategory}"    
                      Name="txtIdCategory" 
                      Width="100"
-                     Height="35" 
                      Padding="2" 
                      Background="#F0F0F0"/>
 
@@ -120,7 +55,6 @@
                             ValidatesOnNotifyDataErrors=True}"    
                     Name="txtName" 
                      Width="320"
-                     Height="35" 
                      Padding="5" 
                      Background="#F0F0F0">
                             <TextBox.Resources>
@@ -139,26 +73,20 @@
                             </Validation.ErrorTemplate>
                         </TextBox>
                         <Button Name="btnsSaveCategory" 
-                    Content="&#x1F4BE; Save" 
-                    Width="60" 
-                    Height="35"
-                    Background="#377d0c"
-                    Foreground="White"
-                    FontWeight="Bold"
-                    BorderThickness="0"
-                    Cursor="Hand" Click="btnsSaveCategory_Click" />
+                                Content="&#x1F4BE; Save" 
+                                Style="{StaticResource CommunButton}"
+                                Background="#377d0c"
+                                Foreground="White"
+                                Click="btnsSaveCategory_Click" />
 
                     </StackPanel>
                 </StackPanel>
             </StackPanel>
         </Border>
-
         <Border Grid.Row="1" 
                 Style="{StaticResource SectionBorder}" 
                 Margin="0,0,0,0">
-            <StackPanel Grid.Row="0" 
-                                Grid.Column="0"
-                                Orientation="Horizontal" Grid.ColumnSpan="4">
+            <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Search:" 
                            FontWeight="SemiBold" 
                            Margin="0,0,10,0"
@@ -178,7 +106,6 @@
 
 
         </Border>
-
         <Border Grid.Row="2" 
                     Style="{StaticResource SectionBorder}"
                     Margin="0,0,0,10">
@@ -191,7 +118,6 @@
                                Foreground="#333333"/>
             </StackPanel>
         </Border>
-
         <Border Grid.Row="3" 
                     Style="{StaticResource SectionBorder}"
                     Padding="0">
@@ -233,22 +159,11 @@
                         <GridViewColumn Header="Action" Width="auto">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" 
-                                                    HorizontalAlignment="Center"
-                                                    Margin="0,5">
-                                        <Button Content="✎" 
-                                                    Width="30" Height="30"
-                                                    Background="#2196F3"
-                                                    Foreground="White"
-                                                    BorderThickness="0"
-                                                    Cursor="Hand" Click="btnUpdate_Click"/>
-                                        <Button Content="🗑" 
-                                                    Width="30" Height="30"
-                                                    Background="#F44336"
-                                                    Foreground="White"
-                                                    BorderThickness="0"
-                                                    Cursor="Hand"
-                                                    Margin="5,0,0,0" Click="btnRemove_Click"/>
+                                    <StackPanel Style="{StaticResource GridButtonPanel}">
+                                        <Button Style="{StaticResource GridButtonEdit}"
+                                                        Click="btnUpdate_Click"/>
+                                        <Button Style="{StaticResource GridButtonRemove}"
+                                                        Click="btnRemove_Click"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
@@ -257,89 +172,47 @@
                 </ListView.View>
             </ListView>
         </Border>
-
-        <Border Grid.Row="4">
-
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="100" />
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <StackPanel Grid.Column="0" Orientation="Horizontal">
-                    <TextBlock Text="📌 ACCIONES" 
-                               Style="{StaticResource TitleselectionBottom}"
-                              Margin="0,0,0,0"
-                              VerticalAlignment="Center"/>
-
-                    <Button x:Name="btnPrevious" 
-                            Content="←"
-                            Style="{StaticResource NavigationButton}"
-                            Click="btnPrevious_Click"/>
-                    <TextBlock x:Name="txtoffset" Text=""  Visibility="Hidden"/>
-                    <TextBlock x:Name="txtTotal" Text="" Visibility="Hidden"/>
-
-
-                    <TextBlock x:Name="txtPaging" 
-                               Text="Page 1 de 5" 
-                               Style="{StaticResource NavigationText}"/>
-
-                    <Button x:Name="btnNext" 
-                            Content="→" 
-                            Style="{StaticResource NavigationButton}"
-                            Click="btnNext_Click"/>
-                </StackPanel>
-
-                
-                <StackPanel Grid.Column="2" Orientation="Horizontal">
-                    <TextBlock Text="Items per page:" 
-                               Style="{StaticResource NavigationText}"/>
-
-
-                    <ComboBox x:Name="cmbLimitPage" 
-                              Width="80" 
-                              Height="35"
-                              BorderBrush="#CCCCCC"
-                              Cursor="Hand"
-                              SelectedIndex="0" SelectionChanged="cmbLimitPage_SelectionChanged">
-                    </ComboBox>
-                </StackPanel>
-            </Grid>
+        <Border Grid.Row="4" >
+            <ctrl:PageNavigation 
+                x:Name="pageControl"
+                PageComboboxChanged ="PageNavigation_SelectionChanged"
+                PreviousClick ="PagePrevious_Click"
+                NextClick="PageNext_Click"/>
         </Border>
-
         <Border Grid.Row="5" 
                 Style="{StaticResource SectionBorder}" 
                 Margin="0,0,0,0">
-
-            <Grid Grid.Row="1">
+            <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Row="1" 
+                <StackPanel Grid.Column="0" 
                     Style="{StaticResource ShortButtonStackPanel}">
 
-                   <Button Name="btnNewStock" 
-                    Content="➕ New" 
-                    Style="{StaticResource ShortButtonPanel}"        
-                    Margin="0,0,167,0"
-                    Background="#5069AA"
-                    Foreground="White"
-                    Click="btnNewStock_Click" />
+                    <Button Name="btnNewStock" 
+                            Content="➕ New" 
+                            Style="{StaticResource ShortButtonPanel}"        
+                            Margin="0,0,0,0"
+                            Background="#5069AA"
+                            Foreground="White"                    
+                            Click="btnNewStock_Click" />
+                </StackPanel>
 
+                <StackPanel Grid.Column="1" 
+                            Orientation="Horizontal" 
+                            HorizontalAlignment="Right">
                     <Button Name="btnsClear" 
-                    Content="Clear" 
-                    Style="{StaticResource ShortButtonPanel}"                                    
-                    Click="btnsClear_Click" />
+                            Content="Clear" 
+                            Style="{StaticResource ShortButtonPanel}"
+                            Click="btnsClear_Click" />
 
                     <Button Name="btnsClose" 
-                    Content="Close" 
-                    Style="{StaticResource ShortButtonPanel}"        
-                    Margin="5,0,10,0"
-                    Click="btnsClose_Click" />
+                            Content="Close" 
+                            Style="{StaticResource ShortButtonPanel}"  
+                            Margin="5,0,10,0"
+                            Click="btnsClose_Click" />
                 </StackPanel>
             </Grid>
         </Border>
