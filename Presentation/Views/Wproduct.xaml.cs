@@ -416,6 +416,11 @@ namespace SIMA.Presentation.Views
             _util.Loading_spimmer(wloading, false);
             this.SupressEventComboBox(false);
         }
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            cmbCategory.SelectedIndex = 0;
+
+        }
         #endregion
 
 
