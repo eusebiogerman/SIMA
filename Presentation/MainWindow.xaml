@@ -99,16 +99,6 @@
                 </StackPanel>
 
                <StackPanel>
-                    <Button x:Name="btnNewStock" 
-                            Style="{StaticResource MenuButtonStyle}" 
-                            Cursor="Hand"
-                            Tag="Stock"
-                            Click="btnNewStock_Click">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="📊" Margin="0,0,10,0"/>
-                            <TextBlock Text="Stock"/>
-                        </StackPanel>
-                    </Button>
                     <Button x:Name="btnCategory" 
                             Style="{StaticResource MenuButtonStyle}" 
                             Tag="Category"
@@ -137,6 +127,16 @@
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="💸" Margin="0,0,10,0"/>
                             <TextBlock Text="Brand"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="btnNewStock" 
+                            Style="{StaticResource MenuButtonStyle}" 
+                            Cursor="Hand"
+                            Tag="Stock"
+                            Click="btnNewStock_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📊" Margin="0,0,10,0"/>
+                            <TextBlock Text="Stock"/>
                         </StackPanel>
                     </Button>
                     <Button Style="{StaticResource MenuButtonStyle}" Tag="Reportes">
