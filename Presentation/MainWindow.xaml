@@ -137,6 +137,12 @@
                                   BorderBrush="#CCCCCC"
                                   SelectedIndex="0"
                                   Cursor="Hand" SelectionChanged="cmbCategory_SelectionChanged"/>
+
+                                    <!--<ctrl:LovTextBox ItemsSource="{Binding Category}"
+                                                     SelectedItem="{Binding Idcategory}"
+                                                     Text="{Binding Name}" 
+                                                     Width="300"/>-->
+
                                 </StackPanel>
                                 <StackPanel Grid.Row="1" 
                                 Grid.Column="0" 

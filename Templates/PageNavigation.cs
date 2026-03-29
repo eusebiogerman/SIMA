@@ -178,10 +178,5 @@ namespace SIMA.Templates
         }
         #endregion
 
-
-
-
-
-
     }
 }
