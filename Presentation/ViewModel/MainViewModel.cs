@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using SIMA.Templates;
 
 namespace SIMA.Presentation.ViewModel
 {
@@ -18,6 +19,9 @@ namespace SIMA.Presentation.ViewModel
         private StockProductServices _stockservices;
         private CategoryServices _categoryservices;
         private ObservableCollection<Category> _category;
+
+        private ObservableCollection<LovObject> _lovcat;
+
         private Paging _page;
         private IConfiguration _config;
         private bool _isSupressed;
@@ -31,6 +35,13 @@ namespace SIMA.Presentation.ViewModel
             get => _category;
             set { _category = value; OnPropertyChanged(nameof(Category)); }
         }
+        public ObservableCollection<LovObject> Lovcat
+        {
+            get => _lovcat;
+            set { _lovcat = value; OnPropertyChanged(nameof(Lovcat)); }
+        }
+
+
         public bool IsSupressed { get => _isSupressed; set => _isSupressed = value; }
 
         public event Action<string> ShowErrorFromModel;
@@ -59,6 +70,7 @@ namespace SIMA.Presentation.ViewModel
             _categoryservices = new CategoryServices(_config);
             FillCat();
             FillStock();
+            FillLov();
             _isSupressed = false;
 
         }
@@ -73,7 +85,7 @@ namespace SIMA.Presentation.ViewModel
         {
             try
             {
-                IEnumerable<Category> cat = await _categoryservices.GetAll(_page);
+                IEnumerable<Category> cat =  await _categoryservices.GetAll(_page);
                 Category = new ObservableCollection<Category>(cat);
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
@@ -86,6 +98,32 @@ namespace SIMA.Presentation.ViewModel
             }
 
         }
+
+
+        /// <summary>
+        /// get the Category data
+        /// </summary>
+        private async void FillLov()
+        {
+            try
+            {
+                IEnumerable<Category> cat = await _categoryservices.GetAll(_page);
+                Lovcat = new ObservableCollection<LovObject>(cat.Select((p)=> new LovObject { Id = p.IdCategory,Value = p.Name }));
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex)
+            {
+                ShowErrorFromModel?.Invoke("DataBase Error Failed");
+            }
+            catch (Exception)
+            {
+                ShowErrorFromModel?.Invoke("System Error Failed");
+            }
+
+        }
+
+
+
+
         /// <summary>
         /// Get the Stock data given the paging configuration
         /// </summary>

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using SIMA.Domain.Models;
 using SIMA.ExtensionsHelper;
 using SIMA.Helper;
+using SIMA.Infrastructure.Repositories.Interfaces;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,7 +15,7 @@ using System.Threading.Tasks;
 namespace SIMA.Infrastructure.Repositories
 {
 
-    public class CategoryParam
+    public class CategoryParam : IParam
     {
         public int? IdCategory { get; set; } = null;
         public string? Name { get; set; } = null;
@@ -32,6 +33,16 @@ namespace SIMA.Infrastructure.Repositories
             limit = page.Limit;
         }
 
+        public void SetPage(Paging page)
+        {
+            offset = page.Offset;
+            limit = page.Limit;
+        }
+
+        public void ResetParam(int? inoffset = 0, int? inlimit = 10)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class CategoryServices : IContextservices<Category>

@@ -9,10 +9,11 @@ using System.Linq;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Dapper;
+using SIMA.Infrastructure.Repositories.Interfaces;
 
 namespace SIMA.Infrastructure.Repositories
 {
-    public class BrandParam
+    public class BrandParam : IParam
     {
         public int? idBrand { get; set; } = null;
         public int? idProduct { get; set; } = null;
@@ -35,6 +36,16 @@ namespace SIMA.Infrastructure.Repositories
             limit = page.Limit;
         }
 
+        public void SetPage(Paging page)
+        {
+            offset = page.Offset;
+            limit = page.Limit;
+        }
+
+        public void ResetParam(int? inoffset = 0, int? inlimit = 10)
+        {
+            throw new NotImplementedException();
+        }
     }
 
 

@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SIMA.Infrastructure.Repositories
+namespace SIMA.Infrastructure.Repositories.Interfaces
 {
-    public interface IContextservices<T> 
+    public interface IContextservices<T>
     {
 
         Task<IEnumerable<T>> GetbyId(int? id);

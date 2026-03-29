@@ -15,11 +15,12 @@ using SIMA.Helper;
 using Dapper;
 using SIMA.Presentation.Views;
 using static Dapper.SqlMapper;
+using SIMA.Infrastructure.Repositories.Interfaces;
 
 namespace SIMA.Infrastructure.Repositories
 {
-    
-    public class StockProductParam
+
+    public class StockProductParam : IParam
     {
         public int? idStock { get; set; } = null;
         public int? idBrand { get; set; } = null;
@@ -41,8 +42,29 @@ namespace SIMA.Infrastructure.Repositories
         public StockProductParam(Paging page) {
             offset = page.Offset;
             limit = page.Limit;
-        }    
+        }
 
+        public void SetPage(Paging page)
+        {
+            offset = page.Offset;
+            limit = page.Limit;
+        }
+
+        public void ResetParam(int? inoffset = 0, int? inlimit = 10)
+        {
+            idStock = null;
+            idBrand = null;
+            idProduct = null;
+            idCategory = null;
+            brands = null;
+            products = null;
+            categorys = null;
+            price = null;
+            stock = null;
+            offset = inoffset;
+            limit = inlimit;
+
+        }
     }
 
     public class StockProductServices : IContextservices<StockProduct>
