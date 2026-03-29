@@ -11,15 +11,10 @@ namespace SIMA.Infrastructure.Repositories.Interfaces
     {
 
         Task<IEnumerable<T>> GetbyId(int? id);
-
         Task<IEnumerable<T>> GetAll(Paging page);
-
         Task<int> Add(T entitiy);
-
         Task<bool> Update(T entitiy);
-
         Task<int> Delete(int? id);
-
         Task<bool> Set(T entitiy);
 
     }

@@ -4,7 +4,6 @@
     {
         void SetPage(Paging page);
         void ResetParam(int? inoffset = 0, int? inlimit = 10);
-
      }
         
 }

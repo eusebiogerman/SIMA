@@ -4,6 +4,7 @@ using SIMA.ExtensionsHelper;
 using SIMA.Helper;
 using SIMA.Infrastructure.Repositories;
 using SIMA.Presentation.ViewModel;
+using SIMA.Templates;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -46,13 +47,13 @@ namespace SIMA.Presentation.Views
         {
 
             InitializeComponent();
-            
-           //this.ContentRendered += (s, e) => { _isloaded = true; };
             FormProduct.Visibility = Visibility.Hidden;
             _page = new Paging();
             _util = new Util();
             _config = _util.CustomConfiguration();
-            this.DataContext = new ProductViewModel(_page, _config);
+            var Vm = new ProductViewModel(_page, _config);
+            this.DataContext = Vm;
+            Vm.ShowErrorFromModel += Vm_ShowErrorFromModel;
             _productservices = new ProductServices(_config);
             _categoryervices = new CategoryServices(_config);
         }
@@ -248,19 +249,19 @@ namespace SIMA.Presentation.Views
             FormProduct.Visibility = Visibility.Visible;
             txtIdProduct.Text = param.idProduct.ToString();
             txtName.Text = param.name;
-            var itemCat = cmbCategory.Items.Cast<Category>().FirstOrDefault(p => p.IdCategory == param.idCategory);
+            cmbCategory.Text = param.categorys; //var dummy  
+            var itemCat = cmbCategory.OrignalSource.First(p => p.Id == param.idCategory);
             cmbCategory.SelectedItem = itemCat;
             txtPrice.Text = param.price.ToString(); 
         }
         #endregion
-
 
         #region Events
         private async void btnsSaveProduct_Click(object sender, RoutedEventArgs e)
         {
             _util.Loading_spimmer(wloading, true, 1000);
             int? id = string.IsNullOrEmpty(txtIdProduct.Text) ? null : int.Parse(txtIdProduct.Text);
-            int? idcat = ((Category)cmbCategory.SelectedItem).IdCategory;
+            int? idcat = ((LovObject)cmbCategory.SelectedItem).Id;
             bool isset = await _productservices.Set(new Product
             {
                 IdProduct = id,
@@ -416,7 +417,11 @@ namespace SIMA.Presentation.Views
             _util.Loading_spimmer(wloading, false);
             this.SupressEventComboBox(false);
         }
-
+        private void Vm_ShowErrorFromModel(string mensaje)
+        {
+            _util.Loading_spimmer(wloading, false);
+            MessageBox.Show(this, mensaje, "Model Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
         #endregion
 
 

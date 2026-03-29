@@ -25,11 +25,9 @@ namespace SIMA.Infrastructure.Repositories
         public int? offset { get; set; } = 0;
         public int? limit { get; set; } = 10;
 
-
         public BrandParam()
         {
         }
-
         public BrandParam(Paging page)
         {
             offset = page.Offset;
@@ -41,21 +39,17 @@ namespace SIMA.Infrastructure.Repositories
             offset = page.Offset;
             limit = page.Limit;
         }
-
         public void ResetParam(int? inoffset = 0, int? inlimit = 10)
         {
             throw new NotImplementedException();
         }
     }
-
-
     public class BrandServices : IContextservices<Brand>
     {
         private readonly IConfiguration _config;
         private JsonFile<Product> _ProductFile;
         private int? _currentIdSave;
         public int? CurrentIdSave { get => _currentIdSave; }
-
 
         public BrandServices()
         {
@@ -68,6 +62,7 @@ namespace SIMA.Infrastructure.Repositories
             _config = config;
         }
 
+        #region DataBase Action
         private async Task<IEnumerable<BrandView>> getBrand(BrandParam param)
         {
             using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
@@ -85,6 +80,7 @@ namespace SIMA.Infrastructure.Repositories
             }
 
         }
+        #endregion
 
         #region Abstractions
         public async Task<int> Add(Brand entitiy)
@@ -118,12 +114,9 @@ namespace SIMA.Infrastructure.Repositories
         {
             throw new NotImplementedException();
         }
-        
-
         #endregion
 
         #region Util Function and Methods
-
         public async Task<IEnumerable<BrandView>> GetByFilter(BrandParam param)
         {
             return await getBrand(param);

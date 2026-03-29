@@ -134,6 +134,8 @@
                         <StackPanel HorizontalAlignment="Right" >
                             <Button x:Name="PART_Button"
                                     Content="▼"
+                                    Foreground="DarkGray"
+                                    VerticalContentAlignment="Top"
                                     Cursor="Hand"/>
                         </StackPanel>
 

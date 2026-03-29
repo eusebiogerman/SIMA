@@ -4,6 +4,7 @@ using SIMA.ExtensionsHelper;
 using SIMA.Helper;
 using SIMA.Infrastructure.Repositories;
 using SIMA.Presentation.ViewModel;
+using SIMA.Templates;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -47,7 +48,6 @@ namespace SIMA.Presentation.Views
             InitializeWstock();
 
         }
-
         public Wstocks(StockProductView rowData)
         {
             InitializeComponent();
@@ -55,7 +55,10 @@ namespace SIMA.Presentation.Views
         }
 
         #region Util
-
+        /// <summary>
+        /// Initialize Window
+        /// </summary>
+        /// <param name="rowData"></param>
         private void InitializeWstock(StockProductView rowData = null) {
 
             FormBrand.Visibility = Visibility.Hidden;
@@ -66,7 +69,6 @@ namespace SIMA.Presentation.Views
             _stockservices = new StockProductServices(_config);
             _brandsrervices = new BrandServices(_config);
         } 
-
         /// <summary>
         /// 
         /// </summary>
@@ -147,8 +149,8 @@ namespace SIMA.Presentation.Views
         /// <returns></returns>
         public StockProductParam activeFilters()
         {
-            int? idprod   = cmbPropduct.SelectedItem != null ? ((ProductView)cmbPropduct.SelectedItem).IdProduct : null ;
-            int? idbrand  = cmbBrand.SelectedItem != null ? ((Brand)cmbBrand.SelectedItem).IdBrand : null;
+            int? idprod   = cmbPropduct.getSelectedItem().Id;
+            int? idbrand  = cmbBrand.getSelectedItem().Id;
             int? didstock = !string.IsNullOrEmpty(txtIdStock.Text) ? int.Parse(txtIdStock.Text.ToString()) : null ;
             int? dstock   = !string.IsNullOrEmpty(txtStock.Text)  ? int.Parse(txtStock.Text.ToString()) : null;
             return new StockProductParam
@@ -167,18 +169,14 @@ namespace SIMA.Presentation.Views
         /// </summary>
         public async void FillCombobox(int? id = null)
         {
-
-
             wloading.Visibility = Visibility.Hidden;
             try
             {
-                _util.Loading_spimmer(wloading, true, 1500);
-                int? cmbid = cmbPropduct.SelectedItem != null ? ((ProductView)cmbPropduct.SelectedItem).IdProduct : 0;
-                int? idprod = id.HasValue ? id : cmbid;  
-                int? dummy = (idprod == 0 || !idprod.HasValue) ? -1 : null;
-                var param = new BrandParam { idProduct = idprod,idBrand = dummy };
+                _util.Loading_spimmer(wloading, true, 500);
+                int? dummy = (id == 0 || !id.HasValue) ? -1 : null;
+                var param = new BrandParam { idProduct = id, idBrand = dummy };
                 IEnumerable<BrandView> cat = await _brandsrervices.GetByFilter(param);
-                cmbBrand.ItemsSource = cat;
+                cmbBrand.ItemsSource = cat.Select(p => new LovObject { Id = p.IdBrand,Value = p.Name });
                 if (!_editmode)
                 {
                     cmbBrand.SelectedIndex = 0;
@@ -286,28 +284,30 @@ namespace SIMA.Presentation.Views
         /// Open the Edit Form for the Stock select in th gridview
         /// </summary>
         /// <param name="param"></param>
-        public void Edit(StockProductParam param)
+        public async void Edit(StockProductParam param)
         {
 
             FormBrand.Visibility = Visibility.Visible;
             txtIdStock.Text = param.idStock.ToString();
             txtStock.Text = param.stock.ToString();
-            var itemProd = cmbPropduct.Items.Cast<ProductView>().FirstOrDefault(p => p.IdProduct == param.idProduct);
+            cmbPropduct.Text = param.products; //dumny select
+            var itemProd = await Task.Run(() => cmbPropduct.OrignalSource.FirstOrDefault(p => p.Id == param.idProduct));
             cmbPropduct.SelectedItem = itemProd;
-            FillCombobox(itemProd.IdProduct);
-            var itemBrand = cmbBrand.Items.Cast<BrandView>().FirstOrDefault(p => p.IdBrand == param.idBrand);
-            cmbPropduct.SelectedItem = itemBrand;
-
+            cmbPropduct.Close();
+            cmbBrand.Text = param.brands; //dumny select
+            var itemBrand = await Task.Run(() => cmbBrand.OrignalSource.FirstOrDefault(p => p.Id == param.idBrand));
+            cmbBrand.SelectedItem = itemBrand;
+            cmbBrand.Close();
+            _editmode = false;
        }
         #endregion
-
 
         #region Events
         private async void btnsSaveBrand_Click(object sender, RoutedEventArgs e)
         {
             _util.Loading_spimmer(wloading, true, 1000);
             int? id = string.IsNullOrEmpty(txtIdStock.Text) ? null : int.Parse(txtIdStock.Text.ToString());
-            int? idbrand = ((BrandView)cmbBrand.SelectedItem).IdBrand;
+            int? idbrand = cmbBrand.getSelectedItem().Id;
             try
             {
 
@@ -372,11 +372,12 @@ namespace SIMA.Presentation.Views
                 UpdatePaging();
             }
         }
-        private void cmbPropduct_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void cmbPropduct_SelectionChanged(object sender, RoutedEventArgs e)
         {
             if (!_isloaded && !_editmode)
             {
-                FillCombobox();
+                var sendobj = cmbPropduct.getSelectedItem(sender);
+                FillCombobox(sendobj.Id);
             }
         }
         private async void txtSearch_TextChanged(object sender, TextChangedEventArgs e)
@@ -439,7 +440,7 @@ namespace SIMA.Presentation.Views
 
 
         }
-        private void btnUpdate_Click(object sender, RoutedEventArgs e)
+        private async void btnUpdate_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -453,6 +454,8 @@ namespace SIMA.Presentation.Views
                     idProduct = rowData.IdProduct,
                     idBrand = rowData.IdBrand,
                     stock = rowData.Stock,
+                    products = rowData.Products,
+                    brands =rowData.Brands
                 });
                 _editmode = false;
                 _util.Loading_spimmer(wloading, false);
@@ -501,8 +504,6 @@ namespace SIMA.Presentation.Views
             this.SupressEventComboBox(false);
 
         }
-
-
         #endregion
 
 

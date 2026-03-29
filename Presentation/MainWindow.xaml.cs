@@ -42,7 +42,7 @@ namespace SIMA.Presentation
             _util = new Util();
             _config = _util.CustomConfiguration();
             var Vm =  new MainViewModel(_page, _config);
-            this.DataContext = (MainViewModel)Vm;
+            this.DataContext = Vm;
             Vm.ShowErrorFromModel += Vm_ShowErrorFromModel;
             _stockservices = new StockProductServices(_config);
             _categoryservices = new CategoryServices(_config);
@@ -105,7 +105,7 @@ namespace SIMA.Presentation
             cmbCategory.SelectedIndex = 0;
             txtSearch.Clear();
         }
-       /// <summary>
+        /// <summary>
        /// Update the Total result of the rows and update the labels on the grid 
        /// </summary>
        /// <param name="total"></param>
@@ -117,7 +117,6 @@ namespace SIMA.Presentation
             pagingLabels(intotal);
             _util.Loading_spimmer(wloading, false);
         }
-
         #endregion
 
         #region Filling Methods
@@ -290,20 +289,20 @@ namespace SIMA.Presentation
 
 
         }
-        /// Incomplited <<<<<<<<<<<<<<-------*******
         private void cmbCategory_SelectionChanged(object sender, RoutedEventArgs e)
         {
-            var sendobj = ((LovTextBox)sender).SelectedItem;
+            var sendobj = cmbCategory.getSelectedItem(sender) ;
             if (!_isloaded && sendobj != null)
             {
                 var param = new StockProductParam
                 {
-                    idCategory = ((LovObject)sendobj).Id
+                    idCategory = sendobj.Id
                 };
                 _page.resetPage();
                 Filter(param);
 
             }
+            
         }
         private void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
         {

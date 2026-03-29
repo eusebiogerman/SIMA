@@ -4,6 +4,7 @@ using SIMA.ExtensionsHelper;
 using SIMA.Helper;
 using SIMA.Infrastructure.Repositories;
 using SIMA.Presentation.ViewModel;
+using SIMA.Templates;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -50,7 +51,9 @@ namespace SIMA.Presentation.Views
             _page = new Paging();
             _util = new Util();
             _config = _util.CustomConfiguration();
-            this.DataContext = new BrandViewModel(_page, _config);
+            var Vm = new BrandViewModel(_page, _config);
+            this.DataContext = Vm;
+            Vm.ShowErrorFromModel += Vm_ShowErrorFromModel;
             _Brandservices = new BrandServices(_config);
             _productervices = new ProductServices(_config);
         }
@@ -159,12 +162,11 @@ namespace SIMA.Presentation.Views
             wloading.Visibility = Visibility.Hidden;
             try
             {
-                _util.Loading_spimmer(wloading, true, 1500);
-                int? idcat = ((Category)cmbCategory.SelectedItem).IdCategory;
-                int? dummy = (idcat == 0 || !idcat.HasValue) ? -1 : null;
-                var param = new ProductParam { idCategory = idcat, idProduct = dummy};
+                _util.Loading_spimmer(wloading, true, 500);
+                int? dummy = (id == 0 || !id.HasValue) ? -1 : null;
+                var param = new ProductParam { idCategory = id, idProduct = dummy};
                 IEnumerable<ProductView> cat = await _productervices.GetByFilter(param);
-                cmbPropduct.ItemsSource = cat;
+                cmbPropduct.ItemsSource = cat.Select((p) => new LovObject { Id = p.IdProduct, Value = p.Name });
                 if (!_editmode)
                 {
                     cmbPropduct.SelectedIndex = 0;
@@ -272,28 +274,31 @@ namespace SIMA.Presentation.Views
         /// Open the Edit Form for the Stock select in th gridview
         /// </summary>
         /// <param name="param"></param>
-        public void Edit(BrandParam param)
+        public async void Edit(BrandParam param)
         {
 
             FormBrand.Visibility = Visibility.Visible;
             txtIdBrand.Text = param.idBrand.ToString();
             txtName.Text = param.name;
-            var itemCat = cmbCategory.Items.Cast<Category>().FirstOrDefault(p => p.IdCategory == param.idCategory);
+            cmbCategory.Text = param.categorys; //dumny select
+            var itemCat = await Task.Run(()=> cmbCategory.OrignalSource.FirstOrDefault(p => p.Id == param.idCategory));
             cmbCategory.SelectedItem = itemCat;
+            cmbCategory.Close();
             txtPrice.Text = param.price.ToString();
-            var itemProd = cmbPropduct.Items.Cast<ProductView>().FirstOrDefault(p => p.IdProduct == param.idProduct);
+            cmbPropduct.Text = param.products; //dumny select
+            var itemProd = await Task.Run(()=> cmbPropduct.OrignalSource.FirstOrDefault(p => p.Id == param.idProduct));  
             cmbPropduct.SelectedItem = itemProd;
+            cmbPropduct.Close();
             _editmode = false;
         }
         #endregion
-
 
         #region Events
         private async void btnsSaveBrand_Click(object sender, RoutedEventArgs e)
         {
             _util.Loading_spimmer(wloading, true, 1000);
             int? id = string.IsNullOrEmpty(txtIdBrand.Text) ? null : int.Parse(txtIdBrand.Text);
-            int? idprod = ((ProductView)cmbPropduct.SelectedItem).IdProduct;
+            int? idprod = cmbPropduct.getSelectedItem().Id;
             try
             {
 
@@ -359,11 +364,12 @@ namespace SIMA.Presentation.Views
                 UpdatePaging();
             }
         }
-        private async void cmbCategory_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void cmbCategory_SelectionChanged(object sender, RoutedEventArgs e)
         {
             if (!_isloaded)
             {
-                FillCombobox();
+                var sendobj = cmbCategory.getSelectedItem(sender);
+                FillCombobox(sendobj.Id);
             }
         }
         private async void txtSearch_TextChanged(object sender, TextChangedEventArgs e)
@@ -425,13 +431,12 @@ namespace SIMA.Presentation.Views
 
 
         }
-        private void btnUpdate_Click(object sender, RoutedEventArgs e)
+        private async void btnUpdate_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 Button btn = sender as Button;
                 BrandView rowData = (BrandView)btn.DataContext;
-                _util.Loading_spimmer(wloading, true, 1000);
                 _editmode = true;
                 Edit(new BrandParam
                 {
@@ -443,7 +448,6 @@ namespace SIMA.Presentation.Views
                     products = rowData.Products,
                     price = rowData.Price
                 });
-                _util.Loading_spimmer(wloading, false);
 
             }
             catch (Exception)
@@ -477,7 +481,11 @@ namespace SIMA.Presentation.Views
 
 
         }
-
+        private void Vm_ShowErrorFromModel(string mensaje)
+        {
+            _util.Loading_spimmer(wloading, false);
+            MessageBox.Show(this, mensaje, "Model Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
         #endregion
 
 

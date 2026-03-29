@@ -27,11 +27,9 @@ namespace SIMA.Infrastructure.Repositories
         public int? offset { get; set; } = 0;
         public int? limit { get; set; } = 10;
 
-
-         public ProductParam()
+        public ProductParam()
         {
         }
-
         public ProductParam(Paging page)
         {
             offset = page.Offset;
@@ -43,21 +41,17 @@ namespace SIMA.Infrastructure.Repositories
             offset = page.Offset;
             limit = page.Limit;
         }
-
         public void ResetParam(int? inoffset = 0, int? inlimit = 10)
         {
             throw new NotImplementedException();
         }
     }
-
-
     public class ProductServices : IContextservices<Product>
     {
         private readonly IConfiguration _config;
         private JsonFile<Product> _ProductFile;
         private int? _currentIdSave;
         public int? CurrentIdSave { get => _currentIdSave; }
-
 
         public ProductServices()
         {
@@ -70,6 +64,7 @@ namespace SIMA.Infrastructure.Repositories
             _config = config;
         }
 
+        #region DataBase Action
         private async Task<IEnumerable<ProductView>> getProduct(ProductParam param)
         {
             using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
@@ -87,6 +82,7 @@ namespace SIMA.Infrastructure.Repositories
             }
 
         }
+        #endregion
 
         #region Abstractions
         public async Task<int> Add(Product entitiy)
@@ -125,7 +121,6 @@ namespace SIMA.Infrastructure.Repositories
         #endregion
 
         #region Util Function and Methods
-
         public async Task<IEnumerable<ProductView>> GetByFilter(ProductParam param)
         {
             return await getProduct(param);
@@ -141,9 +136,6 @@ namespace SIMA.Infrastructure.Repositories
         {
             throw new NotImplementedException();
         }
-
-
-
         #endregion
 
 

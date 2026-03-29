@@ -22,11 +22,9 @@ namespace SIMA.Infrastructure.Repositories
         public int? offset { get; set; } = 0;
         public int? limit { get; set; } = 10;
 
-
         public CategoryParam()
         {
         }
-
         public CategoryParam(Paging page)
         {
             offset = page.Offset;
@@ -38,13 +36,11 @@ namespace SIMA.Infrastructure.Repositories
             offset = page.Offset;
             limit = page.Limit;
         }
-
         public void ResetParam(int? inoffset = 0, int? inlimit = 10)
         {
             throw new NotImplementedException();
         }
     }
-
     public class CategoryServices : IContextservices<Category>
     {
         private readonly IConfiguration _config;
@@ -55,14 +51,13 @@ namespace SIMA.Infrastructure.Repositories
             _stockProductFile = new JsonFile<StockProduct>();
             _stockProductFile.loadData();
         }
-
         public CategoryServices(IConfiguration config) {
             _config = config;
             _stockProductFile = new JsonFile<StockProduct>();
             _stockProductFile.loadData();
         }
 
-
+        #region DataBase Action
         private async Task<IEnumerable<Category>> getCategory(CategoryParam param)
         {
             using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
@@ -70,7 +65,6 @@ namespace SIMA.Infrastructure.Repositories
                 return await conn.QueryAsync<Category>("[dbo].[getCategory]", param, commandType: System.Data.CommandType.StoredProcedure);
             }
         }
-
         private async Task<int> setCategory(Category param) {
 
             using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
@@ -79,6 +73,7 @@ namespace SIMA.Infrastructure.Repositories
             }
            
         }
+        #endregion
 
         #region Abstractions
         public async Task<int> Add(Category entitiy)
@@ -109,7 +104,6 @@ namespace SIMA.Infrastructure.Repositories
         }
         #endregion
 
-
         #region Util Function and Methods
         public async Task<IEnumerable<Category>> GetByFilter(CategoryParam param)
         {
@@ -123,13 +117,10 @@ namespace SIMA.Infrastructure.Repositories
             IEnumerable<Category> res = await getCategory(param);
             return res.Where(p=> p.IdCategory != null).Count();
         }
-
         public async Task<int?> GetNextId()
         {
             throw new NotImplementedException();
         }
-
-
         #endregion
     }
 }

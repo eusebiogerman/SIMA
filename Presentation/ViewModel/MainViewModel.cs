@@ -18,33 +18,25 @@ namespace SIMA.Presentation.ViewModel
     {
         private StockProductServices _stockservices;
         private CategoryServices _categoryservices;
-        private ObservableCollection<Category> _category;
-
-        private ObservableCollection<LovObject> _lovcat;
+        private ObservableCollection<LovObject> _category;
 
         private Paging _page;
         private IConfiguration _config;
         private bool _isSupressed;
 
+        #region Event and Validation Properties
         public event PropertyChangedEventHandler? PropertyChanged;
+        public event Action<string> ShowErrorFromModel;
+        #endregion
 
         #region Observable Collection Property
         public ObservableCollection<StockProductView> StockProducts { get; set; }
-        public ObservableCollection<Category> Category
+        public ObservableCollection<LovObject> Category
         {
             get => _category;
             set { _category = value; OnPropertyChanged(nameof(Category)); }
         }
-        public ObservableCollection<LovObject> Lovcat
-        {
-            get => _lovcat;
-            set { _lovcat = value; OnPropertyChanged(nameof(Lovcat)); }
-        }
-
-
         public bool IsSupressed { get => _isSupressed; set => _isSupressed = value; }
-
-        public event Action<string> ShowErrorFromModel;
         #endregion
 
         public MainViewModel()
@@ -68,47 +60,23 @@ namespace SIMA.Presentation.ViewModel
             _config = config;
             _stockservices = new StockProductServices(_config);
             _categoryservices = new CategoryServices(_config);
-            FillCat();
+            FillLovCat();
             FillStock();
-            FillLov();
             _isSupressed = false;
 
         }
-
         #endregion
 
         #region fill Observable Collection 
         /// <summary>
         /// get the Category data
         /// </summary>
-        private async void FillCat()
-        {
-            try
-            {
-                IEnumerable<Category> cat =  await _categoryservices.GetAll(_page);
-                Category = new ObservableCollection<Category>(cat);
-            }
-            catch (Microsoft.Data.SqlClient.SqlException ex)
-            {
-                ShowErrorFromModel?.Invoke("DataBase Error Failed");
-            }
-            catch (Exception)
-            {
-                ShowErrorFromModel?.Invoke("System Error Failed");
-            }
-
-        }
-
-
-        /// <summary>
-        /// get the Category data
-        /// </summary>
-        private async void FillLov()
+        private async void FillLovCat()
         {
             try
             {
                 IEnumerable<Category> cat = await _categoryservices.GetAll(_page);
-                Lovcat = new ObservableCollection<LovObject>(cat.Select((p)=> new LovObject { Id = p.IdCategory,Value = p.Name }));
+                Category = new ObservableCollection<LovObject>(cat.Select((p)=> new LovObject { Id = p.IdCategory,Value = p.Name }));
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
@@ -120,10 +88,6 @@ namespace SIMA.Presentation.ViewModel
             }
 
         }
-
-
-
-
         /// <summary>
         /// Get the Stock data given the paging configuration
         /// </summary>

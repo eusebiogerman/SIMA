@@ -8,6 +8,7 @@ using System.Windows;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using System.Runtime.CompilerServices;
+using System.Reflection;
 
 namespace SIMA.Templates
 {
@@ -17,8 +18,6 @@ namespace SIMA.Templates
         public string? Value { get; set; }
         
     }
-
-
     public class LovTextBox : Control
     {
         private TextBox _textBox;
@@ -46,7 +45,6 @@ namespace SIMA.Templates
                    SetValue(ItemsSourceProperty, value);
             }
         }
-
         public static readonly DependencyProperty ItemsSourceProperty =
             DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(LovTextBox));
 
@@ -91,6 +89,8 @@ namespace SIMA.Templates
         }
         public static readonly DependencyProperty TextProperty =
             DependencyProperty.Register(nameof(Text), typeof(string), typeof(LovTextBox));
+
+        public IEnumerable<LovObject> OrignalSource { get => (IEnumerable<LovObject>)_orignalSource; }
         #endregion
 
         #region Events
@@ -133,7 +133,6 @@ namespace SIMA.Templates
             add => AddHandler(LovTextBoxChangedEvent, value);
             remove => RemoveHandler(LovTextBoxChangedEvent, value);
         }
-
         #endregion
 
         #region Base Overriding Abstration
@@ -186,7 +185,6 @@ namespace SIMA.Templates
                     RaiseEvent(new RoutedEventArgs(LovTextBoxChangedEvent));
             }
         }
-
         private void OpenPopup(bool _renderAll = false)
         {
             if (_popup != null)
@@ -214,8 +212,6 @@ namespace SIMA.Templates
             {
                 _popup.IsOpen = false;
                 _button.Content = _ButtonClose;
-
-
             }
         }
         private void CommitSelection()
@@ -228,6 +224,29 @@ namespace SIMA.Templates
         }
         #endregion
 
+        #region Public Methods
+        public LovObject getSelectedItem()
+        {
+            var sender = this;
+            var EmptyItem = new LovObject();
+            if (sender != null)
+            {
+                return sender.SelectedItem != null
+                    ? (LovObject)sender.SelectedItem
+                    : EmptyItem;
+            }else
+                return EmptyItem;
+        }
+        public LovObject getSelectedItem(object sender) {
+            if (sender != null)
+                return (LovObject)((LovTextBox)sender).SelectedItem;
+            else
+                return new LovObject();
+        }
+        public void Close() {
+            ClosePopup();
+        }
+        #endregion
 
     }
 
