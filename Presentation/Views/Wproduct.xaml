@@ -51,16 +51,16 @@
                         <Label Content="Category:" 
                                Margin="5,0,0,0"
                                Style="{StaticResource LabelFields}"/>
-                        <ComboBox ItemsSource="{Binding Category}"
-                                  DisplayMemberPath="Name"
-                                  SelectedValuePath="Idcategory"
-                                  x:Name="cmbCategory" 
-                                  Width="300" 
-                                  Height="25" 
-                                  FontSize="14"
-                                  BorderBrush="#CCCCCC"
-                                  SelectedIndex="0"
-                                  Cursor="Hand" />
+                        <ctrl:LovTextBox x:Name="cmbCategory"
+                                         ItemsSource="{Binding Category}"
+                                         DisplayMemberPath="Value"
+                                         SelectedValuePath="Id"
+                                         SelectedIndex="0"
+                                         Width="300" 
+                                         Height="25" 
+                                         FontSize="14"
+                                         BorderBrush="#CCCCCC"/>
+
                     </StackPanel>
                     <StackPanel  Style="{StaticResource PanelFields}">
                         <Label Content="Name:" 

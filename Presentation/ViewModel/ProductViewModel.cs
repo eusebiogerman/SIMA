@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using SIMA.Domain.Models;
 using SIMA.Infrastructure.Repositories;
+using SIMA.Templates;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -17,7 +18,7 @@ namespace SIMA.Presentation.Views
     {
         private string _name;
         private decimal _price;
-        private ObservableCollection<Category> _category;
+        private ObservableCollection<LovObject> _category;
         private ObservableCollection<ProductView> _product;
         private CategoryServices _categoryservices;
         private ProductServices _productservices;
@@ -25,7 +26,6 @@ namespace SIMA.Presentation.Views
         private Paging _page;
         private readonly Dictionary<string, List<string>> _errors = new();
         private bool _isSupressed;
-
 
         public string Name
         {
@@ -46,47 +46,42 @@ namespace SIMA.Presentation.Views
             }
         }
 
-        #region Event Validation Properties
+        #region Event and Validation Properties
         public bool HasErrors => _errors.Any();
         public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
         public event PropertyChangedEventHandler? PropertyChanged;
+        public event Action<string> ShowErrorFromModel;
         #endregion
 
         #region Observable Collection Properties
-        public ObservableCollection<Category> Category
+        public ObservableCollection<LovObject> Category
         {
             get => _category;
             set { _category = value; OnPropertyChanged(nameof(Category)); }
         }
-
         public ObservableCollection<ProductView> Product
         {
             get => _product;
             set { _product = value; OnPropertyChanged(nameof(Product)); }
         }
-
         public bool IsSupressed { get => _isSupressed; set => _isSupressed = value; }
         #endregion
-
 
         public ProductViewModel()
         {
             _page = new Paging();
             _categoryservices = new CategoryServices();
-            FillCat();
+            FillLovCat();
         }
-
-
         public ProductViewModel(Paging page, IConfiguration config)
         {
             _config = config;
             _page = new Paging();
             _categoryservices = new CategoryServices(_config);
             _productservices = new ProductServices(_config);
-            FillCat();
+            FillLovCat();
             FillProduct();
         }
-
 
         #region Validation Errors Methods
         private void ValidateProductName()
@@ -114,21 +109,42 @@ namespace SIMA.Presentation.Views
         /// <summary>
         /// get the Category data
         /// </summary>
-        private async void FillCat()
+        private async void FillLovCat()
         {
+            try
+            {
+                IEnumerable<Category> cat = await _categoryservices.GetAll(_page);
+                Category = new ObservableCollection<LovObject>(cat.Select((p) => new LovObject { Id = p.IdCategory, Value = p.Name }));
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex)
+            {
+                ShowErrorFromModel?.Invoke("PopupLov DataBase Error Failed");
+            }
+            catch (Exception)
+            {
+                ShowErrorFromModel?.Invoke("PopupLov System Error Failed");
+            }
 
-            IEnumerable<Category> cat = await _categoryservices.GetAll(_page);
-            Category = new ObservableCollection<Category>(cat);
         }
-
         /// <summary>
         /// get the Product data
         /// </summary>
         private async void FillProduct()
         {
+            try
+            {
+                IEnumerable<ProductView> cat = await _productservices.GetViewAll(_page);
+                Product = new ObservableCollection<ProductView>(cat);
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex)
+            {
+                ShowErrorFromModel?.Invoke("List Product DataBase Error Failed");
+            }
+            catch (Exception)
+            {
+                ShowErrorFromModel?.Invoke("List Product System Error Failed");
+            }
 
-            IEnumerable<ProductView> cat = await _productservices.GetViewAll(_page);
-            Product = new ObservableCollection<ProductView>(cat);
         }
         #endregion
 

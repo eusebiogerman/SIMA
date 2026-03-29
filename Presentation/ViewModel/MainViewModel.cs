@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using SIMA.Templates;
 
 namespace SIMA.Presentation.ViewModel
 {
@@ -17,23 +18,25 @@ namespace SIMA.Presentation.ViewModel
     {
         private StockProductServices _stockservices;
         private CategoryServices _categoryservices;
-        private ObservableCollection<Category> _category;
+        private ObservableCollection<LovObject> _category;
+
         private Paging _page;
         private IConfiguration _config;
         private bool _isSupressed;
 
+        #region Event and Validation Properties
         public event PropertyChangedEventHandler? PropertyChanged;
+        public event Action<string> ShowErrorFromModel;
+        #endregion
 
         #region Observable Collection Property
         public ObservableCollection<StockProductView> StockProducts { get; set; }
-        public ObservableCollection<Category> Category
+        public ObservableCollection<LovObject> Category
         {
             get => _category;
             set { _category = value; OnPropertyChanged(nameof(Category)); }
         }
         public bool IsSupressed { get => _isSupressed; set => _isSupressed = value; }
-
-        public event Action<string> ShowErrorFromModel;
         #endregion
 
         public MainViewModel()
@@ -57,24 +60,23 @@ namespace SIMA.Presentation.ViewModel
             _config = config;
             _stockservices = new StockProductServices(_config);
             _categoryservices = new CategoryServices(_config);
-            FillCat();
+            FillLovCat();
             FillStock();
             _isSupressed = false;
 
         }
-
         #endregion
 
         #region fill Observable Collection 
         /// <summary>
         /// get the Category data
         /// </summary>
-        private async void FillCat()
+        private async void FillLovCat()
         {
             try
             {
                 IEnumerable<Category> cat = await _categoryservices.GetAll(_page);
-                Category = new ObservableCollection<Category>(cat);
+                Category = new ObservableCollection<LovObject>(cat.Select((p)=> new LovObject { Id = p.IdCategory,Value = p.Name }));
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {

@@ -15,11 +15,12 @@ using SIMA.Helper;
 using Dapper;
 using SIMA.Presentation.Views;
 using static Dapper.SqlMapper;
+using SIMA.Infrastructure.Repositories.Interfaces;
 
 namespace SIMA.Infrastructure.Repositories
 {
-    
-    public class StockProductParam
+
+    public class StockProductParam : IParam
     {
         public int? idStock { get; set; } = null;
         public int? idBrand { get; set; } = null;
@@ -33,16 +34,34 @@ namespace SIMA.Infrastructure.Repositories
         public int? offset { get; set; } = 0;
         public int? limit { get; set; } = 10;
 
-
         public StockProductParam()
         {
         }
-
         public StockProductParam(Paging page) {
             offset = page.Offset;
             limit = page.Limit;
-        }    
+        }
 
+        public void SetPage(Paging page)
+        {
+            offset = page.Offset;
+            limit = page.Limit;
+        }
+        public void ResetParam(int? inoffset = 0, int? inlimit = 10)
+        {
+            idStock = null;
+            idBrand = null;
+            idProduct = null;
+            idCategory = null;
+            brands = null;
+            products = null;
+            categorys = null;
+            price = null;
+            stock = null;
+            offset = inoffset;
+            limit = inlimit;
+
+        }
     }
 
     public class StockProductServices : IContextservices<StockProduct>
@@ -57,7 +76,6 @@ namespace SIMA.Infrastructure.Repositories
             _stockProductFile = new JsonFile<StockProduct>();
             _stockProductFile.loadData();
         }
-
         public StockProductServices(IConfiguration config)
         {
             _config = config;   
@@ -65,6 +83,7 @@ namespace SIMA.Infrastructure.Repositories
             _stockProductFile.loadData();
         }
 
+        #region Database Action
         private async Task<IEnumerable<StockProductView>> getStock(StockProductParam param)
         {
             using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
@@ -77,10 +96,12 @@ namespace SIMA.Infrastructure.Repositories
 
             using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
             {
-                return await conn.ExecuteScalarAsync<int>("[dbo].[setStock]", param, commandType: System.Data.CommandType.StoredProcedure);
+                object inparam = new { idStock = param.IdStock, idBrand = param.IdBrand, stock = param.Stock };
+                return await conn.ExecuteScalarAsync<int>("[dbo].[setStock]", inparam, commandType: System.Data.CommandType.StoredProcedure);
             }
 
         }
+        #endregion
 
         #region Abstractions
         public async Task<int> Add(StockProduct entitiy)

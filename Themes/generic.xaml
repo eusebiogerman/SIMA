@@ -110,20 +110,35 @@
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type local:LovTextBox}">
                     <Grid>
-                        <TextBox x:Name="PART_TextBox"
-                             Text="{Binding Text, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" />
+                        <TextBox x:Name="PART_TextBox" 
+                                 Background="#E0E0E0" 
+                                 BorderBrush="Gray" 
+                                 BorderThickness="1"
+                                 Text="{Binding Text, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" />
 
                         <Popup x:Name="PART_Popup"
                            Placement="Bottom"
                            StaysOpen="False"
                            AllowsTransparency="True"
                            Focusable="False">
-                            <Border Background="White" BorderBrush="Gray" BorderThickness="1">
+                            <Border Background="#E0E0E0" BorderBrush="Gray" BorderThickness="1">
                                 <ListBox x:Name="PART_ListBox"
                                      ItemsSource="{TemplateBinding ItemsSource}"
-                                     SelectedItem="{Binding SelectedItem, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" />
+                                     DisplayMemberPath="{TemplateBinding DisplayMemberPath}"
+                                     SelectedValuePath="{TemplateBinding SelectedValuePath}"
+                                     SelectedItem="{Binding SelectedItem, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                     SelectedIndex="{TemplateBinding SelectedIndex}"
+                                     Cursor="Hand"/>
                             </Border>
                         </Popup>
+                        <StackPanel HorizontalAlignment="Right" >
+                            <Button x:Name="PART_Button"
+                                    Content="▼"
+                                    Foreground="DarkGray"
+                                    VerticalContentAlignment="Top"
+                                    Cursor="Hand"/>
+                        </StackPanel>
+
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using SIMA.Domain.Models;
 using SIMA.Infrastructure.Repositories;
+using SIMA.Templates;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -16,9 +17,9 @@ namespace SIMA.Presentation.Views
         internal class StockViewModel : INotifyDataErrorInfo, INotifyPropertyChanged
         {
         private int? _stockcount;
-        private ObservableCollection<ProductView> _product;
         private ObservableCollection<StockProductView> _stockproduct;
-        private ObservableCollection<ProductView> _brand;
+        private ObservableCollection<LovObject> _product;
+        private ObservableCollection<LovObject> _brand;
         private StockProductServices _stockservices;
         private ProductServices _productservices;
         private IConfiguration _config;
@@ -40,16 +41,16 @@ namespace SIMA.Presentation.Views
         public bool HasErrors => _errors.Any();
         public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
         public event PropertyChangedEventHandler? PropertyChanged;
-        public bool IsSupressed { get => _isSupressed; set => _isSupressed = value; }
+        public event Action<string> ShowErrorFromModel;
         #endregion
 
         #region Observable Collection Properties
-        public ObservableCollection<ProductView> Product
+        public ObservableCollection<LovObject> Product
         {
             get => _product;
             set { _product = value; OnPropertyChanged(nameof(Product)); }
         }
-        public ObservableCollection<ProductView> Brand
+        public ObservableCollection<LovObject> Brand
         {
             get => _brand;
             set { _brand = value; OnPropertyChanged(nameof(Brand)); }
@@ -59,30 +60,26 @@ namespace SIMA.Presentation.Views
             get => _stockproduct;
             set { _stockproduct = value; OnPropertyChanged(nameof(Brand)); }
         }
-      
+        public bool IsSupressed { get => _isSupressed; set => _isSupressed = value; }
         #endregion
-
 
         public StockViewModel()
         {
            _page = new Paging();
            _stockservices = new StockProductServices();
            _productservices = new ProductServices();
-            FillProd();
+            FillLovProd();
             FillStock();
         }
-
-
         public StockViewModel(Paging page, IConfiguration config)
         {
             _config = config;
             _page = page ?? new Paging();
             _stockservices = new StockProductServices(_config);
             _productservices = new ProductServices(_config);
-            FillProd();
+            FillLovProd();
             FillStock();
         }
-
 
         #region Validation Errors Methods
         private void ValidateStock()
@@ -104,11 +101,21 @@ namespace SIMA.Presentation.Views
         /// <summary>
         /// get the Category data
         /// </summary>
-        private async void FillProd()
+        private async void FillLovProd()
         {
-
-            IEnumerable<ProductView> prod = await _productservices.GetViewAll(_page);
-            Product = new ObservableCollection<ProductView>(prod);
+            try
+            {
+                IEnumerable<ProductView> prod = await _productservices.GetViewAll(_page);
+                Product = new ObservableCollection<LovObject>(prod.Select((p) => new LovObject { Id = p.IdProduct, Value = p.Name }));
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex)
+            {
+                ShowErrorFromModel?.Invoke("PopupLov Product DataBase Error Failed");
+            }
+            catch (Exception)
+            {
+                ShowErrorFromModel?.Invoke("PopupLov Product System Error Failed");
+            }
         }
 
         /// <summary>
@@ -120,7 +127,6 @@ namespace SIMA.Presentation.Views
             IEnumerable<StockProductView> st = await _stockservices.GetViewAll(_page);
             StockProducts = new ObservableCollection<StockProductView>(st);
         }
-
         #endregion
 
         #region Handler Errors Methods 

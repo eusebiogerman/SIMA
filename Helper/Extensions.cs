@@ -16,11 +16,9 @@ namespace SIMA.ExtensionsHelper
         {
             return string.IsNullOrEmpty(str) ? exp : str;
         }
-
-
         #endregion
 
-        #region String Extension
+        #region Int Extension
         public static int isNone(this int num, int excepval)
         {
             return (num == -1 ? excepval : num);

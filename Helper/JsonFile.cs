@@ -12,35 +12,27 @@ namespace SIMA.Helper
     public class JsonFile<T>
     {
         private string _fileName = "stock.json";
-
         private string _filePath ;
-
         private List<T> _servicesList;
-
         public string FilePath { get => _filePath; set => _filePath = value; }
-
         public string FileName { get => _fileName; set => _fileName = value; }
-
         public List<T> ServicesList => _servicesList;
 
         public JsonFile() {
             _filePath = parsePath(_fileName, "Infrastructure/data");
         }
-
         public JsonFile(string filename)
         {
 
             _fileName = filename;
             _filePath = parsePath(_fileName, "Infrastructure/data");
         }
-
         public JsonFile(string filename, string path)
         {
 
             _fileName = filename;
             _filePath = parsePath(_fileName, path);
         }
-
 
         private string parsePath(string filename, string path) {
             string rpath = string.Empty;
@@ -53,7 +45,6 @@ namespace SIMA.Helper
 
             return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, rpath, filename);
         }
-
         public void  loadData()
         
         {
@@ -67,7 +58,6 @@ namespace SIMA.Helper
                 _servicesList = new List<T>();
             }
         }
-
         public async  Task<bool> SaveData()
         {
             try

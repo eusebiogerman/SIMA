@@ -48,31 +48,30 @@
                         <Label Content="Product:" 
                                Margin="5,0,6,0"
                                Style="{StaticResource LabelFields}"/>
-                        <ComboBox ItemsSource="{Binding Product}"
-                                  DisplayMemberPath="Name"
-                                  SelectedValuePath="IdProduct"
-                                  x:Name="cmbPropduct" 
-                                  Width="300" 
-                                  Height="25" 
-                                  FontSize="14"
-                                  BorderBrush="#CCCCCC"
-                                  SelectedIndex="0"
-                                  Cursor="Hand" 
-                                  SelectionChanged="cmbPropduct_SelectionChanged" />
-
+                        <ctrl:LovTextBox x:Name="cmbPropduct"
+                                         ItemsSource="{Binding Product}"
+                                         DisplayMemberPath="Value"
+                                         SelectedValuePath="Id"
+                                         SelectedIndex="0"
+                                         Width="300" 
+                                         Height="25" 
+                                         FontSize="14"
+                                         BorderBrush="#CCCCCC"
+                                         LovTextBoxChanged="cmbPropduct_SelectionChanged"/>
+                        
+                        
                         <Label Content="Brand :" 
                                Margin="5,0,0,0"
                                Style="{StaticResource LabelFields}"/>
-                        <ComboBox ItemsSource="{Binding Brand}"
-                                  DisplayMemberPath="Name"
-                                  SelectedValuePath="IdBrand"
-                                  x:Name="cmbBrand" 
-                                  Width="300" 
-                                  Height="25" 
-                                  FontSize="14"
-                                  BorderBrush="#CCCCCC"
-                                  SelectedIndex="0"
-                                  Cursor="Hand" />
+                        <ctrl:LovTextBox x:Name="cmbBrand"
+                                         ItemsSource="{Binding Brand}"
+                                         DisplayMemberPath="Value"
+                                         SelectedValuePath="Id"
+                                         SelectedIndex="0"
+                                         Width="300" 
+                                         Height="25" 
+                                         FontSize="14"
+                                         BorderBrush="#CCCCCC"/>
 
                     </StackPanel>
 

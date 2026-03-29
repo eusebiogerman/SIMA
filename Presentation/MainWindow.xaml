@@ -123,20 +123,20 @@
                                 Grid.Column="0"
                                 Orientation="Horizontal" Grid.ColumnSpan="4">
                                     <TextBlock Text="Category:" 
-                                   FontWeight="SemiBold" 
-                                   Margin="0,0,7,0"
-                                   Foreground="#333333"/>
+                                               FontWeight="SemiBold" 
+                                               Margin="0,0,7,0"
+                                               Foreground="#333333"/>
+                                    <ctrl:LovTextBox x:Name="cmbCategory"
+                                                     ItemsSource="{Binding Category}"
+                                                     DisplayMemberPath="Value"
+                                                     SelectedValuePath="Id"
+                                                     SelectedIndex="0"
+                                                     Width="300" 
+                                                     Height="25" 
+                                                     FontSize="14"
+                                                     BorderBrush="#CCCCCC"
+                                                     LovTextBoxChanged ="cmbCategory_SelectionChanged"/>
 
-                                    <ComboBox ItemsSource="{Binding Category}"
-                                  DisplayMemberPath="Name"
-                                  SelectedValuePath="Idcategory"
-                                  x:Name="cmbCategory" 
-                                  Width="300" 
-                                  Height="35" 
-                                  FontSize="14"
-                                  BorderBrush="#CCCCCC"
-                                  SelectedIndex="0"
-                                  Cursor="Hand" SelectionChanged="cmbCategory_SelectionChanged"/>
                                 </StackPanel>
                                 <StackPanel Grid.Row="1" 
                                 Grid.Column="0" 
@@ -344,7 +344,7 @@
                                 PageComboboxChanged ="PageNavigation_SelectionChanged"
                                 PreviousClick ="PagePrevious_Click"
                                 NextClick="PageNext_Click"/>
-                            </Border>
+                        </Border>
                         <Border Grid.Row="3" 
                                 Style="{StaticResource SectionBorder}" 
                                 Margin="0,0,0,0">
@@ -365,7 +365,7 @@
                                 </StackPanel>
                             </Grid>
                         </Border>
-                  </Grid>
+                    </Grid>
                     <StackPanel>
                         <Ellipse x:Name="wloading" 
                                  Width="50" 
@@ -395,5 +395,5 @@
             </StackPanel>
 
         </ScrollViewer>
-            </Grid>
-        </Window>
+    </Grid>
+</Window>

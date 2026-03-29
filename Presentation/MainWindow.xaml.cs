@@ -42,7 +42,7 @@ namespace SIMA.Presentation
             _util = new Util();
             _config = _util.CustomConfiguration();
             var Vm =  new MainViewModel(_page, _config);
-            this.DataContext = (MainViewModel)Vm;
+            this.DataContext = Vm;
             Vm.ShowErrorFromModel += Vm_ShowErrorFromModel;
             _stockservices = new StockProductServices(_config);
             _categoryservices = new CategoryServices(_config);
@@ -102,10 +102,10 @@ namespace SIMA.Presentation
         /// </summary>
         public void ClearFilters()
         {
-            FillCombobox();
+            cmbCategory.SelectedIndex = 0;
             txtSearch.Clear();
         }
-       /// <summary>
+        /// <summary>
        /// Update the Total result of the rows and update the labels on the grid 
        /// </summary>
        /// <param name="total"></param>
@@ -117,7 +117,6 @@ namespace SIMA.Presentation
             pagingLabels(intotal);
             _util.Loading_spimmer(wloading, false);
         }
-
         #endregion
 
         #region Filling Methods
@@ -131,11 +130,12 @@ namespace SIMA.Presentation
         /// <returns></returns>
         public StockProductParam activeFilters()
         {
-            Category catcmb = ((Category)cmbCategory.SelectedItem);
+            //Category catcmb = ((Category)cmbCategory.SelectedItem);
+            LovObject catcmb  = ((LovObject)cmbCategory.SelectedItem);
             return new StockProductParam
             {
 
-                idCategory = catcmb != null ? catcmb.IdCategory : null,
+                idCategory = catcmb != null ? catcmb.Id : null,
                 offset = _page.Offset,
                 limit = _page.Limit
                 //,Name = txtSearch.Text
@@ -146,24 +146,7 @@ namespace SIMA.Presentation
         /// </summary>
         public async void FillCombobox(int? id = null)
         {
-            try
-            {
-                _util.Loading_spimmer(wloading, true,200);
-                IEnumerable<Category> cat = await _categoryservices.GetAll(_page);
-                cmbCategory.ItemsSource = cat;
-                _isloaded = false;
-                cmbCategory.SelectedIndex = 0;
-            }
-            catch (Microsoft.Data.SqlClient.SqlException ex) {
-
-                _util.Loading_spimmer(wloading, false);
-                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-            catch (Exception)
-            {
-                _util.Loading_spimmer(wloading, false);
-                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
+            throw new NotImplementedException();
         }
         /// <summary>
         /// Fill the stock
@@ -226,7 +209,8 @@ namespace SIMA.Presentation
             try
             {
                 _util.Loading_spimmer(wloading, true, 1000);
-                IEnumerable<StockProductView> prod = await _stockservices.GetViewAll(_page);
+                param.SetPage(_page);    
+                IEnumerable<StockProductView> prod = await _stockservices.GetByFilter(param);
                 int total = await _stockservices.GetTotalFound(param);
                 gridProducts.ItemsSource = prod;
                 UpdatePaging(total);
@@ -305,19 +289,20 @@ namespace SIMA.Presentation
 
 
         }
-        /// Incomplited <<<<<<<<<<<<<<-------*******
-        private void cmbCategory_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void cmbCategory_SelectionChanged(object sender, RoutedEventArgs e)
         {
-            if (!_isloaded && e.AddedItems.Count > 0)
+            var sendobj = cmbCategory.getSelectedItem(sender) ;
+            if (!_isloaded && sendobj != null)
             {
                 var param = new StockProductParam
                 {
-                    idCategory = ((Category)e.AddedItems[0]).IdCategory
+                    idCategory = sendobj.Id
                 };
                 _page.resetPage();
                 Filter(param);
 
             }
+            
         }
         private void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
         {

@@ -24,16 +24,6 @@ namespace SIMA.Templates
                 new FrameworkPropertyMetadata(typeof(PageNavigation)));
         }
 
-        private void SetRoutEvent(SelectionChangedEventHandler routedevent)
-        {
-            routedevent += (s, e) =>
-            {
-                RaiseEvent(new RoutedEventArgs(PreviousClickEvent));
-            };
-
-        }
-
-
         #region Dependecy Properties
         public int PageNumber
         {
