@@ -417,10 +417,10 @@ namespace SIMA.Presentation.Views
             _util.Loading_spimmer(wloading, false);
             this.SupressEventComboBox(false);
         }
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private void Vm_ShowErrorFromModel(string mensaje)
         {
-            cmbCategory.SelectedIndex = 0;
-
+            _util.Loading_spimmer(wloading, false);
+            MessageBox.Show(this, mensaje, "Model Error", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         #endregion
 
