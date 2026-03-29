@@ -40,6 +40,8 @@
         <Setter Property="SelectedIndex" Value="0"/>
     </Style>
 
+    
+    <!--Paging Custom Control-->
     <Style TargetType="{x:Type local:PageNavigation}">
     <Setter Property="Template">
         <Setter.Value>
@@ -100,5 +102,32 @@
         </Setter.Value>
     </Setter>
 </Style>
+
+    
+    <!--PopupLOV Custom Control-->
+    <Style TargetType="{x:Type local:LovTextBox}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:LovTextBox}">
+                    <Grid>
+                        <TextBox x:Name="PART_TextBox"
+                             Text="{Binding Text, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" />
+
+                        <Popup x:Name="PART_Popup"
+                           Placement="Bottom"
+                           StaysOpen="False"
+                           AllowsTransparency="True"
+                           Focusable="False">
+                            <Border Background="White" BorderBrush="Gray" BorderThickness="1">
+                                <ListBox x:Name="PART_ListBox"
+                                     ItemsSource="{TemplateBinding ItemsSource}"
+                                     SelectedItem="{Binding SelectedItem, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" />
+                            </Border>
+                        </Popup>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 
 </ResourceDictionary>
