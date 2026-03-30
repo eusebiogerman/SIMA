@@ -36,10 +36,14 @@ namespace SIMA.Presentation.Views
         {
             InitializeComponent();
             FormCategory.Visibility = Visibility.Hidden;
+            FormCategory.Height = 0;
+
             _page = new Paging();
             _util = new Util();
             _config = _util.CustomConfiguration();
-            this.DataContext = new CategoryViewModel(_page, _config);
+            var Vm = new CategoryViewModel(_page, _config);
+            this.DataContext = Vm;
+            Vm.ShowErrorFromModel += Vm_ShowErrorFromModel;
            _categoryservices = new CategoryServices(_config);
 
         }
@@ -93,6 +97,8 @@ namespace SIMA.Presentation.Views
             txtName.Text = string.Empty;
             txtSearch.Text = string.Empty;
             FormCategory.Visibility = Visibility.Hidden;
+            FormCategory.Height = 0;
+            ResizeGrid("60%");
         }
         /// <summary>
         /// Update the Total result of the rows and update the labels on the grid 
@@ -104,6 +110,19 @@ namespace SIMA.Presentation.Views
             _page.parsePageData(intotal);
             txtResults.Text = getResultMsgAsync(intotal);
             pagingLabels(intotal);
+        }
+        /// <summary>
+        /// Managment of Responsive Windows
+        /// </summary>
+        /// <param name="gridheight">Size Height = Only Numeric string percent {Size}% or Size}</param>
+        public void ResizeGrid(string gridheight)
+        {
+            Dictionary<int, string> columns_width = new Dictionary<int, string>();
+            columns_width.Add(0, "4%");
+            columns_width.Add(1, "86%");
+            columns_width.Add(2, "7%");
+            _util.ResponsiveListViewHeight(gridCategory, this.ActualHeight, gridheight);
+            _util.ResponsiveGridWidth(gridCellCategory, this.ActualWidth, columns_width);
         }
         #endregion
 
@@ -163,7 +182,7 @@ namespace SIMA.Presentation.Views
             {
                 _util.Loading_spimmer(wloading, true, 1000);
                 IEnumerable<Category> cat = await _categoryservices.GetByFilter(param);
-                gridProducts.ItemsSource = cat.Where(p => p.IdCategory != null);
+                gridCategory.ItemsSource = cat.Where(p => p.IdCategory != null);
                 UpdatePaging();
                 _util.Loading_spimmer(wloading, false);
 
@@ -191,7 +210,7 @@ namespace SIMA.Presentation.Views
             {
                 _util.Loading_spimmer(wloading, true, 1000);
                 IEnumerable<Category> cat = await _categoryservices.GetByFilter(param);
-                gridProducts.ItemsSource = cat.Where(p => p.IdCategory != null);
+                gridCategory.ItemsSource = cat.Where(p => p.IdCategory != null);
                 UpdatePaging();
                 _util.Loading_spimmer(wloading, false);
 
@@ -230,6 +249,10 @@ namespace SIMA.Presentation.Views
         public void Edit(CategoryParam param)
         {
             FormCategory.Visibility = Visibility.Visible;
+            FormCategory.Height = Double.NaN;
+            ResizeGrid("40%");
+
+            //Set the Field Values from the grid
             txtIdCategory.Text = param.IdCategory.ToString();
             txtName.Text = param.Name;
         }
@@ -285,10 +308,16 @@ namespace SIMA.Presentation.Views
         }
         private void btnUpdate_Click(object sender, RoutedEventArgs e)
         {
-            Button btn = sender as Button;
-            Category rowData = (Category)btn.DataContext;
-            Edit(new CategoryParam { IdCategory = rowData.IdCategory, Name = rowData.Name });
-
+            try
+            {
+                Button btn = sender as Button;
+                Category rowData = (Category)btn.DataContext;
+                Edit(new CategoryParam { IdCategory = rowData.IdCategory, Name = rowData.Name });
+            }
+            catch (Exception)
+            {
+                _util.Loading_spimmer(wloading, false);
+            }
         }
         private void btnRemove_Click(object sender, RoutedEventArgs e)
         {
@@ -350,7 +379,17 @@ namespace SIMA.Presentation.Views
         {
             this.SupressEventComboBox();
         }
+        private void Vm_ShowErrorFromModel(string mensaje)
+        {
+            _util.Loading_spimmer(wloading, false);
+            MessageBox.Show(this, mensaje, "Model Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+           ResizeGrid("60%");
+        }
         #endregion
+
 
     }
 }

@@ -29,6 +29,7 @@ namespace SIMA.Presentation.ViewModel
         public bool HasErrors => _errors.Any();
         public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
         public event PropertyChangedEventHandler? PropertyChanged;
+        public event Action<string> ShowErrorFromModel;
         #endregion
 
         #region Observable Collection Properties
@@ -37,23 +38,18 @@ namespace SIMA.Presentation.ViewModel
             get => _category;
             set { _category = value; OnPropertyChanged(nameof(Categorys)); }
         }
-
         public ObservableCollection<Category> CategoryCombo
         {
             get => _categoryCombo;
             set { _categoryCombo = value; OnPropertyChanged(nameof(CategoryCombo)); }
         }
-
-
         public bool IsSupressed { get => _isSupressed; set => _isSupressed = value; }
         #endregion
-
 
         public CategoryViewModel()
         {
             InitializeModel(new Paging(), new ConfigurationManager());
         }
-
         public CategoryViewModel(Paging page, IConfiguration config)
         {
             InitializeModel(page, config);
@@ -72,13 +68,9 @@ namespace SIMA.Presentation.ViewModel
             _isSupressed = false;
 
         }
-
         #endregion
 
-
-
         #region fill Observable Collection 
-
         /// <summary>
         /// get the Category data
         /// </summary>
@@ -88,7 +80,6 @@ namespace SIMA.Presentation.ViewModel
             CategoryCombo = new ObservableCollection<Category>(cat);
 
         }
-
         /// <summary>
         /// get the Category data
         /// </summary>

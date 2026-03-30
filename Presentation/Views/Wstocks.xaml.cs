@@ -61,7 +61,10 @@ namespace SIMA.Presentation.Views
         /// <param name="rowData"></param>
         private void InitializeWstock(StockProductView rowData = null) {
 
-            FormBrand.Visibility = Visibility.Hidden;
+            FormStock.Visibility = Visibility.Hidden;
+            FormStock.Height = 0;
+
+
             _page = new Paging();
             _util = new Util();
             _config = _util.CustomConfiguration();
@@ -118,7 +121,12 @@ namespace SIMA.Presentation.Views
             txtStock.Text = "0";
             txtSearch.Text = string.Empty;
             cmbPropduct.SelectedIndex = 0;
-            FormBrand.Visibility = Visibility.Hidden;
+
+            //Edit panel Closing
+            FormStock.Visibility = Visibility.Hidden;
+            FormStock.Height = 0;
+            ResizeGrid("60%");
+
         }
         /// <summary>
         /// Update the Total result of the rows and update the labels on the grid 
@@ -130,6 +138,16 @@ namespace SIMA.Presentation.Views
             _page.parsePageData(intotal);
             txtResults.Text = getResultMsgAsync(intotal);
             pagingLabels(intotal);
+        }
+        /// <summary>
+        /// Managment of Responsive Windows
+        /// </summary>
+        /// <param name="gridheight">Size Height = Only Numeric string percent {Size}% or Size}</param>
+        public void ResizeGrid(string gridheight)
+        {
+            gridheight = this.WindowState == WindowState.Maximized ? "60%" : gridheight;
+            _util.ResponsiveListViewHeight(gridStocks, this.ActualHeight, gridheight);
+            _util.ResponsiveGridWidth(gridCellStocks, this.ActualWidth, _util.CommonSizeGrid);
         }
         #endregion
 
@@ -220,7 +238,7 @@ namespace SIMA.Presentation.Views
             {
                 _util.Loading_spimmer(wloading, true, 1000);
                 IEnumerable<StockProductView> cat = await _stockservices.GetByFilter(param);
-                gridBrands.ItemsSource = cat.Where(p => p.IdBrand != null);
+                gridStocks.ItemsSource = cat.Where(p => p.IdBrand != null);
                 UpdatePaging();
                 _util.Loading_spimmer(wloading, false);
 
@@ -248,7 +266,7 @@ namespace SIMA.Presentation.Views
             {
                 _util.Loading_spimmer(wloading, true, 1000);
                 IEnumerable<StockProductView> cat = await _stockservices.GetByFilter(param);
-                gridBrands.ItemsSource = cat.Where(p => p.IdBrand != null);
+                gridStocks.ItemsSource = cat.Where(p => p.IdBrand != null);
                 UpdatePaging();
                 _util.Loading_spimmer(wloading, false);
 
@@ -287,13 +305,22 @@ namespace SIMA.Presentation.Views
         public async void Edit(StockProductParam param)
         {
 
-            FormBrand.Visibility = Visibility.Visible;
+            //Edit panel visualization
+            FormStock.Visibility = Visibility.Visible;
+            FormStock.Height = Double.NaN;
+            ResizeGrid("40%");
+
+            //Set the Field Values from the grid
             txtIdStock.Text = param.idStock.ToString();
             txtStock.Text = param.stock.ToString();
             cmbPropduct.Text = param.products; //dumny select
+
+            //Set the Field Values for Product
             var itemProd = await Task.Run(() => cmbPropduct.OrignalSource.FirstOrDefault(p => p.Id == param.idProduct));
             cmbPropduct.SelectedItem = itemProd;
             cmbPropduct.Close();
+
+            //Set the Field Values for Brand
             cmbBrand.Text = param.brands; //dumny select
             var itemBrand = await Task.Run(() => cmbBrand.OrignalSource.FirstOrDefault(p => p.Id == param.idBrand));
             cmbBrand.SelectedItem = itemBrand;
@@ -503,6 +530,10 @@ namespace SIMA.Presentation.Views
             _util.Loading_spimmer(wloading, false);
             this.SupressEventComboBox(false);
 
+        }
+        private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            ResizeGrid("60%");
         }
         #endregion
 

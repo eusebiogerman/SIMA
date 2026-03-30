@@ -12,6 +12,7 @@
                 <ResourceDictionary Source="Styles/Controls/Borders.xaml"/>
                 <ResourceDictionary Source="Styles/Controls/Labels.xaml"/>
                 <ResourceDictionary Source="Styles/Controls/ComboBoxs.xaml"/>
+                <ResourceDictionary Source="Styles/Controls/ListView.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

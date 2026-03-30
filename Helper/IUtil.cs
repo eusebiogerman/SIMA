@@ -11,6 +11,8 @@ namespace SIMA.Helper
         void pagingLabels(int total);
         void NavigationGrid(Paging.DIRECTION direction);
         void UpdatePaging(int total = 0);
-
+        void ResizeGrid(string gridheight);
+        
+        
     }
 }
