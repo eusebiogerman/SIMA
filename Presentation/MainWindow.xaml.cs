@@ -14,6 +14,8 @@ using System.Windows.Media;
 using Microsoft.Extensions.Configuration;
 using System.Xml.Linq;
 using SIMA.Templates;
+using System.Reflection.PortableExecutable;
+using System.Windows.Media.Media3D;
 
 namespace SIMA.Presentation
 {
@@ -116,6 +118,23 @@ namespace SIMA.Presentation
             txtResults.Text = getResultMsgAsync(intotal);
             pagingLabels(intotal);
             _util.Loading_spimmer(wloading, false);
+        }
+        /// <summary>
+        /// Managment of Responsive Windows
+        /// </summary>
+        /// <param name="gridheight">Size Height = Only Numeric string percent {Size}% or Size}</param>
+        public void ResizeGrid(string gridheight)
+        {
+            Dictionary<int, string> columns_width = new Dictionary<int, string>();
+            columns_width.Add(0, "4%");
+            columns_width.Add(1, "25%");
+            columns_width.Add(2, "18%");
+            columns_width.Add(3, "18%");
+            columns_width.Add(4, "12%");
+            columns_width.Add(5, "12%");
+            columns_width.Add(6, "7%");
+            _util.ResponsiveListViewHeight(gridProducts, this.ActualHeight, gridheight);
+            _util.ResponsiveGridWidth(gridCellProduct, this.ActualWidth - 220, columns_width);
         }
         #endregion
 
@@ -466,7 +485,20 @@ namespace SIMA.Presentation
             _util.Loading_spimmer(wloading, false);
             MessageBox.Show(this, mensaje, "Model Error", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
+        private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            ResizeGrid("60%");
+        }
         #endregion
+
+
+
+
+
+
+
+
+
 
     }
 

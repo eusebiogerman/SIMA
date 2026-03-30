@@ -17,7 +17,7 @@
     <Style x:Key="GridButtonPanel" TargetType="StackPanel">
         <Setter Property="Orientation" Value="Horizontal"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>
-        <Setter Property="Margin" Value="0,5"/>
+        <Setter Property="Width" Value="auto"/>
     </Style>
 
 </ResourceDictionary>

@@ -6,11 +6,12 @@
         xmlns:ctrl="clr-namespace:SIMA.Templates"
         mc:Ignorable="d"
         Title="Stock Management" 
-        Width="820"
-        Height="770"
         Background="#F5F5F5"
         WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize" Closing="Window_Closing" Loaded="Window_Loaded" Initialized="Window_Initialized">
+        Closing="Window_Closing" 
+        Loaded="Window_Loaded" 
+        Initialized="Window_Initialized" 
+        SizeChanged="Window_SizeChanged">
 
     <Grid >
         <Grid.RowDefinitions>
@@ -20,20 +21,22 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-
         <Border Grid.Row="0" 
-                Style="{StaticResource SectionBorder}"
-                Margin="0,0,0,0">
-
-            <StackPanel Grid.Row="1" >
-                <StackPanel >
-                    <TextBlock Text="STOCK MANAGMENT" 
+                Style="{StaticResource SectionBorder}">
+            <StackPanel >
+                <TextBlock Text="STOCK MANAGMENT" 
                                Style="{StaticResource Titleselection}"
                                TextAlignment="Center"/>
-                </StackPanel>
-                <StackPanel x:Name="FormBrand">
+            </StackPanel>
+        </Border>
+        <Border Grid.Row="1" 
+                x:Name="FormStock"
+                Style="{StaticResource SectionBorder}"
+                Margin="0,0,0,0">
+            <StackPanel Grid.Row="1" >
+                <StackPanel>
                     <StackPanel  Style="{StaticResource PanelFields}">
                         <Label Content="ID:" 
                                Margin="5,0,37,0"
@@ -112,19 +115,17 @@
                 </StackPanel>
             </StackPanel>
         </Border>
-        <Border Grid.Row="1" 
+        <Border Grid.Row="2" 
                 Style="{StaticResource SectionBorder}" 
                 Margin="0,0,0,0">
             <StackPanel Grid.Row="0" 
-                                Grid.Column="0"
-                                Orientation="Horizontal" Grid.ColumnSpan="4">
+                        Grid.Column="0"
+                        Orientation="Horizontal" Grid.ColumnSpan="4">
                 <TextBlock Text="Search:" 
                            FontWeight="SemiBold" 
-                           Margin="0,0,29,0"
+                           Margin="9,0,19,0"
                            Foreground="#333333"
                            VerticalAlignment="Center"/>
-
-
                 <TextBox Name="txtSearch" 
                          Width="430"
                          Height="35" 
@@ -132,10 +133,8 @@
                          Background="#F0F0F0" 
                          TextChanged="txtSearch_TextChanged"/>
             </StackPanel>
-
-
         </Border>
-        <Border Grid.Row="2" 
+        <Border Grid.Row="3" 
                     Style="{StaticResource SectionBorder}"
                     Margin="0,0,0,10">
 
@@ -147,22 +146,16 @@
                                Foreground="#333333"/>
             </StackPanel>
         </Border>
-        <Border Grid.Row="3" 
+        <Border Grid.Row="4" 
                     Style="{StaticResource SectionBorder}"
                     Padding="0">
-            <ListView x:Name="gridBrands" 
-                            Background="Transparent"
-                            BorderThickness="0"
-                            ScrollViewer.VerticalScrollBarVisibility="Auto"
-                            Width="auto"
-                            Height="380"  
-                            Cursor="Hand"
-                            ItemsSource="{Binding StockProducts}"
-                            VerticalAlignment="Top">
+            <ListView x:Name="gridStocks" 
+                      Style="{StaticResource ListViewStyle}"
+                      ItemsSource="{Binding StockProducts}">
 
                 <ListView.View>
-                    <GridView>
-                        <GridViewColumn Header="ID" Width="80">
+                    <GridView x:Name="gridCellStocks" >
+                        <GridViewColumn Header="ID">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding IdStock}" 
@@ -172,10 +165,10 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn Header="Product" Width="250">
+                        <GridViewColumn Header="Product">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Border Style="{StaticResource GVText}">
+                                    <Border Style="{StaticResource GVBorderText}">
                                         <TextBlock Text="{Binding Products}" 
                                                        HorizontalAlignment="Center"
                                                        FontSize="12"/>
@@ -183,10 +176,10 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn Header="Brand" Width="250">
+                        <GridViewColumn Header="Brand">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Border Style="{StaticResource GVText}">
+                                    <Border Style="{StaticResource GVBorderText}">
                                         <TextBlock Text="{Binding Brands}" 
                                                        HorizontalAlignment="Center"
                                                        FontSize="12"/>
@@ -194,7 +187,7 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn Header="Stock" Width="120">
+                        <GridViewColumn Header="Stock">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Border Style="{StaticResource GVNumericBadge}" Width="50">
@@ -207,7 +200,7 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn Header="Acciones" Width="auto">
+                        <GridViewColumn Header="Acciones">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Style="{StaticResource GridButtonPanel}">
@@ -223,14 +216,14 @@
                 </ListView.View>
             </ListView>
         </Border>
-        <Border Grid.Row="4" >
+        <Border Grid.Row="5" >
             <ctrl:PageNavigation 
                 x:Name="pageControl"
                 PageComboboxChanged ="PageNavigation_SelectionChanged"
                 PreviousClick ="PagePrevious_Click"
                 NextClick="PageNext_Click"/>
         </Border>
-        <Border Grid.Row="5" 
+        <Border Grid.Row="6" 
                 Style="{StaticResource SectionBorder}" 
                 Margin="0,0,0,0">
             <Grid>

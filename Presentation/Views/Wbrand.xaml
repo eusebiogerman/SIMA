@@ -5,12 +5,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ctrl="clr-namespace:SIMA.Templates"
         mc:Ignorable="d"
-        Title="Brand Management" Height="750" Width="820"
+        Title="Brand Management" 
         Background="#F5F5F5"
         WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize" Closing="Window_Closing" Loaded="Window_Loaded" Initialized="Window_Initialized">
+        Closing="Window_Closing" 
+        Loaded="Window_Loaded" 
+        Initialized="Window_Initialized" SizeChanged="Window_SizeChanged">
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -18,27 +21,28 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-
         <Border Grid.Row="0" 
-                Style="{StaticResource SectionBorder}"
-                Margin="0,0,0,0">
-
-            <StackPanel Grid.Row="1" >
+                Style="{StaticResource SectionBorder}">
                 <StackPanel >
                     <TextBlock Text="BRAND MANAGMENT" 
                                Style="{StaticResource Titleselection}"
                                TextAlignment="Center"/>
                 </StackPanel>
-                <StackPanel x:Name="FormBrand">
-                    <StackPanel  Style="{StaticResource PanelFields}">
+        </Border>
+        <Border Grid.Row="1" 
+                x:Name="FormBrand"
+                Style="{StaticResource SectionBorder}">
+            <StackPanel>
+                <StackPanel>
+                    <StackPanel Style="{StaticResource PanelFields}">
                         <Label Content="ID:" 
                                Margin="5,0,37,0"
                                Style="{StaticResource LabelFields}"/>
                         <TextBox Name="txtIdBrand" 
-                             Width="100"
-                             Height="25"    
-                             Background="#F0F0F0"
-                             IsReadOnly="True"/>
+                                 Width="100"
+                                 Height="25"   
+                                 Background="#F0F0F0"
+                                 IsReadOnly="True"/>
                     </StackPanel>
                     <StackPanel  Style="{StaticResource PanelFields}">
                         <Label Content="Category:" 
@@ -67,9 +71,7 @@
                                          Height="25" 
                                          FontSize="14"
                                          BorderBrush="#CCCCCC"/>
-
                     </StackPanel>
-
                     <StackPanel  Style="{StaticResource PanelFields}">
                         <Label Content="Name:" 
                                Margin="5,0,17,0"
@@ -136,19 +138,16 @@
                 </StackPanel>
             </StackPanel>
         </Border>
-        <Border Grid.Row="1" 
-                Style="{StaticResource SectionBorder}" 
-                Margin="0,0,0,0">
+        <Border Grid.Row="2" 
+                Style="{StaticResource SectionBorder}">
             <StackPanel Grid.Row="0" 
                         Grid.Column="0"
                         Orientation="Horizontal">
                 <TextBlock Text="Search:" 
                            FontWeight="SemiBold" 
-                           Margin="0,0,10,0"
+                           Margin="10,0,18,0"
                            Foreground="#333333"
                            VerticalAlignment="Center"/>
-
-
                 <TextBox Name="txtSearch" 
                          Width="430"
                          Height="35" 
@@ -159,7 +158,7 @@
 
 
         </Border>
-        <Border Grid.Row="2" 
+        <Border Grid.Row="3" 
                 Style="{StaticResource SectionBorder}"
                 Margin="0,0,0,10">
 
@@ -172,68 +171,52 @@
                                Foreground="#333333"/>
             </StackPanel>
         </Border>
-        <Border Grid.Row="3" 
+        <Border Grid.Row="4" 
                     Style="{StaticResource SectionBorder}"
                     Padding="0">
             <ListView x:Name="gridBrands" 
-                          Background="Transparent"
-                          BorderThickness="0"
-                          ScrollViewer.VerticalScrollBarVisibility="Auto"
-                          Width="auto"
-                          Height="335" 
-                          VerticalAlignment="Top"
-                          Cursor="Hand"
-                          ItemsSource="{Binding Product}" >
+                      Style="{StaticResource ListViewStyle}"
+                      ItemsSource="{Binding Product}">
 
                 <ListView.View>
-                    <GridView>
-                        <GridViewColumn Header="ID" Width="70">
+                    <GridView x:Name="gridCellBrands">
+                        <GridViewColumn Header="ID">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding IdBrand}" 
-                                                   Margin="10,0" 
-                                                   VerticalAlignment="Center"
-                                                   FontWeight="SemiBold"/>
+                                    <Border Style="{StaticResource GVBorderTextDefault}">
+                                        <TextBlock Text="{Binding IdBrand}"/>
+                                    </Border>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn Header="Product" Width="280">
+                        <GridViewColumn Header="Product">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" Margin="5">
-                                        <TextBlock Text="{Binding Icono}" 
-                                                       FontSize="16" 
-                                                       Margin="0,0,8,0"/>
-                                        <TextBlock Text="{Binding Products}" 
-                                                       VerticalAlignment="Center"/>
-                                    </StackPanel>
+                                    <Border Style="{StaticResource GVBorderText}">
+                                        <TextBlock Text="{Binding Products}" />
+                                    </Border>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn Header="Brand" Width="220">
+                        <GridViewColumn Header="Brand">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" Margin="5">
-                                        <TextBlock Text="{Binding Icono}" 
-                                                       FontSize="16" 
-                                                       Margin="0,0,8,0"/>
-                                        <TextBlock Text="{Binding Name}" 
-                                                       VerticalAlignment="Center"/>
-                                    </StackPanel>
+                                    <Border Style="{StaticResource GVBorderText}">
+                                        <TextBlock Text="{Binding Name}" />
+                                    </Border>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn Header="Price" Width="120" >
+                        <GridViewColumn Header="Price">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding Price, StringFormat='${0:N2}'}" 
-                                                   FontWeight="Bold"
-                                                   Foreground="#2196F3"
-                                                   TextAlignment="Right"/>
+                                    <Border Style="{StaticResource GVBorderCurrency}">
+                                        <TextBlock Text="{Binding Price, StringFormat='${0:N2}'}"/>
+                                    </Border>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn Header="Action" Width="auto">
+                        <GridViewColumn Header="Action">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Style="{StaticResource GridButtonPanel}">
@@ -249,16 +232,16 @@
                 </ListView.View>
             </ListView>
         </Border>
-        <Border Grid.Row="4" >
+        <Border Grid.Row="5"   
+                Style="{StaticResource SectionBorder}" >
             <ctrl:PageNavigation 
                 x:Name="pageControl"
                 PageComboboxChanged ="PageNavigation_SelectionChanged"
                 PreviousClick ="PagePrevious_Click"
                 NextClick="PageNext_Click"/>
         </Border>
-        <Border Grid.Row="5" 
-                Style="{StaticResource SectionBorder}" 
-                Margin="0,0,0,0">
+        <Border Grid.Row="6" 
+                Style="{StaticResource SectionBorder}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>

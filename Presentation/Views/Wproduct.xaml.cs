@@ -48,6 +48,7 @@ namespace SIMA.Presentation.Views
 
             InitializeComponent();
             FormProduct.Visibility = Visibility.Hidden;
+            FormProduct.Height = 0;
             _page = new Paging();
             _util = new Util();
             _config = _util.CustomConfiguration();
@@ -109,7 +110,11 @@ namespace SIMA.Presentation.Views
             txtPrice.Text = string.Empty;
             txtSearch.Text = string.Empty;
             cmbCategory.SelectedIndex = 0;
+
+            //Edit panel Closing
             FormProduct.Visibility = Visibility.Hidden;
+            FormProduct.Height = 0;
+            ResizeGrid("60%");
         }
         /// <summary>
         /// Update the Total result of the rows and update the labels on the grid 
@@ -121,6 +126,16 @@ namespace SIMA.Presentation.Views
             _page.parsePageData(intotal);
             txtResults.Text = getResultMsgAsync(intotal);
             pagingLabels(intotal);
+        }
+        /// <summary>
+        /// Managment of Responsive Windows
+        /// </summary>
+        /// <param name="gridheight">Size Height = Only Numeric string percent {Size}% or Size}</param>
+        public void ResizeGrid(string gridheight)
+        {
+            gridheight = this.WindowState == WindowState.Maximized ? "60%" : gridheight;
+            _util.ResponsiveListViewHeight(gridProducts, this.ActualHeight, gridheight);
+            _util.ResponsiveGridWidth(gridCellProducts, this.ActualWidth, _util.CommonSizeGrid);
         }
         #endregion
 
@@ -246,13 +261,22 @@ namespace SIMA.Presentation.Views
         /// <param name="param"></param>
         public void Edit(ProductParam param)
         {
+            //Edit panel visualization
             FormProduct.Visibility = Visibility.Visible;
+            FormProduct.Height = Double.NaN;
+            ResizeGrid("40%");
+
+            //Set the Field Values from the grid
             txtIdProduct.Text = param.idProduct.ToString();
             txtName.Text = param.name;
+            txtPrice.Text = param.price.ToString();
+
+            //Set the Field Values for Category
             cmbCategory.Text = param.categorys; //var dummy  
             var itemCat = cmbCategory.OrignalSource.First(p => p.Id == param.idCategory);
             cmbCategory.SelectedItem = itemCat;
-            txtPrice.Text = param.price.ToString(); 
+            
+
         }
         #endregion
 
@@ -417,10 +441,14 @@ namespace SIMA.Presentation.Views
             _util.Loading_spimmer(wloading, false);
             this.SupressEventComboBox(false);
         }
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private void Vm_ShowErrorFromModel(string mensaje)
         {
-            cmbCategory.SelectedIndex = 0;
-
+            _util.Loading_spimmer(wloading, false);
+            MessageBox.Show(this, mensaje, "Model Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            ResizeGrid("60%");
         }
         #endregion
 

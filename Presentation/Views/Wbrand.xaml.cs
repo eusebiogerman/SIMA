@@ -46,8 +46,8 @@ namespace SIMA.Presentation.Views
         {
 
             InitializeComponent();
-
             FormBrand.Visibility = Visibility.Hidden;
+            FormBrand.Height = 0;
             _page = new Paging();
             _util = new Util();
             _config = _util.CustomConfiguration();
@@ -116,6 +116,9 @@ namespace SIMA.Presentation.Views
             txtSearch.Text = string.Empty;
             cmbCategory.SelectedIndex = 0;
             FormBrand.Visibility = Visibility.Hidden;
+            FormBrand.Height = 0;
+            ResizeGrid("60%");
+
         }
         /// <summary>
         /// Update the Total result of the rows and update the labels on the grid 
@@ -127,6 +130,14 @@ namespace SIMA.Presentation.Views
             _page.parsePageData(intotal);
             txtResults.Text = getResultMsgAsync(intotal);
             pagingLabels(intotal);
+        }
+        /// <summary>
+        /// Managment of Responsive Windows
+        /// </summary>
+        /// <param name="gridheight">Size Height = Only Numeric string percent {Size}% or Size}</param>
+        public void ResizeGrid(string gridheight) {
+            _util.ResponsiveListViewHeight(gridBrands, this.ActualHeight, gridheight);
+            _util.ResponsiveGridWidth(gridCellBrands, this.ActualWidth, _util.CommonSizeGrid);
         }
         #endregion
 
@@ -278,13 +289,21 @@ namespace SIMA.Presentation.Views
         {
 
             FormBrand.Visibility = Visibility.Visible;
+            FormBrand.Height= Double.NaN;
+            ResizeGrid("40%");
+
+            //Set the Field Values from the grid
             txtIdBrand.Text = param.idBrand.ToString();
             txtName.Text = param.name;
+            txtPrice.Text = param.price.ToString();
+
+            //Set the Field Values for Category
             cmbCategory.Text = param.categorys; //dumny select
             var itemCat = await Task.Run(()=> cmbCategory.OrignalSource.FirstOrDefault(p => p.Id == param.idCategory));
             cmbCategory.SelectedItem = itemCat;
             cmbCategory.Close();
-            txtPrice.Text = param.price.ToString();
+
+            // Set the Field Valuesfor product
             cmbPropduct.Text = param.products; //dumny select
             var itemProd = await Task.Run(()=> cmbPropduct.OrignalSource.FirstOrDefault(p => p.Id == param.idProduct));  
             cmbPropduct.SelectedItem = itemProd;
@@ -485,6 +504,10 @@ namespace SIMA.Presentation.Views
         {
             _util.Loading_spimmer(wloading, false);
             MessageBox.Show(this, mensaje, "Model Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            ResizeGrid("60%");
         }
         #endregion
 

@@ -6,14 +6,16 @@
         xmlns:ctrl="clr-namespace:SIMA.Templates"
         mc:Ignorable="d"
         Title="Category Management" 
-        Height="710" 
-        Width="560"
         Background="#F5F5F5"
         WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize" Closing="Window_Closing" Loaded="Window_Loaded" Initialized="Window_Initialized">
+        Closing="Window_Closing" 
+        Loaded="Window_Loaded" 
+        Initialized="Window_Initialized" 
+        SizeChanged="Window_SizeChanged">
 
-    <Grid >
+    <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -24,89 +26,75 @@
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" 
-                Style="{StaticResource SectionBorder}"
-                Margin="0,0,0,0">
-
-            <StackPanel Grid.Row="1" >
-                <StackPanel>
-                    <TextBlock Text="CATEGORY MANAGMENT" 
+                Style="{StaticResource SectionBorder}">
+            <StackPanel >
+                <TextBlock Text="CATEGORY MANAGMENT" 
                                Style="{StaticResource Titleselection}"
                                TextAlignment="Center"/>
+            </StackPanel>
+        </Border>
+        <Border Grid.Row="1"
+                x:Name="FormCategory"
+                Style="{StaticResource SectionBorder}"
+                Margin="0,0,0,0">
+            <StackPanel>
+                <StackPanel  Style="{StaticResource PanelFields}">
+                    <Label Content="ID:" 
+                               Margin="5,0,37,0"
+                               Style="{StaticResource LabelFields}"/>
+                    <TextBox Name="txtIdCategory" 
+                             Width="100"
+                             Height="25"    
+                             Background="#F0F0F0"
+                             IsReadOnly="True"/>
                 </StackPanel>
-                <StackPanel x:Name="FormCategory">
-                    <StackPanel Orientation="Horizontal">
-                        <Label Content="ID:" 
-                           FontWeight="SemiBold" 
-                           BorderThickness="0"
-                           Margin="30,0,45,0"/>
-                        <Label Content="Name:" 
-                           FontWeight="SemiBold" 
-                           BorderThickness="0"/>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBox Text="{Binding IdCategory}"    
-                     Name="txtIdCategory" 
-                     Width="100"
-                     Padding="2" 
-                     Background="#F0F0F0"/>
-
-                        <TextBox Text="{Binding Name, 
-                            UpdateSourceTrigger=PropertyChanged, 
-                            ValidatesOnNotifyDataErrors=True}"    
-                    Name="txtName" 
-                     Width="320"
-                     Padding="5" 
-                     Background="#F0F0F0">
-                            <TextBox.Resources>
-                                <ControlTemplate x:Key="NameErrorTemplate">
-                                    <StackPanel>
-                                        <AdornedElementPlaceholder Name="placeholder"/>
-                                        <TextBlock Text="{Binding ElementName=placeholder, 
-                           Path=AdornedElement.(Validation.Errors)[0].ErrorContent}" 
+                <StackPanel  Style="{StaticResource PanelFields}">
+                    <Label Content="Name:" 
+                               Margin="5,0,17,0"
+                               Style="{StaticResource LabelFields}"/>
+                    <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"  
+                                 Name="txtName" 
+                                 Width="400"
+                                 Padding="5" 
+                                 Background="#F0F0F0">
+                        <TextBox.Resources>
+                            <ControlTemplate x:Key="NameErrorTemplate">
+                                <StackPanel>
+                                    <AdornedElementPlaceholder Name="placeholder"/>
+                                    <TextBlock Text="{Binding ElementName=placeholder,Path=AdornedElement.(Validation.Errors)[0].ErrorContent}" 
                            Foreground="Red" FontSize="10"/>
-                                    </StackPanel>
-                                </ControlTemplate>
-                            </TextBox.Resources>
+                                </StackPanel>
+                            </ControlTemplate>
+                        </TextBox.Resources>
 
-                            <Validation.ErrorTemplate>
-                                <StaticResource ResourceKey="NameErrorTemplate"/>
-                            </Validation.ErrorTemplate>
-                        </TextBox>
-                        <Button Name="btnsSaveCategory" 
-                                Content="&#x1F4BE; Save" 
-                                Style="{StaticResource CommunButton}"
-                                Background="#377d0c"
-                                Foreground="White"
-                                Click="btnsSaveCategory_Click" />
-
-                    </StackPanel>
+                        <Validation.ErrorTemplate>
+                            <StaticResource ResourceKey="NameErrorTemplate"/>
+                        </Validation.ErrorTemplate>
+                    </TextBox>
                 </StackPanel>
             </StackPanel>
         </Border>
-        <Border Grid.Row="1" 
+        <Border Grid.Row="2" 
                 Style="{StaticResource SectionBorder}" 
                 Margin="0,0,0,0">
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Search:" 
                            FontWeight="SemiBold" 
-                           Margin="0,0,10,0"
+                           Margin="8,0,21,0"
                            Foreground="#333333"
                            VerticalAlignment="Center"/>
-
-
                 <TextBox Text="{Binding Name, 
                             UpdateSourceTrigger=PropertyChanged, 
                             ValidatesOnNotifyDataErrors=True}"    
-                    Name="txtSearch" 
-                     Width="430"
-                     Height="35" 
-                     Padding="5" 
-                     Background="#F0F0F0" TextChanged="txtSearch_TextChanged"/>
+                         Name="txtSearch" 
+                         Width="400"
+                         Height="25" 
+                         Padding="5" 
+                         Background="#F0F0F0" 
+                         TextChanged="txtSearch_TextChanged"/>
             </StackPanel>
-
-
         </Border>
-        <Border Grid.Row="2" 
+        <Border Grid.Row="3" 
                     Style="{StaticResource SectionBorder}"
                     Margin="0,0,0,10">
 
@@ -118,41 +106,29 @@
                                Foreground="#333333"/>
             </StackPanel>
         </Border>
-        <Border Grid.Row="3" 
+        <Border Grid.Row="4" 
                     Style="{StaticResource SectionBorder}"
                     Padding="0">
-            <ListView x:Name="gridProducts" 
-                          Background="Transparent"
-                          BorderThickness="0"
-                          ScrollViewer.VerticalScrollBarVisibility="Auto"
-                          Width="auto"
-                          Height="335" 
-                          VerticalAlignment="Top"
-                          Cursor="Hand"
-                          ItemsSource="{Binding Categorys}" >
-
+            <ListView x:Name="gridCategory"
+                      Style="{StaticResource ListViewStyle}"
+                      ItemsSource="{Binding Categorys}" >
                 <ListView.View>
-                    <GridView>
+                    <GridView x:Name="gridCellCategory">
                         <GridViewColumn Header="ID" Width="100">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding IdCategory}" 
-                                                   Margin="10,0" 
-                                                   VerticalAlignment="Center"
-                                                   FontWeight="SemiBold"/>
+                                    <Border Style="{StaticResource GVBorderTextDefault}">
+                                        <TextBlock Text="{Binding IdCategory}"/>
+                                    </Border>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
                         <GridViewColumn Header="Name" Width="300">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" Margin="5">
-                                        <TextBlock Text="{Binding Icono}" 
-                                                       FontSize="16" 
-                                                       Margin="0,0,8,0"/>
-                                        <TextBlock Text="{Binding Name}" 
-                                                       VerticalAlignment="Center"/>
-                                    </StackPanel>
+                                    <Border Style="{StaticResource GVBorderText}">
+                                        <TextBlock Text="{Binding Name}" />
+                                    </Border>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
@@ -172,14 +148,14 @@
                 </ListView.View>
             </ListView>
         </Border>
-        <Border Grid.Row="4" >
+        <Border Grid.Row="5" >
             <ctrl:PageNavigation 
                 x:Name="pageControl"
                 PageComboboxChanged ="PageNavigation_SelectionChanged"
                 PreviousClick ="PagePrevious_Click"
                 NextClick="PageNext_Click"/>
         </Border>
-        <Border Grid.Row="5" 
+        <Border Grid.Row="6" 
                 Style="{StaticResource SectionBorder}" 
                 Margin="0,0,0,0">
             <Grid>
