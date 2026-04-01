@@ -13,8 +13,6 @@
         Initialized="Window_Initialized" 
         SizeChanged="Window_SizeChanged" WindowState="Maximized">
 
-
-
     <Grid Margin="5">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -336,5 +334,4 @@
             </Grid>
         </ScrollViewer>
     </Grid>
-
 </Window>

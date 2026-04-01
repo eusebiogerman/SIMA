@@ -20,10 +20,12 @@ using Microsoft.Extensions.Configuration;
 
 namespace SIMA.Templates
 {
-    public class Loading :Control
+    public class Loading : Control
     {
         private Popup? _popup;
         private Ellipse? _ellipse;
+
+        public const int DefaulDelay = 500; 
 
         static Loading()
         {
@@ -49,7 +51,6 @@ namespace SIMA.Templates
         public static readonly DependencyProperty MessageProperty =
             DependencyProperty.Register(nameof(Message), typeof(string), typeof(Loading));
 
-
         public int Delay
         {
             get => (int)GetValue(IsDelayProperty);
@@ -58,7 +59,6 @@ namespace SIMA.Templates
         public static readonly DependencyProperty IsDelayProperty =
             DependencyProperty.Register(nameof(Delay), typeof(int), typeof(Loading));
         #endregion
-
 
         #region Base Overriding Abstration
         public override void OnApplyTemplate()
@@ -70,8 +70,15 @@ namespace SIMA.Templates
         }
         #endregion
 
-
-        public void SetLoadingState(Action process, bool isloading,string message="Loading....",int delay=500)
+        #region Public Methods
+        /// <summary>
+        /// Open loading given the action delegated
+        /// </summary>
+        /// <param name="process">Action delegated</param>
+        /// <param name="isloading">Open load popup {True/False}</param>
+        /// <param name="message">Loadind Message</param>
+        /// <param name="delay">Decent Time to delay</param>
+        public void SetLoadingState(Action process, bool isloading,string message="Loading....",int delay= DefaulDelay)
         {
 
             Delay = delay;
@@ -82,7 +89,7 @@ namespace SIMA.Templates
             {
                 try
                 {
-                    _popup.IsOpen = IsLoading;
+                    RunProgress(isloading, message, delay);
                     new Task(() => { }).WaitAsync(TimeSpan.FromMilliseconds(Delay)).GetAwaiter().OnCompleted(() => 
                     { 
                         process.Invoke();
@@ -95,19 +102,24 @@ namespace SIMA.Templates
 
             }
           }
-
+        /// <summary>
+        ///  Open loading for Data Base Processind(Delay = ping the DB result) Async given the action delegated
+        /// </summary>
+        /// <param name="process">Action delegated</param>
+        /// <param name="isloading">Open load popup {True/False}</param>
+        /// <param name="message">Loadind Message</param>
         public void SetLoadingStateDataBase(Action process, IConfiguration config, bool isloading=true, string message = "Loading...." )
         {
 
-            Delay = DataBaseServices.PingSqlServer(config);
+            int delay = DataBaseServices.PingSqlServer(config) + DefaulDelay;
             IsLoading = isloading;
             Message = message;
 
-            if (_popup != null)
+            if (_popup != null )
             {
                 try
                 {
-                    _popup.IsOpen = IsLoading;
+                   RunProgress(isloading, message, delay);
                    new Task(() => { }).WaitAsync(TimeSpan.FromMilliseconds(Delay)).GetAwaiter().OnCompleted(() =>
                     {
                         process.Invoke();
@@ -119,13 +131,19 @@ namespace SIMA.Templates
                     StopProgress();
                     throw ex;
                 }
-
             }
         }
+        /// <summary>
+        ///  Open loading for Data Base Processind(Delay = ping the DB result) Async given the action delegated
+        /// </summary>
+        /// <param name="process">Function boolean delegated </param>
+        /// <param name="isloading">Open load popup {True/False}</param>
+        /// <param name="message">Loadind Message</param>
+        /// <returns>Scalar Boolean </returns>
         public bool SetLoadingStateDataBaseResult(Func<Task<bool>> process, IConfiguration config, bool isloading = true, string message = "Loading....")
         {
 
-            Delay = DataBaseServices.PingSqlServer(config);
+            int delay = DataBaseServices.PingSqlServer(config) + DefaulDelay;
             IsLoading = isloading;
             Message = message;
             bool _result = false;
@@ -134,7 +152,7 @@ namespace SIMA.Templates
             {
                 try
                 {
-                    _popup.IsOpen = IsLoading;
+                    RunProgress(isloading, message, delay);
                     new Task(() => { }).WaitAsync(TimeSpan.FromMilliseconds(Delay)).GetAwaiter().OnCompleted(async () =>
                     {
                         _result = await process.Invoke();
@@ -147,15 +165,26 @@ namespace SIMA.Templates
                     StopProgress();
                     throw ex;
                 }
-
             }
             return _result;
         }
-
-
-
-
-
+        /// <summary>
+        /// Open the Loading
+        /// </summary>
+        public bool RunProgress(bool isloading, string message = "Loading....", int delay = DefaulDelay)
+        {
+            IsLoading = isloading;
+            if (_popup != null && IsLoading)
+            {
+                _popup.IsOpen = IsLoading;
+                Delay = delay;
+                Message = message;
+            }
+            return IsLoading;
+        }
+        /// <summary>
+        /// Close or desactivate the Loading
+        /// </summary>
         public void StopProgress()
         {
             if (_popup != null)
@@ -166,6 +195,7 @@ namespace SIMA.Templates
                 Delay = 0;
             }
         }
+        #endregion
     }
 
 }

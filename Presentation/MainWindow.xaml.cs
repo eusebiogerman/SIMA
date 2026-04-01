@@ -16,7 +16,6 @@ using System.Xml.Linq;
 using SIMA.Templates;
 using System.Reflection.PortableExecutable;
 using System.Windows.Media.Media3D;
-
 namespace SIMA.Presentation
 {
     /// <summary>
@@ -26,18 +25,19 @@ namespace SIMA.Presentation
     {
         private StockProductServices _stockservices;
         private CategoryServices _categoryservices;
-        private bool _isloaded;
         private Paging _page;
         private Wstocks _windowStock;
         private Wproduct _wproduct;
         private Wcategory _wcategory;
         private Wbrand _wbrand;
         private Util _util;
-        private bool _isloadedCat;
-        private bool _isloadedStock;
+        private Task _process;
+        private bool _isloaded;
         private readonly IConfiguration _config;
         private readonly ViewModelBase _vm;
-        private Task _process;
+
+        private bool _isloadedCat;
+        private bool _isloadedStock;
 
         public MainWindow()
         {

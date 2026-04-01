@@ -27,6 +27,7 @@ namespace SIMA.Presentation.ViewModel
         private bool _isBusy;
         private string _message;
         private int _delay;
+        private object _passingParameter;
 
         #region Event Validation Properties
         public bool HasErrors => _errors.Any();
@@ -34,7 +35,8 @@ namespace SIMA.Presentation.ViewModel
         public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
         public event PropertyChangedEventHandler? PropertyChanged;
         public event Action<string> ShowErrorFromModel;
-        public event Action<Action> EventFromModel;
+        public event Action<object> ObjectEventFromModel;
+        public event Action<Action> ActionEventFromModel;
         public IEnumerable GetErrors(string? propertyName)
         {
             return _errors.GetValueOrDefault(propertyName ?? string.Empty, new List<string>());
@@ -42,6 +44,7 @@ namespace SIMA.Presentation.ViewModel
         public IConfiguration Config { get => _config; set => _config = value; }
         public Paging Page { get => _page; set => _page = value; }
         public int Delay { set => _delay = value; }
+        public object PassingParameter { get => _passingParameter; set => _passingParameter = value; }
         #endregion
 
         #region Observable Property
@@ -108,12 +111,16 @@ namespace SIMA.Presentation.ViewModel
             _isBusy = false;
             _isSupressed = false;
         }
-        public async void InvokeError(string errormeassage) {
+        public void InvokeError(string errormeassage) {
             ShowErrorFromModel?.Invoke(errormeassage);
         }
         public void InvokeEvent(Action execute)
         {
-           EventFromModel?.Invoke(execute);
+            ActionEventFromModel?.Invoke(execute);
+        }
+        public void InvokeEvent(object execute)
+        {
+            ObjectEventFromModel?.Invoke(execute);
         }
         #endregion
 

@@ -302,13 +302,13 @@ namespace SIMA.Presentation.Views
 
             //Set the Field Values for Category
             cmbCategory.Text = param.categorys; //dumny select
-            var itemCat = await Task.Run(() => cmbCategory.OrignalSource.FirstOrDefault(p => p.Id == param.idCategory));
+            var itemCat = await Task.Run(() => cmbCategory.OriginalSource.FirstOrDefault(p => p.Id == param.idCategory));
             cmbCategory.SelectedItem = itemCat;
             cmbCategory.Close();
 
             // Set the Field Valuesfor product
             cmbPropduct.Text = param.products; //dumny select
-            var itemProd = await Task.Run(() => cmbPropduct.OrignalSource.FirstOrDefault(p => p.Id == param.idProduct));
+            var itemProd = await Task.Run(() => cmbPropduct.OriginalSource.FirstOrDefault(p => p.Id == param.idProduct));
             cmbPropduct.SelectedItem = itemProd;
             cmbPropduct.Close();
             _editmode = false;

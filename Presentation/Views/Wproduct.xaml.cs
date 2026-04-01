@@ -273,7 +273,7 @@ namespace SIMA.Presentation.Views
 
             //Set the Field Values for Category
             cmbCategory.Text = param.categorys; //var dummy  
-            var itemCat = cmbCategory.OrignalSource.First(p => p.Id == param.idCategory);
+            var itemCat = cmbCategory.OriginalSource.First(p => p.Id == param.idCategory);
             cmbCategory.SelectedItem = itemCat;
 
 
