@@ -73,6 +73,7 @@
                                          DisplayMemberPath="Value"
                                          SelectedValuePath="Id"
                                          SelectedIndex="0"
+                                         IsChild ="True" 
                                          Width="300" 
                                          Height="25" 
                                          FontSize="14"

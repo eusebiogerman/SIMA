@@ -71,7 +71,6 @@ namespace SIMA.Presentation.Views
                 _categoryservices = new CategoryServices(Config);
                 _productservices = new ProductServices(Config);
                 FillLovCat();
-                FillProduct();
             });
         }
 
@@ -118,27 +117,7 @@ namespace SIMA.Presentation.Views
             }
 
         }
-        /// <summary>
-        /// get the Product data
-        /// </summary>
-        private async void FillProduct()
-        {
-            try
-            {
-                IEnumerable<ProductView> cat = await _productservices.GetViewAll(Page);
-                Product = new ObservableCollection<ProductView>(cat);
-            }
-            catch (Microsoft.Data.SqlClient.SqlException ex)
-            {
-                InvokeError("List Product DataBase Error Failed");
-            }
-            catch (Exception)
-            {
-                InvokeError("List Product System Error Failed");
-            }
-
-        }
-        #endregion
+          #endregion
 
 
 

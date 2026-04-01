@@ -43,6 +43,7 @@ namespace SIMA.Presentation.Views
         private IConfiguration _config;
         private bool _isloaded;
         private bool _editmode = false;
+        private bool _fromMain = false;
 
         public Wstocks()
         {
@@ -75,7 +76,9 @@ namespace SIMA.Presentation.Views
             _vm.ShowErrorFromModel += Vm_ShowErrorFromModel;
             _stockservices = new StockProductServices(_config);
             _brandsrervices = new BrandServices(_config);
-            _rowData = rowData;   
+            _rowData = rowData;
+            _editmode = _rowData != null;
+            _fromMain = _editmode;
         }
         /// <summary>
         /// 
@@ -125,12 +128,28 @@ namespace SIMA.Presentation.Views
             txtIdStock.Text = string.Empty;
             txtStock.Text = "0";
             txtSearch.Text = string.Empty;
-            cmbPropduct.SelectedIndex = 0;
+
+            cmbBrand.Clear();
+
+            //Set the Field Default Values for Product
+            cmbPropduct.Text = " ";
+            LovObject? itemProd = cmbPropduct.OriginalSource.FirstOrDefault(p => p.Id == null);
+            cmbPropduct.SelectedItem = itemProd;
+            cmbPropduct.Commit();
+            cmbPropduct.Close();
+
+            //Set the Field Default Values for Brands
+            cmbBrand.Text = " "; //dumny select
+            LovObject? itemBrand = ((IEnumerable<LovObject>)cmbBrand.ItemsSource)?.FirstOrDefault(p => p.Id == null);
+            cmbBrand.SelectedItem = itemBrand;
+            cmbBrand.Commit();
+            cmbBrand.Close();
 
             //Edit panel Closing
             FormStock.Visibility = Visibility.Hidden;
             FormStock.Height = 0;
             ResizeGrid("60%");
+
 
         }
         /// <summary>
@@ -172,16 +191,9 @@ namespace SIMA.Presentation.Views
         /// <returns></returns>
         public StockProductParam activeFilters()
         {
-            int? idprod = cmbPropduct.getSelectedItem().Id;
-            int? idbrand = cmbBrand.getSelectedItem().Id;
-            int? didstock = !string.IsNullOrEmpty(txtIdStock.Text) ? int.Parse(txtIdStock.Text.ToString()) : null;
-            int? dstock = !string.IsNullOrEmpty(txtStock.Text) ? int.Parse(txtStock.Text.ToString()) : null;
             return new StockProductParam
             {
-                idStock = didstock,
-                idProduct = idprod,
-                idBrand = idbrand,
-                stock = dstock,
+                brands = txtSearch.Text,
                 offset = 0,
                 limit = 10
             };
@@ -194,16 +206,17 @@ namespace SIMA.Presentation.Views
         {
             try
             {
-
-                int? dummy = (id == 0 || !id.HasValue) ? -1 : null;
-                var param = new BrandParam { idProduct = id, idBrand = dummy };
-                IEnumerable<BrandView> cat = await _brandsrervices.GetByFilter(param);
-                cmbBrand.ItemsSource = cat.Select(p => new LovObject { Id = p.IdBrand, Value = p.Name });
-                if (!_editmode)
+                progress.SetLoadingStateDataBase(async () =>
                 {
-                    cmbBrand.SelectedIndex = 0;
-                }
-
+                    int? dummy = (id == 0 || !id.HasValue) ? -1 : null;
+                    var param = new BrandParam { idProduct = id, idBrand = dummy };
+                    IEnumerable<BrandView> cat = await _brandsrervices.GetByFilter(param);
+                    cmbBrand.ItemsSource = cat.Select(p => new LovObject { Id = p.IdBrand, Value = p.Name });
+                    if (!_editmode || !_fromMain)
+                    {
+                        cmbBrand.SelectedIndex = 0;
+                    }
+                }, _config, true, "Loading Brand list...");
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
@@ -324,7 +337,7 @@ namespace SIMA.Presentation.Views
             txtIdStock.Text = param.idStock.ToString();
             txtStock.Text = param.stock.ToString();
 
-            if (_editmode)
+            if (_editmode || _fromMain)
             {
                 //Set the Field Values for Product
                 cmbPropduct.Text = param.products; //dumny select
@@ -333,13 +346,9 @@ namespace SIMA.Presentation.Views
                 cmbPropduct.Close();
 
                 //Set the Field Values for Brand
-                Thread.Sleep(500);
                 cmbBrand.Text = param.brands; //dumny select
-                var itemBrand = (cmbBrand.OriginalSource)?.FirstOrDefault(p => p.Id == param.idBrand);
-                if (itemBrand != null)
-                {
-                    cmbBrand.SelectedItem = itemBrand;
-                }
+                var itemBrand = ((IEnumerable<LovObject>)cmbBrand.ItemsSource)?.FirstOrDefault(p => p.Id == param.idBrand);
+                cmbBrand.SelectedItem = itemBrand;
                 cmbBrand.Close();
             }
             else {
@@ -417,9 +426,17 @@ namespace SIMA.Presentation.Views
             if (!_isloaded)
             {
                 _page.Limit = (int)pageControl.GetSelectedItemsPerPage();
-                Filter(activeFilters());
+                if(!_fromMain) {
+                    Filter(activeFilters());
+                }
                 UpdatePaging();
             }
+        }
+        private void btnRefresh_Click(object sender, RoutedEventArgs e)
+        {
+            _page.Limit = (int)pageControl.GetSelectedItemsPerPage();
+            Filter(activeFilters());
+            UpdatePaging();
         }
         private async void cmbPropduct_SelectionChanged(object sender, RoutedEventArgs e)
         {
@@ -437,7 +454,7 @@ namespace SIMA.Presentation.Views
 
             try
             {
-                if (!_isloaded)
+                if (!_isloaded && !_fromMain)
                 {
                     await Task.Delay(300, _cts.Token);
                     FilterbyText(activeFilters());
@@ -541,18 +558,11 @@ namespace SIMA.Presentation.Views
         {
             MessageBox.Show(this, mensaje, "Model Error", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
-
-
-
-        #endregion
-
-
-
         private void Window_ContentRendered(object sender, EventArgs e)
         {
             if (_rowData != null)
             {
-                _editmode = true;
+                this.SupressEventComboBox(false);
                 Edit(new StockProductParam
                 {
                     idStock = _rowData.IdStock,
@@ -562,9 +572,18 @@ namespace SIMA.Presentation.Views
                     products = _rowData.Products,
                     brands = _rowData.Brands
                 });
+                _fromMain = false;
+                Filter(new StockProductParam { idBrand = _rowData.IdBrand });
             }
 
         }
+        #endregion
+
+
+
+
+
+
     }
 }
 

@@ -61,13 +61,13 @@ namespace SIMA.Presentation.Views
                 FillLovProd();
             });
         }
-        public StockViewModel(Paging page, IConfiguration config) :base(page, config) 
+        public StockViewModel(Paging page, IConfiguration config,bool fillgrid = true) :base(page, config) 
         {
             InitializeModel(() =>
             {
                 _stockservices = new StockProductServices(Config);
                 _productservices = new ProductServices(Config);
-                FillLovProd();
+                 FillLovProd();
             });
         }
 
@@ -107,7 +107,6 @@ namespace SIMA.Presentation.Views
                 InvokeError("PopupLov Product System Error Failed");
             }
         }
-
         #endregion
 
     }

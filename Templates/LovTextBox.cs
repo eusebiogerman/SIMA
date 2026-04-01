@@ -18,7 +18,7 @@ namespace SIMA.Templates
     {
         public int? Id { get; set; }
         public string? Value { get; set; }
-        
+
     }
     public class LovTextBox : Control
     {
@@ -37,18 +37,19 @@ namespace SIMA.Templates
                 typeof(LovTextBox),
                 new FrameworkPropertyMetadata(typeof(LovTextBox)));
         }
- 
+
         #region Dependecy Properties
         public IEnumerable ItemsSource
         {
             get => (IEnumerable)GetValue(ItemsSourceProperty);
-            set  {
-                  _orignalSource = value;
+            set
+            {
+                _orignalSource = value;
                 SetValue(ItemsSourceProperty, value);
             }
         }
         public static readonly DependencyProperty ItemsSourceProperty =
-             DependencyProperty.Register(nameof(ItemsSource),typeof(IEnumerable),typeof(LovTextBox),new PropertyMetadata(null, OnItemsSourceChanged));
+             DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(LovTextBox), new PropertyMetadata(null, OnItemsSourceChanged));
 
         public string DisplayMemberPath
         {
@@ -69,11 +70,12 @@ namespace SIMA.Templates
         public int SelectedIndex
         {
             get => (int)GetValue(SelectedIndexProperty);
-            set => SetValue(SelectedIndexProperty, value);
+            set  { SetValue(SelectedIndexProperty, value);
+            }
         }
         public static readonly DependencyProperty SelectedIndexProperty =
             DependencyProperty.Register(nameof(SelectedIndex), typeof(int), typeof(LovTextBox));
-              
+
         public object SelectedItem
         {
             get => GetValue(SelectedItemProperty);
@@ -96,8 +98,8 @@ namespace SIMA.Templates
             private set => SetValue(OriginalSourceProperty, value);
         }
         public static readonly DependencyProperty OriginalSourceProperty =
-            DependencyProperty.Register(nameof(OriginalSource),typeof(IEnumerable<LovObject>),typeof(LovTextBox),new PropertyMetadata(null));
-        
+            DependencyProperty.Register(nameof(OriginalSource), typeof(IEnumerable<LovObject>), typeof(LovTextBox), new PropertyMetadata(null));
+
         public bool IsChild
         {
             get => (bool)GetValue(IsChildProperty);
@@ -105,10 +107,6 @@ namespace SIMA.Templates
         }
         public static readonly DependencyProperty IsChildProperty =
             DependencyProperty.Register(nameof(IsChild), typeof(bool), typeof(LovTextBox));
-
-
-
-
         #endregion
 
         #region Events
@@ -119,14 +117,14 @@ namespace SIMA.Templates
                 if (_popup.IsOpen)
                 {
                     _listBox?.Focus();
-                   /* if (_listBox?.Items.Count > 0)
-                        _listBox.SelectedIndex = 0;*/
+                    /* if (_listBox?.Items.Count > 0)
+                         _listBox.SelectedIndex = 0;*/
                 }
             }
         }
         private void ListBox_KeyDown(object sender, KeyEventArgs e)
         {
-           
+
             if (e.Key == Key.Enter)
             {
                 CommitSelection();
@@ -152,7 +150,6 @@ namespace SIMA.Templates
             if (control._listBox != null)
                 control._listBox.ItemsSource = (IEnumerable)e.NewValue;
         }
-
         public static readonly RoutedEvent LovTextBoxChangedEvent =
         EventManager.RegisterRoutedEvent("LovTextBoxChanged", RoutingStrategy.Direct, typeof(RoutedEventHandler), typeof(LovTextBox));
         public event RoutedEventHandler LovTextBoxChanged
@@ -160,8 +157,6 @@ namespace SIMA.Templates
             add => AddHandler(LovTextBoxChangedEvent, value);
             remove => RemoveHandler(LovTextBoxChangedEvent, value);
         }
-
-
         #endregion
 
         #region Base Overriding Abstration
@@ -173,7 +168,7 @@ namespace SIMA.Templates
             _popup = GetTemplateChild("PART_Popup") as Popup;
             _listBox = GetTemplateChild("PART_ListBox") as ListBox;
             _button = GetTemplateChild("PART_Button") as Button;
-            
+
 
             if (_textBox != null)
             {
@@ -187,17 +182,20 @@ namespace SIMA.Templates
                 _listBox.MouseDoubleClick += (s, e) => CommitSelection();
                 _listBox.PreviewKeyDown += ListBox_KeyDown;
                 _listBox.SelectionChanged += ListBox_SelectionChange;
-    
 
 
-                if (_textBox != null) {
+
+
+                if (_textBox != null)
+                {
                     selectValue(_listBox);
                 }
             }
 
-            if (_button != null) { 
+            if (_button != null)
+            {
                 _button.Height = this.Height;
-                _button.Width = (this.Width * 0.1) ;
+                _button.Width = (this.Width * 0.1);
                 _button.Click += (s, e) => OpenPopup(true);
             }
 
@@ -209,13 +207,15 @@ namespace SIMA.Templates
         /// Set and Raise the Routed Event Property Change fot the Texbox  
         /// </summary>
         /// <param name="mlistbox"></param>
-        private void selectValue(ListBox mlistbox) {
-            if (mlistbox.SelectedItem != null) {
+        private void selectValue(ListBox mlistbox)
+        {
+            if (mlistbox.SelectedItem != null)
+            {
                 LovObject? lovItem = (LovObject)mlistbox.SelectedItem;
                 SelectedItem = lovItem;
                 Text = lovItem?.Value;
 
-                if(lovItem != null)
+                if (lovItem != null)
                     RaiseEvent(new RoutedEventArgs(LovTextBoxChangedEvent));
             }
         }
@@ -283,14 +283,16 @@ namespace SIMA.Templates
                 return sender.SelectedItem != null
                     ? (LovObject)sender.SelectedItem
                     : EmptyItem;
-            }else
+            }
+            else
                 return EmptyItem;
         }
         /// <summary>
         /// Return the (LovTextBox)object selected(to handle Event sender when changeEvent fore ) 
         /// </summary>
         /// <returns></returns>
-        public LovObject getSelectedItem(object sender) {
+        public LovObject getSelectedItem(object sender)
+        {
             if (sender != null)
                 return (LovObject)((LovTextBox)sender).SelectedItem;
             else
@@ -299,8 +301,29 @@ namespace SIMA.Templates
         /// <summary>
         /// 
         /// </summary>
-        public void Close() {
+        public void Close()
+        {
             ClosePopup();
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Commit()
+        {
+            CommitSelection();
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <exception cref="NotImplementedException"></exception>
+        public void Clear()
+        {
+         var clear =  new List<LovObject>();
+            ItemsSource = clear;
+            _listBox.ItemsSource = clear;
+            OriginalSource = clear;
+            SelectedIndex = -1;
+            SelectedItem = null; 
         }
         #endregion
 

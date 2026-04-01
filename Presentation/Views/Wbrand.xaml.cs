@@ -114,7 +114,23 @@ namespace SIMA.Presentation.Views
             txtName.Text = string.Empty;
             txtPrice.Text = string.Empty;
             txtSearch.Text = string.Empty;
-            cmbCategory.SelectedIndex = 0;
+
+            cmbPropduct.Clear();
+
+            //Set the Field Default Values for Category
+            cmbCategory.Text = " "; //dumny select
+            LovObject? itemCat = cmbCategory.OriginalSource.FirstOrDefault(p => p.Id == null);
+            cmbCategory.SelectedItem = itemCat;
+            cmbCategory.Commit();
+            cmbCategory.Close();
+
+            //Set the Field Default Values for Propducts
+            cmbPropduct.Text = " "; //dumny select
+            LovObject? itemProd = ((IEnumerable<LovObject>)cmbPropduct.ItemsSource)?.FirstOrDefault(p => p.Id == null);
+            cmbPropduct.SelectedItem = itemProd;
+            cmbPropduct.Commit();
+            cmbPropduct.Close();
+
             FormBrand.Visibility = Visibility.Hidden;
             FormBrand.Height = 0;
             ResizeGrid("60%");
@@ -184,8 +200,7 @@ namespace SIMA.Presentation.Views
                     {
                         cmbPropduct.SelectedIndex = 0;
                     }
-                }, _config, true, "Loading Products...");
-
+                }, _config, true, "Loading Product list...");
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
@@ -300,18 +315,26 @@ namespace SIMA.Presentation.Views
             txtName.Text = param.name;
             txtPrice.Text = param.price.ToString();
 
-            //Set the Field Values for Category
-            cmbCategory.Text = param.categorys; //dumny select
-            var itemCat = await Task.Run(() => cmbCategory.OriginalSource.FirstOrDefault(p => p.Id == param.idCategory));
-            cmbCategory.SelectedItem = itemCat;
-            cmbCategory.Close();
+            if (_editmode)
+            {
+                //Set the Field Values for Category
+                cmbCategory.Text = param.categorys; //dumny select
+                var itemCat = cmbCategory.OriginalSource.FirstOrDefault(p => p.Id == param.idCategory);
+                cmbCategory.SelectedItem = itemCat;
+                cmbCategory.Close();
 
-            // Set the Field Valuesfor product
-            cmbPropduct.Text = param.products; //dumny select
-            var itemProd = await Task.Run(() => cmbPropduct.OriginalSource.FirstOrDefault(p => p.Id == param.idProduct));
-            cmbPropduct.SelectedItem = itemProd;
-            cmbPropduct.Close();
-            _editmode = false;
+                //Set the Field Values for Propducts
+                cmbPropduct.Text = param.products; //dumny select
+                var itemProd = ((IEnumerable<LovObject>)cmbPropduct.ItemsSource)?.FirstOrDefault(p => p.Id == param.idProduct);
+                cmbPropduct.SelectedItem = itemProd;
+                cmbPropduct.Close();
+                _editmode = false;
+            }
+            else
+            {
+                cmbPropduct.SelectedIndex = 0;
+                cmbPropduct.SelectedIndex = 0;
+            }
         }
         #endregion
 
@@ -361,7 +384,8 @@ namespace SIMA.Presentation.Views
         }
         private void btnNewBrand_Click(object sender, RoutedEventArgs e)
         {
-            Edit(new BrandParam { idBrand = null, name = null, idCategory = null, categorys = null });
+         
+            Edit(new BrandParam());
         }
         private void btnsClear_Click(object sender, RoutedEventArgs e)
         {
@@ -479,10 +503,6 @@ namespace SIMA.Presentation.Views
             {
 
             }
-
-
-
-
         }
         private void Window_Initialized(object sender, EventArgs e)
         {

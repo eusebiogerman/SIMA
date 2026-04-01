@@ -138,7 +138,6 @@ namespace SIMA.Presentation.ViewModel
             if (_errors.Remove(propertyName))
                 OnErrorsChanged(propertyName);
         }
-
         #endregion
 
 

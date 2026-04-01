@@ -42,6 +42,7 @@ namespace SIMA.Presentation.Views
         private readonly IConfiguration _config;
         private bool _isloaded;
         private bool _isNewStock = false;
+        private bool _editmode = false;
 
         public Wproduct()
         {
@@ -109,7 +110,13 @@ namespace SIMA.Presentation.Views
             txtName.Text = string.Empty;
             txtPrice.Text = string.Empty;
             txtSearch.Text = string.Empty;
-            cmbCategory.SelectedIndex = 0;
+
+            //Set the Field Default Values for Category
+            cmbCategory.Text = " "; //dumny select
+            LovObject? itemCat = cmbCategory.OriginalSource.FirstOrDefault(p => p.Id == null);
+            cmbCategory.SelectedItem = itemCat;
+            cmbCategory.Commit();
+            cmbCategory.Close();
 
             //Edit panel Closing
             FormProduct.Visibility = Visibility.Hidden;
@@ -271,12 +278,17 @@ namespace SIMA.Presentation.Views
             txtName.Text = param.name;
             txtPrice.Text = param.price.ToString();
 
-            //Set the Field Values for Category
-            cmbCategory.Text = param.categorys; //var dummy  
-            var itemCat = cmbCategory.OriginalSource.First(p => p.Id == param.idCategory);
-            cmbCategory.SelectedItem = itemCat;
-
-
+            if (_editmode)
+            {
+                //Set the Field Values for Category
+                cmbCategory.Text = param.categorys; //var dummy  
+                var itemCat = cmbCategory.OriginalSource.FirstOrDefault(p => p.Id == param.idCategory);
+                cmbCategory.SelectedItem = itemCat;
+                cmbCategory.Close();
+                _editmode = false;
+            }
+            else
+                cmbCategory.SelectedIndex = 0;
         }
         #endregion
 
@@ -325,7 +337,8 @@ namespace SIMA.Presentation.Views
         }
         private void btnNewProduct_Click(object sender, RoutedEventArgs e)
         {
-            Edit(new ProductParam { idProduct = null, name = null, idCategory = null, categorys = null });
+            _editmode = false;
+            Edit(new ProductParam());
         }
         private void btnsClear_Click(object sender, RoutedEventArgs e)
         {
@@ -416,16 +429,13 @@ namespace SIMA.Presentation.Views
         {
             Button btn = sender as Button;
             ProductView rowData = (ProductView)btn.DataContext;
+            _editmode = true;
             Edit(new ProductParam
             {
-                idProduct = rowData.IdProduct
-            ,
-                idCategory = rowData.IdCategory
-            ,
-                name = rowData.Name
-            ,
-                categorys = rowData.Categorys
-            ,
+                idProduct = rowData.IdProduct,
+                idCategory = rowData.IdCategory,
+                name = rowData.Name,
+                categorys = rowData.Categorys,
                 price = rowData.Price
             });
 

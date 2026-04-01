@@ -16,6 +16,7 @@ using Dapper;
 using SIMA.Presentation.Views;
 using static Dapper.SqlMapper;
 using SIMA.Infrastructure.Repositories.Interfaces;
+using SIMA.ExtensionsHelper;
 
 namespace SIMA.Infrastructure.Repositories
 {
@@ -80,7 +81,6 @@ namespace SIMA.Infrastructure.Repositories
         {
             _config = config;   
             _stockProductFile = new JsonFile<StockProduct>();
-            _stockProductFile.loadData();
         }
 
         #region Database Action
@@ -88,7 +88,17 @@ namespace SIMA.Infrastructure.Repositories
         {
             using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
             {
-                return await conn.QueryAsync<StockProductView>("[dbo].[getStock]", param, commandType: System.Data.CommandType.StoredProcedure);
+                object inparam = new
+                {
+                    idStock = param.idStock,
+                    idBrand = param.idBrand,
+                    idProduct = param.idProduct,
+                    idCategory = param.idCategory,
+                    textSearch = param.brands.isNull(param.products).isNull(param.categorys),
+                    offset = param.offset,
+                    limit = param.limit
+                };
+                return await conn.QueryAsync<StockProductView>("[dbo].[getStock]", inparam, commandType: System.Data.CommandType.StoredProcedure);
             }
         }
         private async Task<int> setStock(StockProduct param)

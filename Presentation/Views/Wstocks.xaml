@@ -133,10 +133,17 @@
                            VerticalAlignment="Center"/>
                     <TextBox Name="txtSearch" 
                          Width="430"
-                         Height="35" 
+                         Height="25" 
                          Padding="5" 
                          Background="#F0F0F0" 
                          TextChanged="txtSearch_TextChanged"/>
+                    <Button x:Name="btnRefresh" 
+                            Style="{StaticResource CommunButton}"
+                            Content="&#x1F504; Refresh"
+                            Background="#2531DB"
+                            Foreground="#F2F2F2"                                
+                            Cursor="Hand" 
+                            Click="btnRefresh_Click" />
                 </StackPanel>
             </Border>
             <Border Grid.Row="3" 
