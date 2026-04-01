@@ -69,7 +69,7 @@ namespace SIMA.Presentation.Views
             _isloaded = val;
             if (this.DataContext != null)
                 ((ProductViewModel)this.DataContext).IsSupressed = val;
-       
+
         }
         /// <summary>
         /// Return and Update the message of the render Category result
@@ -193,21 +193,21 @@ namespace SIMA.Presentation.Views
         {
             try
             {
-                _util.Loading_spimmer(wloading, true, 1000);
-                IEnumerable<ProductView> cat = await _productservices.GetByFilter(param);
-                gridProducts.ItemsSource = cat.Where(p => p.IdProduct != null);
-                UpdatePaging();
-                _util.Loading_spimmer(wloading, false);
-
+                progress.SetLoadingStateDataBase(async () =>
+                {
+                    IEnumerable<ProductView> cat = await _productservices.GetByFilter(param);
+                    gridProducts.ItemsSource = cat.Where(p => p.IdProduct != null);
+                    UpdatePaging();
+                }, _config, true, "Loading Products...");
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
-                _util.Loading_spimmer(wloading, false);
+
                 MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             catch (Exception)
             {
-                _util.Loading_spimmer(wloading, false);
+
                 MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
 
@@ -221,21 +221,21 @@ namespace SIMA.Presentation.Views
         {
             try
             {
-                _util.Loading_spimmer(wloading, true, 1000);
+
                 IEnumerable<ProductView> cat = await _productservices.GetByFilter(param);
                 gridProducts.ItemsSource = cat.Where(p => p.IdProduct != null);
                 UpdatePaging();
-                _util.Loading_spimmer(wloading, false);
+
 
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
-                _util.Loading_spimmer(wloading, false);
+
                 MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             catch (Exception)
             {
-                _util.Loading_spimmer(wloading, false);
+
                 MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
 
@@ -275,7 +275,7 @@ namespace SIMA.Presentation.Views
             cmbCategory.Text = param.categorys; //var dummy  
             var itemCat = cmbCategory.OrignalSource.First(p => p.Id == param.idCategory);
             cmbCategory.SelectedItem = itemCat;
-            
+
 
         }
         #endregion
@@ -283,17 +283,20 @@ namespace SIMA.Presentation.Views
         #region Events
         private async void btnsSaveProduct_Click(object sender, RoutedEventArgs e)
         {
-            _util.Loading_spimmer(wloading, true, 1000);
+
             int? id = string.IsNullOrEmpty(txtIdProduct.Text) ? null : int.Parse(txtIdProduct.Text);
             int? idcat = ((LovObject)cmbCategory.SelectedItem).Id;
-            bool isset = await _productservices.Set(new Product
-            {
-                IdProduct = id,
-                IdCategory = idcat,
-                Name = txtName.Text,
-                Price = decimal.Parse(txtPrice.Text) 
-            });
+            string name = txtName.Text;
+            decimal price = decimal.Parse(txtPrice.Text);
 
+            bool isset = progress.SetLoadingStateDataBaseResult
+                (async () => await _productservices.Set(new Product
+                {
+                    IdProduct = id,
+                    IdCategory = idcat,
+                    Name = name,
+                    Price = price,
+                }), _config, true, "Saving Product...");
             try
             {
                 if (isset)
@@ -306,23 +309,23 @@ namespace SIMA.Presentation.Views
                 {
                     MessageBox.Show(this, "Error Saving Product", "Save Product", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 }
-                _util.Loading_spimmer(wloading, false);
+
 
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
-                _util.Loading_spimmer(wloading, false);
+
                 MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             catch (Exception)
             {
-                _util.Loading_spimmer(wloading, false);
+
                 MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
         private void btnNewProduct_Click(object sender, RoutedEventArgs e)
         {
-            Edit(new ProductParam { idProduct = null, name = null, idCategory = null,categorys = null});
+            Edit(new ProductParam { idProduct = null, name = null, idCategory = null, categorys = null });
         }
         private void btnsClear_Click(object sender, RoutedEventArgs e)
         {
@@ -377,7 +380,7 @@ namespace SIMA.Presentation.Views
             {
                 if (result == MessageBoxResult.Yes)
                 {
-                    _util.Loading_spimmer(wloading, true, 1000);
+
                     Button btn = sender as Button;
                     ProductView rowData = (ProductView)btn.DataContext;
                     bool valid = await _productservices.Delete(rowData.IdProduct) > 0;
@@ -390,18 +393,18 @@ namespace SIMA.Presentation.Views
                     {
                         MessageBox.Show(this, "Error removing the Product", "Product Stock", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
-                    _util.Loading_spimmer(wloading, false, 100);
+
 
                 }
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
-                _util.Loading_spimmer(wloading, false);
+
                 MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             catch (Exception)
             {
-                _util.Loading_spimmer(wloading, false);
+
                 MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
 
@@ -413,12 +416,17 @@ namespace SIMA.Presentation.Views
         {
             Button btn = sender as Button;
             ProductView rowData = (ProductView)btn.DataContext;
-            Edit(new ProductParam 
-            { idProduct = rowData.IdProduct
-            , idCategory = rowData.IdCategory
-            , name = rowData.Name 
-            , categorys = rowData.Categorys
-            , price = rowData.Price
+            Edit(new ProductParam
+            {
+                idProduct = rowData.IdProduct
+            ,
+                idCategory = rowData.IdCategory
+            ,
+                name = rowData.Name
+            ,
+                categorys = rowData.Categorys
+            ,
+                price = rowData.Price
             });
 
         }
@@ -433,17 +441,17 @@ namespace SIMA.Presentation.Views
         }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            _util.Loading_spimmer(wloading, true);
+
             _page.Offset = (int?)pageControl.GetSelectedItemsPerPage() ?? _page.DefaulOffset;
             this.SupressEventComboBox();
             FillLimitPageVal();
             UpdatePaging();
-            _util.Loading_spimmer(wloading, false);
+
             this.SupressEventComboBox(false);
         }
         private void Vm_ShowErrorFromModel(string mensaje)
         {
-            _util.Loading_spimmer(wloading, false);
+
             MessageBox.Show(this, mensaje, "Model Error", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)

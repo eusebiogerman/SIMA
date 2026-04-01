@@ -1,0 +1,49 @@
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
+using SIMA.Infrastructure.Repositories.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace SIMA.Infrastructure.Repositories
+{
+    public class DataBaseServices
+    {
+        private static IConfiguration _config;
+
+        public DataBaseServices(IConfiguration config) => _config = config;
+
+        public static int PingSqlServer(IConfiguration config)
+        {
+            _config = config;
+            var stopwatch = Stopwatch.StartNew();
+            try
+            {
+                using (var connection = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
+                {
+                    using var command = new SqlCommand("SELECT 1", connection);
+                    stopwatch = Stopwatch.StartNew();
+                    connection.Open();
+                    command.ExecuteScalar();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return -1;
+            }
+            finally
+            {
+                   stopwatch.Stop();
+            }
+
+            return (int)stopwatch.ElapsedMilliseconds;
+        }
+
+    }
+
+}
+

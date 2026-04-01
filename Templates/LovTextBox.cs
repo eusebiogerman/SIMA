@@ -20,9 +20,9 @@ namespace SIMA.Templates
     }
     public class LovTextBox : Control
     {
-        private TextBox _textBox;
-        private Popup _popup;
-        private ListBox _listBox;
+        private TextBox? _textBox;
+        private Popup? _popup;
+        private ListBox? _listBox;
         private Button? _button;
         private IEnumerable _orignalSource;
         private bool _isready = false;

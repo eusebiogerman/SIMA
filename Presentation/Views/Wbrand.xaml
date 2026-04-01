@@ -11,44 +11,50 @@
         Closing="Window_Closing" 
         Loaded="Window_Loaded" 
         Initialized="Window_Initialized" SizeChanged="Window_SizeChanged">
-    <Grid>
+
+
+    <Grid Margin="5">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Border Grid.Row="0" 
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Border Grid.Row="0" 
                 Style="{StaticResource SectionBorder}">
                 <StackPanel >
                     <TextBlock Text="BRAND MANAGMENT" 
                                Style="{StaticResource Titleselection}"
                                TextAlignment="Center"/>
                 </StackPanel>
-        </Border>
-        <Border Grid.Row="1" 
+            </Border>
+            <Border Grid.Row="1" 
                 x:Name="FormBrand"
                 Style="{StaticResource SectionBorder}">
-            <StackPanel>
                 <StackPanel>
-                    <StackPanel Style="{StaticResource PanelFields}">
-                        <Label Content="ID:" 
+                    <StackPanel>
+                        <StackPanel Style="{StaticResource PanelFields}">
+                            <Label Content="ID:" 
                                Margin="5,0,37,0"
                                Style="{StaticResource LabelFields}"/>
-                        <TextBox Name="txtIdBrand" 
+                            <TextBox Name="txtIdBrand" 
                                  Width="100"
                                  Height="25"   
                                  Background="#F0F0F0"
                                  IsReadOnly="True"/>
-                    </StackPanel>
-                    <StackPanel  Style="{StaticResource PanelFields}">
-                        <Label Content="Category:" 
+                        </StackPanel>
+                        <StackPanel  Style="{StaticResource PanelFields}">
+                            <Label Content="Category:" 
                                Margin="5,0,0,0"
                                Style="{StaticResource LabelFields}"/>
-                        <ctrl:LovTextBox x:Name="cmbCategory"
+                            <ctrl:LovTextBox x:Name="cmbCategory"
                                          ItemsSource="{Binding Category}"
                                          DisplayMemberPath="Value"
                                          SelectedValuePath="Id"
@@ -59,10 +65,10 @@
                                          BorderBrush="#CCCCCC"
                                          LovTextBoxChanged="cmbCategory_SelectionChanged"/>
 
-                        <Label Content="Product:" 
+                            <Label Content="Product:" 
                                Margin="5,0,0,0"
                                Style="{StaticResource LabelFields}"/>
-                        <ctrl:LovTextBox x:Name="cmbPropduct"
+                            <ctrl:LovTextBox x:Name="cmbPropduct"
                                          ItemsSource="{Binding Product}"
                                          DisplayMemberPath="Value"
                                          SelectedValuePath="Id"
@@ -71,230 +77,215 @@
                                          Height="25" 
                                          FontSize="14"
                                          BorderBrush="#CCCCCC"/>
-                    </StackPanel>
-                    <StackPanel  Style="{StaticResource PanelFields}">
-                        <Label Content="Name:" 
+                        </StackPanel>
+                        <StackPanel  Style="{StaticResource PanelFields}">
+                            <Label Content="Name:" 
                                Margin="5,0,17,0"
                                Style="{StaticResource LabelFields}"/>
 
-                        <TextBox Text="{Binding Name, 
+                            <TextBox Text="{Binding Name, 
                             UpdateSourceTrigger=PropertyChanged, 
                             ValidatesOnNotifyDataErrors=True}" 
                              Name="txtName" 
                              Width="400"
                              Height="25"    
                              Background="#F0F0F0">
-                            <TextBox.Resources>
-                                <ControlTemplate x:Key="NameErrorTemplate">
-                                    <StackPanel>
-                                        <AdornedElementPlaceholder Name="placeholder"/>
-                                        <TextBlock Text="{Binding ElementName=placeholder, 
+                                <TextBox.Resources>
+                                    <ControlTemplate x:Key="NameErrorTemplate">
+                                        <StackPanel>
+                                            <AdornedElementPlaceholder Name="placeholder"/>
+                                            <TextBlock Text="{Binding ElementName=placeholder, 
                            Path=AdornedElement.(Validation.Errors)[0].ErrorContent}" 
                            Foreground="Red" FontSize="10"/>
-                                    </StackPanel>
-                                </ControlTemplate>
-                            </TextBox.Resources>
+                                        </StackPanel>
+                                    </ControlTemplate>
+                                </TextBox.Resources>
 
-                            <Validation.ErrorTemplate>
-                                <StaticResource ResourceKey="NameErrorTemplate"/>
-                            </Validation.ErrorTemplate>
-                        </TextBox>
-                    </StackPanel>
-                    <StackPanel  Style="{StaticResource PanelFields}">
-                        <Label Content="Price:" 
+                                <Validation.ErrorTemplate>
+                                    <StaticResource ResourceKey="NameErrorTemplate"/>
+                                </Validation.ErrorTemplate>
+                            </TextBox>
+                        </StackPanel>
+                        <StackPanel  Style="{StaticResource PanelFields}">
+                            <Label Content="Price:" 
                                Margin="5,0,24,0"
                                Style="{StaticResource LabelFields}"/>
 
-                        <TextBox Text="{Binding Price, 
+                            <TextBox Text="{Binding Price, 
                             UpdateSourceTrigger=PropertyChanged, 
                             ValidatesOnNotifyDataErrors=True}" 
                              Name="txtPrice" 
                              Width="150"
                              Height="25"    
                              Background="#F0F0F0">
-                            <TextBox.Resources>
-                                <ControlTemplate x:Key="NameErrorTemplate">
-                                    <StackPanel>
-                                        <AdornedElementPlaceholder Name="placeholder"/>
-                                        <TextBlock Text="{Binding ElementName=placeholder, 
+                                <TextBox.Resources>
+                                    <ControlTemplate x:Key="NameErrorTemplate">
+                                        <StackPanel>
+                                            <AdornedElementPlaceholder Name="placeholder"/>
+                                            <TextBlock Text="{Binding ElementName=placeholder, 
                            Path=AdornedElement.(Validation.Errors)[0].ErrorContent}" 
                            Foreground="Red" FontSize="10"/>
-                                    </StackPanel>
-                                </ControlTemplate>
-                            </TextBox.Resources>
+                                        </StackPanel>
+                                    </ControlTemplate>
+                                </TextBox.Resources>
 
-                            <Validation.ErrorTemplate>
-                                <StaticResource ResourceKey="NameErrorTemplate"/>
-                            </Validation.ErrorTemplate>
-                        </TextBox>
-                        <Button Name="btnsSaveBrand" 
+                                <Validation.ErrorTemplate>
+                                    <StaticResource ResourceKey="NameErrorTemplate"/>
+                                </Validation.ErrorTemplate>
+                            </TextBox>
+                            <Button Name="btnsSaveBrand" 
                                 Content="&#x1F4BE; Save" 
                                 Style="{StaticResource CommunButton}"
                                 Background="#377d0c"
                                 Foreground="White"
                                 Click="btnsSaveBrand_Click" />
+                        </StackPanel>
                     </StackPanel>
-
                 </StackPanel>
-            </StackPanel>
-        </Border>
-        <Border Grid.Row="2" 
+            </Border>
+            <Border Grid.Row="2" 
                 Style="{StaticResource SectionBorder}">
-            <StackPanel Grid.Row="0" 
+                <StackPanel Grid.Row="0" 
                         Grid.Column="0"
                         Orientation="Horizontal">
-                <TextBlock Text="Search:" 
+                    <TextBlock Text="Search:" 
                            FontWeight="SemiBold" 
                            Margin="10,0,18,0"
                            Foreground="#333333"
                            VerticalAlignment="Center"/>
-                <TextBox Name="txtSearch" 
+                    <TextBox Name="txtSearch" 
                          Width="430"
                          Height="35" 
                          Padding="5" 
                          Background="#F0F0F0" 
                          TextChanged="txtSearch_TextChanged"/>
-            </StackPanel>
+                </StackPanel>
 
 
-        </Border>
-        <Border Grid.Row="3" 
+            </Border>
+            <Border Grid.Row="3" 
                 Style="{StaticResource SectionBorder}"
                 Margin="0,0,0,10">
 
-            <StackPanel Orientation="Horizontal" 
+                <StackPanel Orientation="Horizontal" 
                         HorizontalAlignment="Left">
-                <TextBlock x:Name="txtResults" 
+                    <TextBlock x:Name="txtResults" 
                                Text="📊 Show 12 Brand found" 
                                FontSize="12" 
                                FontWeight="SemiBold"
                                Foreground="#333333"/>
-            </StackPanel>
-        </Border>
-        <Border Grid.Row="4" 
+                </StackPanel>
+            </Border>
+            <Border Grid.Row="4" 
                     Style="{StaticResource SectionBorder}"
                     Padding="0">
-            <ListView x:Name="gridBrands" 
+                <ListView x:Name="gridBrands" 
                       Style="{StaticResource ListViewStyle}"
                       ItemsSource="{Binding Product}">
 
-                <ListView.View>
-                    <GridView x:Name="gridCellBrands">
-                        <GridViewColumn Header="ID">
-                            <GridViewColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Border Style="{StaticResource GVBorderTextDefault}">
-                                        <TextBlock Text="{Binding IdBrand}"/>
-                                    </Border>
-                                </DataTemplate>
-                            </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
-                        <GridViewColumn Header="Product">
-                            <GridViewColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Border Style="{StaticResource GVBorderText}">
-                                        <TextBlock Text="{Binding Products}" />
-                                    </Border>
-                                </DataTemplate>
-                            </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
-                        <GridViewColumn Header="Brand">
-                            <GridViewColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Border Style="{StaticResource GVBorderText}">
-                                        <TextBlock Text="{Binding Name}" />
-                                    </Border>
-                                </DataTemplate>
-                            </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
-                        <GridViewColumn Header="Price">
-                            <GridViewColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Border Style="{StaticResource GVBorderCurrency}">
-                                        <TextBlock Text="{Binding Price, StringFormat='${0:N2}'}"/>
-                                    </Border>
-                                </DataTemplate>
-                            </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
-                        <GridViewColumn Header="Action">
-                            <GridViewColumn.CellTemplate>
-                                <DataTemplate>
-                                    <StackPanel Style="{StaticResource GridButtonPanel}">
-                                        <Button Style="{StaticResource GridButtonEdit}"
+                    <ListView.View>
+                        <GridView x:Name="gridCellBrands">
+                            <GridViewColumn Header="ID">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource GVBorderTextDefault}">
+                                            <TextBlock Text="{Binding IdBrand}"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="Product">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource GVBorderText}">
+                                            <TextBlock Text="{Binding Products}" />
+                                        </Border>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="Brand">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource GVBorderText}">
+                                            <TextBlock Text="{Binding Name}" />
+                                        </Border>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="Price">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource GVBorderCurrency}">
+                                            <TextBlock Text="{Binding Price, StringFormat='${0:N2}'}"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="Action">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Style="{StaticResource GridButtonPanel}">
+                                            <Button Style="{StaticResource GridButtonEdit}"
                                                         Click="btnUpdate_Click"/>
-                                        <Button Style="{StaticResource GridButtonRemove}"
+                                            <Button Style="{StaticResource GridButtonRemove}"
                                                         Click="btnRemove_Click"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
-                    </GridView>
-                </ListView.View>
-            </ListView>
-        </Border>
-        <Border Grid.Row="5"   
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </Border>
+            <Border Grid.Row="5"   
                 Style="{StaticResource SectionBorder}" >
-            <ctrl:PageNavigation 
+                <ctrl:PageNavigation 
                 x:Name="pageControl"
                 PageComboboxChanged ="PageNavigation_SelectionChanged"
                 PreviousClick ="PagePrevious_Click"
                 NextClick="PageNext_Click"/>
-        </Border>
-        <Border Grid.Row="6" 
+            </Border>
+            <Border Grid.Row="6" 
                 Style="{StaticResource SectionBorder}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="0" 
+                    <StackPanel Grid.Column="0" 
                     Style="{StaticResource ShortButtonStackPanel}">
 
-                    <Button Name="btnNewBrand" 
+                        <Button Name="btnNewBrand" 
                             Content="➕ New" 
                             Style="{StaticResource ShortButtonPanel}"        
                             Margin="0,0,0,0"
                             Background="#5069AA"
                             Foreground="White"                    
                             Click="btnNewBrand_Click" />
-                </StackPanel>
+                    </StackPanel>
 
-                <StackPanel Grid.Column="1" 
+                    <StackPanel Grid.Column="1" 
                             Orientation="Horizontal" 
                             HorizontalAlignment="Right">
-                    <Button Name="btnsClear" 
+                        <Button Name="btnsClear" 
                             Content="Clear" 
                             Style="{StaticResource ShortButtonPanel}"
                             Click="btnsClear_Click" />
 
-                    <Button Name="btnsClose" 
+                        <Button Name="btnsClose" 
                             Content="Close" 
                             Style="{StaticResource ShortButtonPanel}"  
                             Margin="5,0,10,0"
                             Click="btnsClose_Click" />
-                </StackPanel>
-            </Grid>
-        </Border>
-        <StackPanel>
-            <Ellipse x:Name="wloading" Width="50" Height="50" Stroke="DodgerBlue" StrokeThickness="5" 
-         StrokeDashArray="3, 1" RenderTransformOrigin="0.5,0.5">
-                <Ellipse.RenderTransform>
-                    <RotateTransform x:Name="noFreezeRotate" Angle="0" />
-                </Ellipse.RenderTransform>
-                <Ellipse.Triggers>
-                    <EventTrigger RoutedEvent="Loaded">
-                        <BeginStoryboard>
-                            <Storyboard>
-                                <DoubleAnimation Storyboard.TargetName="noFreezeRotate"
-                                     Storyboard.TargetProperty="Angle"
-                                     From="0" To="360" Duration="0:0:1"
-                                     RepeatBehavior="Forever" />
-                            </Storyboard>
-                        </BeginStoryboard>
-                    </EventTrigger>
-                </Ellipse.Triggers>
-            </Ellipse>
-        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+        <ctrl:Loading x:Name="progress" 
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"        
+                      IsLoading="{Binding IsBusy}" 
+                      Message="{Binding Message}"/>
     </Grid>
 </Window>
