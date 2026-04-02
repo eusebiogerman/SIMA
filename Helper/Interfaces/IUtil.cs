@@ -1,9 +1,9 @@
 ﻿using SIMA.Infrastructure.Repositories;
-using SIMA.Infrastructure.Repositories.Interfaces;
 using SIMA.Presentation.ViewModel;
 using System.Windows.Controls;
+using SIMA.Infrastructure.Repositories.Interfaces;
 
-namespace SIMA.Helper
+namespace SIMA.Helper.Interfaces
 {
     internal interface IUtil
     {
@@ -13,7 +13,7 @@ namespace SIMA.Helper
         void NavigationGrid(DIRECTION direction);
         void UpdatePaging(int total = 0);
         void ResizeGrid(string gridheight);
-        
-        
+
+
     }
 }

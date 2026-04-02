@@ -12,7 +12,7 @@ namespace SIMA.ExtensionsHelper
         {
             return str.Equals(str.defaultCategory()) ? string.Empty : str;
         }
-        public static string isNull(this string str, string exp)
+        public static string? isNull(this string? str, string? exp)
         {
             return string.IsNullOrEmpty(str) ? exp : str;
         }

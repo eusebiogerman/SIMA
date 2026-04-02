@@ -11,23 +11,15 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using SIMA.Templates;
+using SIMA.Infrastructure.Repositories.Interfaces;
 
 namespace SIMA.Presentation.ViewModel
 {
-    public class MainViewModel : INotifyPropertyChanged
+    public class MainViewModel : ViewModelBase
     {
         private StockProductServices _stockservices;
         private CategoryServices _categoryservices;
         private ObservableCollection<LovObject> _category;
-
-        private Paging _page;
-        private IConfiguration _config;
-        private bool _isSupressed;
-
-        #region Event and Validation Properties
-        public event PropertyChangedEventHandler? PropertyChanged;
-        public event Action<string> ShowErrorFromModel;
-        #endregion
 
         #region Observable Collection Property
         public ObservableCollection<StockProductView> StockProducts { get; set; }
@@ -36,36 +28,37 @@ namespace SIMA.Presentation.ViewModel
             get => _category;
             set { _category = value; OnPropertyChanged(nameof(Category)); }
         }
-        public bool IsSupressed { get => _isSupressed; set => _isSupressed = value; }
         #endregion
 
-        public MainViewModel()
+        public MainViewModel() : base()
         {
-            InitializeModel(new Paging(),new ConfigurationManager());
+            
+            InitializeModel(() => {
+                _stockservices = new StockProductServices(Config);
+                _categoryservices = new CategoryServices(Config);
+                FillLovCat();
+            });
         }
-        public MainViewModel(Paging page)
+        public MainViewModel(Paging page) : base(page)
         {
-            InitializeModel(page,new ConfigurationManager());
+
+            
+            InitializeModel(() => {
+                _stockservices = new StockProductServices(Config);
+                _categoryservices = new CategoryServices(Config);
+                FillLovCat();
+            });
         }
-        public MainViewModel(Paging page,IConfiguration config)
+        public MainViewModel(Paging page,IConfiguration config) : base(page, config) 
         {
-            InitializeModel(page,config);
-        }
 
-        #region Util
-        private void InitializeModel(Paging page, IConfiguration config) {
-
-            _isSupressed = true;
-            _page = page;
-            _config = config;
-            _stockservices = new StockProductServices(_config);
-            _categoryservices = new CategoryServices(_config);
-            FillLovCat();
-            FillStock();
-            _isSupressed = false;
+            InitializeModel(() => {
+                _stockservices = new StockProductServices(Config);
+                _categoryservices = new CategoryServices(Config);
+                FillLovCat();
+            });
 
         }
-        #endregion
 
         #region fill Observable Collection 
         /// <summary>
@@ -75,44 +68,18 @@ namespace SIMA.Presentation.ViewModel
         {
             try
             {
-                IEnumerable<Category> cat = await _categoryservices.GetAll(_page);
+                IEnumerable<Category> cat = await _categoryservices.GetAll(Page);
                 Category = new ObservableCollection<LovObject>(cat.Select((p)=> new LovObject { Id = p.IdCategory,Value = p.Name }));
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
-                ShowErrorFromModel?.Invoke("DataBase Error Failed");
+                InvokeError("DataBase Error Failed");
             }
             catch (Exception)
             {
-                ShowErrorFromModel?.Invoke("System Error Failed");
+                InvokeError("System Error Failed");
             }
 
-        }
-        /// <summary>
-        /// Get the Stock data given the paging configuration
-        /// </summary>
-        private async void FillStock()
-        {
-            try
-            {
-                IEnumerable<StockProductView> instock = await _stockservices.GetViewAll(_page);
-                StockProducts = new ObservableCollection<StockProductView>(instock);
-            }
-            catch (Microsoft.Data.SqlClient.SqlException ex)
-            {
-                ShowErrorFromModel?.Invoke("DataBase Error Failed");
-            }
-            catch (Exception)
-            {
-                ShowErrorFromModel?.Invoke("System Error Failed");
-            }
-        }
-        #endregion
-
-        #region View Model Events
-        protected void OnPropertyChanged([CallerMemberName] string name = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
         #endregion
 

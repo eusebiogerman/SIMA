@@ -14,7 +14,6 @@
         SizeChanged="Window_SizeChanged" WindowState="Maximized">
 
     <Grid Margin="5">
-
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
@@ -22,7 +21,6 @@
             <ColumnDefinition Width="220"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-
         <Border Grid.Column="0" 
                 Background="#1E1E1C" 
                 Padding="15" 
@@ -93,48 +91,47 @@
         <ScrollViewer Grid.Column="1" 
                       VerticalScrollBarVisibility="Auto"
                       Padding="5">
-            <StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
                     </Grid.RowDefinitions>
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
-                        </Grid.RowDefinitions>
-                        <Border Grid.Row="0" 
+                    <Border Grid.Row="0" 
                             Style="{StaticResource SectionBorder}"
                             Margin="0,0,0,15">
 
-                            <StackPanel>
-                                <TextBlock Text="🔍 FILTER PRODUCTS" 
+                        <StackPanel>
+                            <TextBlock Text="🔍 FILTER PRODUCTS" 
                           Style="{StaticResource Titleselection}"/>
 
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
 
-                                    <StackPanel Grid.Row="0" 
+                                <StackPanel Grid.Row="0" 
                                 Grid.Column="0"
                                 Orientation="Horizontal">
-                                        <TextBlock Text="Category:" 
+                                    <TextBlock Text="Category:" 
                                                FontWeight="SemiBold" 
                                                Margin="5,0,7,0"
                                                Foreground="#333333"/>
-                                        <ctrl:LovTextBox x:Name="cmbCategory"
+                                    <ctrl:LovTextBox x:Name="cmbCategory"
                                                      ItemsSource="{Binding Category}"
                                                      DisplayMemberPath="Value"
                                                      SelectedValuePath="Id"
@@ -145,25 +142,25 @@
                                                      BorderBrush="#CCCCCC"
                                                      LovTextBoxChanged ="cmbCategory_SelectionChanged"/>
 
-                                    </StackPanel>
-                                    <StackPanel Grid.Row="1" 
+                                </StackPanel>
+                                <StackPanel Grid.Row="1" 
                                 Grid.Column="0" 
                                 Orientation="Horizontal"
                                 Grid.ColumnSpan="4" 
                                 Margin="5,5,0,0">
-                                        <TextBlock Text="Product:" 
+                                    <TextBlock Text="Product:" 
                                    FontWeight="SemiBold" 
                                    Margin="0,0,15,0"
                                    Foreground="#333333"/>
 
-                                        <TextBox x:Name="txtSearch"
+                                    <TextBox x:Name="txtSearch"
                                  Height="35" 
                                  Width="400"
                                  FontSize="14"
                                  Padding="10,5"
                                  BorderBrush="#CCCCCC" TextChanged="txtSearch_TextChanged"/>
 
-                                        <Button x:Name="btnClear"
+                                    <Button x:Name="btnClear"
                                             Style="{StaticResource CommunButton}"
                                             Content="🗑 Clear" 
                                             Background="#FF5722" 
@@ -171,7 +168,7 @@
                                             Cursor="Hand" 
                                             Click="btnClear_Click"/>
 
-                                        <Button x:Name="btnRefresh" 
+                                    <Button x:Name="btnRefresh" 
                                             Style="{StaticResource CommunButton}"
                                             Content="&#x1F504; Refresh"
                                             Background="#2531DB"
@@ -179,184 +176,162 @@
                                             Cursor="Hand" 
                                             Click="btnRefresh_Click" />
 
-                                    </StackPanel>
-                                    <StackPanel Grid.Row="2" 
+                                </StackPanel>
+                                <StackPanel Grid.Row="2" 
                                 Grid.Column="0" 
                                 Grid.ColumnSpan="4" 
                                 Orientation="Horizontal">
 
-                                        <Border x:Name="filterCatTag" 
+                                    <Border x:Name="filterCatTag" 
                                 Background="#E3F2FD" 
                                 CornerRadius="15" 
                                 Padding="10,3" 
                                 Margin="0,0,5,0"
                                 Visibility="Collapsed">
-                                            <TextBlock x:Name="txtFiltroCategoria" 
+                                        <TextBlock x:Name="txtFiltroCategoria" 
                                        Foreground="#2196F3"
                                        FontSize="12"/>
-                                        </Border>
+                                    </Border>
 
-                                        <Border x:Name="FilterProductTag" 
+                                    <Border x:Name="FilterProductTag" 
                                 Background="#E3F2FD" 
                                 CornerRadius="15" 
                                 Padding="10,3" 
                                 Margin="5,0,0,0"
                                 Visibility="Collapsed">
-                                            <TextBlock x:Name="txtSearchProduct" 
+                                        <TextBlock x:Name="txtSearchProduct" 
                                        Foreground="#2196F3"
                                        FontSize="12"/>
-                                        </Border>
-                                    </StackPanel>
-                                </Grid>
-                            </StackPanel>
-                        </Border>
-                        <Border Grid.Row="1" 
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Row="1" 
                                 Style="{StaticResource SectionBorder}"
                                 Margin="0,0,0,5">
 
-                            <StackPanel Orientation="Horizontal" 
+                        <StackPanel Orientation="Horizontal" 
                                         HorizontalAlignment="Left">
-                                <TextBlock x:Name="txtResults" 
+                            <TextBlock x:Name="txtResults" 
                                            Text="📊 Show 12 products found" 
                                            FontSize="12" 
                                            FontWeight="SemiBold"
                                            Foreground="#333333"/>
-                            </StackPanel>
-                        </Border>
-                        <Border Grid.Row="2" 
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Row="2" 
                                 Style="{StaticResource SectionBorder}"
                                 Padding="0">
-                            <ListView x:Name="gridProducts"
+                        <ListView x:Name="gridProducts"
                                       Style="{StaticResource ListViewStyle}"
                                       ItemsSource="{Binding StockProducts}">
-                                <ListView.View>
-                                    <GridView x:Name="gridCellProduct">
-                                        <GridViewColumn Header="ID">
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <Border Style="{StaticResource GVBorderTextDefault}">
-                                                        <TextBlock Text="{Binding IdStock}"/>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                        <GridViewColumn Header="Category">
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <Border Style="{StaticResource GVBorderText}">
-                                                        <TextBlock Text="{Binding Categorys}"/>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                        <GridViewColumn Header="Product">
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <Border Style="{StaticResource GVBorderText}">
-                                                        <TextBlock Text="{Binding Products}"/>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                        <GridViewColumn Header="Brand">
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                        <Border Style="{StaticResource GVBorderText}">
-                                                            <TextBlock Text="{Binding Brands}" />
-                                                        </Border>
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                        <GridViewColumn Header="Price">
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <Border Style="{StaticResource GVBorderCurrency}">
-                                                        <TextBlock Text="{Binding Price, StringFormat='${0:N2}'}"/>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                        <GridViewColumn Header="Stock">
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                        <Border Style="{StaticResource GVNumericBadge}">
-                                                            <TextBlock Text="{Binding Stock}"/>
-                                                        </Border>
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                        <GridViewColumn Header="Acciones">
-                                            <GridViewColumn.CellTemplate >
-                                                <DataTemplate>
-                                                    <StackPanel Style="{StaticResource GridButtonPanel}">
-                                                        <Button Style="{StaticResource GridButtonEdit}"
+                            <ListView.View>
+                                <GridView x:Name="gridCellProduct">
+                                    <GridViewColumn Header="ID">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border Style="{StaticResource GVBorderTextDefault}">
+                                                    <TextBlock Text="{Binding IdStock}"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Category">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border Style="{StaticResource GVBorderText}">
+                                                    <TextBlock Text="{Binding Categorys}"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Product">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border Style="{StaticResource GVBorderText}">
+                                                    <TextBlock Text="{Binding Products}"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Brand">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border Style="{StaticResource GVBorderText}">
+                                                    <TextBlock Text="{Binding Brands}" />
+                                                </Border>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Price">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border Style="{StaticResource GVBorderCurrency}">
+                                                    <TextBlock Text="{Binding Price, StringFormat='${0:N2}'}"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Stock">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border Style="{StaticResource GVNumericBadge}">
+                                                    <TextBlock Text="{Binding Stock}"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Acciones">
+                                        <GridViewColumn.CellTemplate >
+                                            <DataTemplate>
+                                                <StackPanel Style="{StaticResource GridButtonPanel}">
+                                                    <Button Style="{StaticResource GridButtonEdit}"
                                                                 Click="btnUpdate_Click"/>
-                                                        <Button Style="{StaticResource GridButtonRemove}"
+                                                    <Button Style="{StaticResource GridButtonRemove}"
                                                                 Click="btnRemove_Click"/>
-                                                    </StackPanel>
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                    </GridView>
-                                </ListView.View>
-                            </ListView>
-                        </Border>
-                        <Border Grid.Row="3" 
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                    </Border>
+                    <Border Grid.Row="3" 
                                 Style="{StaticResource SectionBorder}">
-                            <ctrl:PageNavigation 
+                        <ctrl:PageNavigation 
                                 x:Name="pageControl"
                                 PageComboboxChanged ="PageNavigation_SelectionChanged"
                                 PreviousClick ="PagePrevious_Click"
                                 NextClick="PageNext_Click"/>
-                        </Border>
-                        <Border Grid.Row="4" 
+                    </Border>
+                    <Border Grid.Row="4" 
                                 Style="{StaticResource SectionBorder}">
-                            <Grid Grid.Row="1">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
 
-                                <StackPanel Grid.Row="1" 
+                            <StackPanel Grid.Row="1" 
                                             Style="{StaticResource ShortButtonStackPanel}"
                                             HorizontalAlignment="Right">
 
-                                    <Button Name="btnsClose"
+                                <Button Name="btnsClose"
                                             Content="Close" 
                                             Style="{StaticResource ShortButtonPanel}"
                                             Margin="5,0,10,0"
                                             Click="btnClose_Click" />
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-                    </Grid>
-                    <StackPanel>
-                        <Ellipse x:Name="wloading" 
-                                 Width="50" 
-                                 Height="50" 
-                                 Stroke="DodgerBlue" 
-                                 StrokeThickness="5" 
-                                 StrokeDashArray="3, 1" 
-                                 RenderTransformOrigin="0.5,0.5">
-                            <Ellipse.RenderTransform>
-                                <RotateTransform x:Name="noFreezeRotate" Angle="0" />
-                            </Ellipse.RenderTransform>
-                            <Ellipse.Triggers>
-                                <EventTrigger RoutedEvent="Loaded">
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetName="noFreezeRotate"
-                                     Storyboard.TargetProperty="Angle"
-                                     From="0" To="360" Duration="0:0:1"
-                                     RepeatBehavior="Forever" />
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </EventTrigger>
-                            </Ellipse.Triggers>
-                        </Ellipse>
-                    </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
                 </Grid>
-            </StackPanel>
-
+                <ctrl:Loading x:Name="progress" 
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"        
+                      IsLoading="{Binding IsBusy}" 
+                      Message="{Binding Message}"/>
+            </Grid>
         </ScrollViewer>
     </Grid>
 </Window>

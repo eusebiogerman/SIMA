@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using SIMA.ExtensionsHelper;
+using SIMA.Templates;
+using SIMA.Infrastructure.Repositories.Interfaces;
 
 namespace SIMA.Infrastructure.Repositories
 {
-    public class Paging
+    public class Paging : IPaging
     {
         private JsonFile<String> _jsonLimit;
         private const int _defaulLimit = 10;
@@ -23,13 +25,8 @@ namespace SIMA.Infrastructure.Repositories
             _jsonLimit.loadData();
         }
 
-        public enum DIRECTION
-        {
-            previous = 1,
-            next = 2
-        }
-        public int DefaulOffset { get => _defaulOffset; }
-        public int DefaulLimit { get => _defaulLimit; }
+        public int DefaultOffset { get => _defaulOffset; }
+        public int DefaultLimit { get => _defaulLimit; }
         public int Pagenumber { get => _pagenumber; set => _pagenumber = value; }
         public int Offset { get => _offset; set => _offset = value; }
         public int Limit { get => _limit; set => _limit = value; }
@@ -41,7 +38,7 @@ namespace SIMA.Infrastructure.Repositories
         public void resetPage()
         {
             _offset = _defaulOffset;
-            _limit = DefaulLimit;
+            _limit = DefaultLimit;
             _pagenumber = 1;
 
         }
@@ -95,6 +92,17 @@ namespace SIMA.Infrastructure.Repositories
             return await Task.Run(() => _jsonLimit.ServicesList.Select(p => p).ToList());
 
         }
-
+        /// <summary>
+        /// Fill the Page Limit Values
+        /// </summary>
+        public async Task FillLimitPageVal(PageNavigation pageControl)
+        {
+            IEnumerable<string> lim = await GetLimitPaging();
+            pageControl.SetItemsPerPageSource(lim);
+            var selected = pageControl.GetSelectedItemsPerPage();
+            Limit = selected != null
+                ? int.Parse(selected.ToString())
+                : DefaultLimit;
+        }
     }
 }

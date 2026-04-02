@@ -7,7 +7,6 @@
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="Padding" Value="15,12"/>
         <Setter Property="HorizontalContentAlignment" Value="Left"/>
-        <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Margin" Value="0,2"/>
         <Setter Property="Cursor" Value="Hand"/>
 
@@ -30,7 +29,6 @@
         <Setter Property="Height" Value="25"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Margin" Value="10,0,0,0"/>
-        <Setter Property="BorderThickness" Value="0"/>
     </Style>
 
     <Style x:Key="ShortButtonPanel" TargetType="Button">
@@ -47,7 +45,6 @@
         <Setter Property="Height" Value="25"/>
         <Setter Property="Background" Value="#2196F3"/>
         <Setter Property="Foreground" Value="White"/>
-        <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Content" Value="✎"/>
     </Style>

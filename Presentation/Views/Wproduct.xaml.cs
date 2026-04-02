@@ -3,6 +3,7 @@ using SIMA.Domain.Models;
 using SIMA.ExtensionsHelper;
 using SIMA.Helper;
 using SIMA.Infrastructure.Repositories;
+using SIMA.Infrastructure.Repositories.Interfaces;
 using SIMA.Presentation.ViewModel;
 using SIMA.Templates;
 using System;
@@ -23,6 +24,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using static System.Net.Mime.MediaTypeNames;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using SIMA.Infrastructure.Repositories.Interfaces;
 
 namespace SIMA.Presentation.Views
 {
@@ -42,6 +44,7 @@ namespace SIMA.Presentation.Views
         private readonly IConfiguration _config;
         private bool _isloaded;
         private bool _isNewStock = false;
+        private bool _editmode = false;
 
         public Wproduct()
         {
@@ -69,7 +72,7 @@ namespace SIMA.Presentation.Views
             _isloaded = val;
             if (this.DataContext != null)
                 ((ProductViewModel)this.DataContext).IsSupressed = val;
-       
+
         }
         /// <summary>
         /// Return and Update the message of the render Category result
@@ -96,7 +99,7 @@ namespace SIMA.Presentation.Views
         /// Control the Paging Previous and Next Page Number,Offset and Limit 
         /// </summary>
         /// <param name="direction"></param>
-        public void NavigationGrid(Paging.DIRECTION direction)
+        public void NavigationGrid(DIRECTION direction)
         {
             throw new NotImplementedException();
         }
@@ -109,7 +112,13 @@ namespace SIMA.Presentation.Views
             txtName.Text = string.Empty;
             txtPrice.Text = string.Empty;
             txtSearch.Text = string.Empty;
-            cmbCategory.SelectedIndex = 0;
+
+            //Set the Field Default Values for Category
+            cmbCategory.Text = " "; //dumny select
+            LovObject? itemCat = cmbCategory.OriginalSource.FirstOrDefault(p => p.Id == null);
+            cmbCategory.SelectedItem = itemCat;
+            cmbCategory.Commit();
+            cmbCategory.Close();
 
             //Edit panel Closing
             FormProduct.Visibility = Visibility.Hidden;
@@ -189,25 +198,25 @@ namespace SIMA.Presentation.Views
         /// Filter the GridView given the Stock Category param
         /// </summary>
         /// <param name="param"></param>
-        public async void Filter(ProductParam param)
+        public async Task Filter(ProductParam param)
         {
             try
             {
-                _util.Loading_spimmer(wloading, true, 1000);
-                IEnumerable<ProductView> cat = await _productservices.GetByFilter(param);
-                gridProducts.ItemsSource = cat.Where(p => p.IdProduct != null);
-                UpdatePaging();
-                _util.Loading_spimmer(wloading, false);
-
+                progress.SetLoadingStateDataBase(async () =>
+                {
+                    IEnumerable<ProductView> cat = await _productservices.GetByFilter(param);
+                    gridProducts.ItemsSource = cat.Where(p => p.IdProduct != null);
+                    UpdatePaging();
+                }, _config, true, "Loading Products...");
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
-                _util.Loading_spimmer(wloading, false);
+
                 MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             catch (Exception)
             {
-                _util.Loading_spimmer(wloading, false);
+
                 MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
 
@@ -221,39 +230,26 @@ namespace SIMA.Presentation.Views
         {
             try
             {
-                _util.Loading_spimmer(wloading, true, 1000);
+
                 IEnumerable<ProductView> cat = await _productservices.GetByFilter(param);
                 gridProducts.ItemsSource = cat.Where(p => p.IdProduct != null);
                 UpdatePaging();
-                _util.Loading_spimmer(wloading, false);
+
 
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
-                _util.Loading_spimmer(wloading, false);
+
                 MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             catch (Exception)
             {
-                _util.Loading_spimmer(wloading, false);
+
                 MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
 
 
 
-        }
-        /// <summary>
-        /// Fill the Page Limit Values
-        /// </summary>
-        public async void FillLimitPageVal()
-        {
-            IEnumerable<string> lim = await _page.GetLimitPaging();
-            pageControl.SetItemsPerPageSource(lim);
-            var selected = pageControl.GetSelectedItemsPerPage();
-            var cmblimit = selected != null
-                ? int.Parse(selected.ToString())
-                : _page.DefaulLimit;
-            _page.Limit = cmblimit;
         }
         /// <summary>
         /// Open the Edit Form for the Stock select in th gridview
@@ -271,58 +267,67 @@ namespace SIMA.Presentation.Views
             txtName.Text = param.name;
             txtPrice.Text = param.price.ToString();
 
-            //Set the Field Values for Category
-            cmbCategory.Text = param.categorys; //var dummy  
-            var itemCat = cmbCategory.OrignalSource.First(p => p.Id == param.idCategory);
-            cmbCategory.SelectedItem = itemCat;
-            
-
+            if (_editmode)
+            {
+                //Set the Field Values for Category
+                cmbCategory.Text = param.categorys; //var dummy  
+                var itemCat = cmbCategory.OriginalSource.FirstOrDefault(p => p.Id == param.idCategory);
+                cmbCategory.SelectedItem = itemCat;
+                cmbCategory.Close();
+                _editmode = false;
+            }
+            else
+                cmbCategory.SelectedIndex = 0;
         }
         #endregion
 
         #region Events
         private async void btnsSaveProduct_Click(object sender, RoutedEventArgs e)
         {
-            _util.Loading_spimmer(wloading, true, 1000);
+
             int? id = string.IsNullOrEmpty(txtIdProduct.Text) ? null : int.Parse(txtIdProduct.Text);
             int? idcat = ((LovObject)cmbCategory.SelectedItem).Id;
-            bool isset = await _productservices.Set(new Product
-            {
-                IdProduct = id,
-                IdCategory = idcat,
-                Name = txtName.Text,
-                Price = decimal.Parse(txtPrice.Text) 
-            });
+            string name = txtName.Text;
+            decimal price = decimal.Parse(txtPrice.Text);
 
+            bool isset = progress.SetLoadingStateDataBaseResult
+                (async () => await _productservices.Set(new Product
+                {
+                    IdProduct = id,
+                    IdCategory = idcat,
+                    Name = name,
+                    Price = price,
+                }), _config, true, "Saving Product...");
             try
             {
                 if (isset)
                 {
                     MessageBox.Show(this, "Product Sucessfully saved", "Save Product", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                     ClearFilters();
-                    Filter(activeFilters());
+                    await Filter(activeFilters());
                 }
                 else
                 {
                     MessageBox.Show(this, "Error Saving Product", "Save Product", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 }
-                _util.Loading_spimmer(wloading, false);
+
 
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
-                _util.Loading_spimmer(wloading, false);
+
                 MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             catch (Exception)
             {
-                _util.Loading_spimmer(wloading, false);
+
                 MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
         private void btnNewProduct_Click(object sender, RoutedEventArgs e)
         {
-            Edit(new ProductParam { idProduct = null, name = null, idCategory = null,categorys = null});
+            _editmode = false;
+            Edit(new ProductParam());
         }
         private void btnsClear_Click(object sender, RoutedEventArgs e)
         {
@@ -335,18 +340,18 @@ namespace SIMA.Presentation.Views
         }
         private void PagePrevious_Click(object sender, RoutedEventArgs e)
         {
-            NavigationGrid(Paging.DIRECTION.previous);
+            NavigationGrid(DIRECTION.previous);
         }
         private void PageNext_Click(object sender, RoutedEventArgs e)
         {
-            NavigationGrid(Paging.DIRECTION.next);
+            NavigationGrid(DIRECTION.next);
         }
-        private void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
+        private async void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
         {
             if (!_isloaded)
             {
                 _page.Limit = (int)pageControl.GetSelectedItemsPerPage();
-                Filter(activeFilters());
+                await Filter(activeFilters());
                 UpdatePaging();
             }
         }
@@ -377,31 +382,31 @@ namespace SIMA.Presentation.Views
             {
                 if (result == MessageBoxResult.Yes)
                 {
-                    _util.Loading_spimmer(wloading, true, 1000);
+
                     Button btn = sender as Button;
                     ProductView rowData = (ProductView)btn.DataContext;
                     bool valid = await _productservices.Delete(rowData.IdProduct) > 0;
                     if (valid)
                     {
-                        Filter(activeFilters());
+                        await Filter(activeFilters());
                         MessageBox.Show(this, "Product Succesfully removed", "Product Stock", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     else
                     {
                         MessageBox.Show(this, "Error removing the Product", "Product Stock", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
-                    _util.Loading_spimmer(wloading, false, 100);
+
 
                 }
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
-                _util.Loading_spimmer(wloading, false);
+
                 MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             catch (Exception)
             {
-                _util.Loading_spimmer(wloading, false);
+
                 MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
 
@@ -413,12 +418,14 @@ namespace SIMA.Presentation.Views
         {
             Button btn = sender as Button;
             ProductView rowData = (ProductView)btn.DataContext;
-            Edit(new ProductParam 
-            { idProduct = rowData.IdProduct
-            , idCategory = rowData.IdCategory
-            , name = rowData.Name 
-            , categorys = rowData.Categorys
-            , price = rowData.Price
+            _editmode = true;
+            Edit(new ProductParam
+            {
+                idProduct = rowData.IdProduct,
+                idCategory = rowData.IdCategory,
+                name = rowData.Name,
+                categorys = rowData.Categorys,
+                price = rowData.Price
             });
 
         }
@@ -431,19 +438,19 @@ namespace SIMA.Presentation.Views
             e.Cancel = true;
             this.Visibility = Visibility.Hidden;
         }
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            _util.Loading_spimmer(wloading, true);
-            _page.Offset = (int?)pageControl.GetSelectedItemsPerPage() ?? _page.DefaulOffset;
+
+            _page.Offset = (int?)pageControl.GetSelectedItemsPerPage() ?? _page.DefaultOffset;
             this.SupressEventComboBox();
-            FillLimitPageVal();
+            await _page.FillLimitPageVal(pageControl);
             UpdatePaging();
-            _util.Loading_spimmer(wloading, false);
+
             this.SupressEventComboBox(false);
         }
         private void Vm_ShowErrorFromModel(string mensaje)
         {
-            _util.Loading_spimmer(wloading, false);
+
             MessageBox.Show(this, mensaje, "Model Error", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)

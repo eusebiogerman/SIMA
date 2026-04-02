@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
 using SIMA.Domain.Models;
+using SIMA.Helper;
 using SIMA.Infrastructure.Repositories;
+using SIMA.Presentation.ViewModel;
 using SIMA.Templates;
 using System;
 using System.Collections;
@@ -14,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace SIMA.Presentation.Views
 {
-    internal class BrandViewModel : INotifyDataErrorInfo, INotifyPropertyChanged
+  public class BrandViewModel : ViewModelBase
     {
         private string _name;
         private decimal _price;
@@ -23,10 +25,6 @@ namespace SIMA.Presentation.Views
         private ObservableCollection<BrandView> _brand;
         private CategoryServices _categoryservices;
         private BrandServices _brandservices;
-        private IConfiguration _config;
-        private Paging _page;
-        private readonly Dictionary<string, List<string>> _errors = new();
-        private bool _isSupressed;
 
         public string Name
         {
@@ -47,13 +45,6 @@ namespace SIMA.Presentation.Views
             }
         }
 
-        #region Event Validation Properties
-        public bool HasErrors => _errors.Any();
-        public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
-        public event PropertyChangedEventHandler? PropertyChanged;
-        public event Action<string> ShowErrorFromModel;
-        #endregion
-
         #region Observable Collection Properties
         public ObservableCollection<LovObject> Category
         {
@@ -70,24 +61,27 @@ namespace SIMA.Presentation.Views
             get => _brand;
             set { _brand = value; OnPropertyChanged(nameof(Brand)); }
         }
-        public bool IsSupressed { get => _isSupressed; set => _isSupressed = value; }
         #endregion
 
-        public BrandViewModel()
+        public BrandViewModel() :base()
         {
-            _page = new Paging();
-            _categoryservices = new CategoryServices();
-            FillLovCat();
-            FillBrand();
+
+            InitializeModel(() => {
+                _categoryservices = new CategoryServices(Config);
+                _brandservices = new BrandServices(Config);
+                FillLovCat();
+                FillBrand();
+            });
         }
-        public BrandViewModel(Paging page, IConfiguration config)
+        public BrandViewModel(Paging page, IConfiguration config):base()
         {
-            _config = config;
-            _page = page ?? new Paging();
-            _categoryservices = new CategoryServices(_config);
-            _brandservices = new BrandServices(_config);
-            FillLovCat();
-            FillBrand();
+
+            InitializeModel(() => {
+                _categoryservices = new CategoryServices(Config);
+                _brandservices = new BrandServices(Config);
+                FillLovCat();
+                FillBrand();
+            });
         }
 
         #region Validation Errors Methods
@@ -120,16 +114,16 @@ namespace SIMA.Presentation.Views
         {
             try
             {
-                IEnumerable<Category> cat = await _categoryservices.GetAll(_page);
+                IEnumerable<Category> cat = await _categoryservices.GetAll(Page);
                 Category = new ObservableCollection<LovObject>(cat.Select((p) => new LovObject { Id = p.IdCategory, Value = p.Name }));
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
-                ShowErrorFromModel?.Invoke("PopupLov Category DataBase Error Failed");
+                InvokeError("PopupLov Category DataBase Error Failed");
             }
             catch (Exception)
             {
-                ShowErrorFromModel?.Invoke("PopupLov Category System Error Failed");
+                InvokeError("PopupLov Category System Error Failed");
             }
         }
         /// <summary>
@@ -139,50 +133,22 @@ namespace SIMA.Presentation.Views
         {
             try
             {
-                IEnumerable<BrandView> br = await _brandservices.GetViewAll(_page);
+                IEnumerable<BrandView> br = await _brandservices.GetViewAll(Page);
                 Brand = new ObservableCollection<BrandView>(br);
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
-                ShowErrorFromModel?.Invoke("List Brand DataBase Error Failed");
+                InvokeError("List Brand DataBase Error Failed");
             }
             catch (Exception)
             {
-                ShowErrorFromModel?.Invoke("List Brand System Error Failed");
+                InvokeError("List Brand System Error Failed");
             }
         }
         #endregion
 
-        #region Handler Errors Methods 
-        private void AddError(string propertyName, string error)
-        {
-            if (!_errors.ContainsKey(propertyName))
-                _errors[propertyName] = new List<string>();
 
-            _errors[propertyName].Add(error);
-            OnErrorsChanged(propertyName);
-        }
-        private void ClearErrors(string propertyName)
-        {
-            if (_errors.Remove(propertyName))
-                OnErrorsChanged(propertyName);
-        }
-        public IEnumerable GetErrors(string? propertyName)
-        {
-            return _errors.GetValueOrDefault(propertyName ?? string.Empty, new List<string>());
-        }
-        #endregion
 
-        #region View Model Events
-        protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-        protected virtual void OnErrorsChanged([CallerMemberName] string? propertyName = null)
-        {
-            ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
-        }
-        #endregion
 
     }
 }

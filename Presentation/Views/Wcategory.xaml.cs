@@ -5,6 +5,7 @@ using SIMA.Infrastructure.Repositories;
 using SIMA.Presentation.ViewModel;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -17,6 +18,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using SIMA.Infrastructure.Repositories.Interfaces;
 
 namespace SIMA.Presentation.Views
 {
@@ -84,7 +86,7 @@ namespace SIMA.Presentation.Views
         /// Control the Paging Previous and Next Page Number,Offset and Limit 
         /// </summary>
         /// <param name="direction"></param>
-        public void NavigationGrid(Paging.DIRECTION direction)
+        public void NavigationGrid(DIRECTION direction)
         {
             throw new NotImplementedException();
         }
@@ -163,7 +165,27 @@ namespace SIMA.Presentation.Views
         /// <exception cref="NotImplementedException"></exception>
         public void Fill()
         {
-            throw new NotImplementedException();
+            try
+            {
+                progress.SetLoadingStateDataBase(async () =>
+                {
+                    IEnumerable<Category> cat = await _categoryservices.GetAll(_page);
+                    gridCategory.ItemsSource = cat.Where(p => p.IdCategory != null);
+                    UpdatePaging();
+                }, _config, true, "Loading Category...");
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex)
+            {
+
+                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (Exception)
+            {
+
+                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+
+
         }
         /// <summary>
         /// Filter the GridView given the activeFilters() : function
@@ -176,25 +198,25 @@ namespace SIMA.Presentation.Views
         /// Filter the GridView given the Stock Category param
         /// </summary>
         /// <param name="param"></param>
-        public async void Filter(CategoryParam param)
+        public async Task Filter(CategoryParam param)
         {
             try
             {
-                _util.Loading_spimmer(wloading, true, 1000);
-                IEnumerable<Category> cat = await _categoryservices.GetByFilter(param);
-                gridCategory.ItemsSource = cat.Where(p => p.IdCategory != null);
-                UpdatePaging();
-                _util.Loading_spimmer(wloading, false);
-
+                progress.SetLoadingStateDataBase(async () =>
+                {
+                    IEnumerable<Category> cat = await _categoryservices.GetByFilter(param);
+                    gridCategory.ItemsSource = cat.Where(p => p.IdCategory != null);
+                    UpdatePaging();
+                }, _config, true, "Loading Category...");
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
-                _util.Loading_spimmer(wloading, false);
+               
                 MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             catch (Exception)
             {
-                _util.Loading_spimmer(wloading, false);
+               
                 MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
 
@@ -208,39 +230,26 @@ namespace SIMA.Presentation.Views
         {
             try
             {
-                _util.Loading_spimmer(wloading, true, 1000);
+                
                 IEnumerable<Category> cat = await _categoryservices.GetByFilter(param);
                 gridCategory.ItemsSource = cat.Where(p => p.IdCategory != null);
                 UpdatePaging();
-                _util.Loading_spimmer(wloading, false);
+               
 
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
-                _util.Loading_spimmer(wloading, false);
+               
                 MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             catch (Exception)
             {
-                _util.Loading_spimmer(wloading, false);
+               
                 MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
 
 
 
-        }
-        /// <summary>
-        /// Fill the Page Limit Values
-        /// </summary>
-        public async void FillLimitPageVal()
-        {
-            IEnumerable<string> lim = await _page.GetLimitPaging();
-            pageControl.SetItemsPerPageSource(lim);
-            var selected = pageControl.GetSelectedItemsPerPage();
-            var cmblimit = selected != null
-                ? int.Parse(selected.ToString())
-                : _page.DefaulLimit;
-            _page.Limit = cmblimit;
         }
         /// <summary>
         /// Open the Edit Form for the Stock select in th gridview
@@ -261,14 +270,17 @@ namespace SIMA.Presentation.Views
         #region Events
         private async void btnsSaveCategory_Click(object sender, RoutedEventArgs e)
         {
-            _util.Loading_spimmer(wloading, true,1000);
+            
             int? id = string.IsNullOrEmpty(txtIdCategory.Text) ? null : int.Parse(txtIdCategory.Text);
-            bool isset = await _categoryservices.Set(new Category
+            bool isset = false;
+            progress.SetLoadingStateDataBase(async () =>
             {
-                IdCategory = id
-                      ,
-                Name = txtName.Text
-            });
+                isset = await _categoryservices.Set(new Category
+                {
+                    IdCategory = id,
+                    Name = txtName.Text
+                });
+            }, _config, true, "Saving Category...");
 
             try
             {
@@ -276,23 +288,23 @@ namespace SIMA.Presentation.Views
                 {
                     MessageBox.Show(this, "Category Sucessfully saved", "Save Category", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                     ClearFilters();
-                    Filter(activeFilters());
+                    await Filter(activeFilters());
                 }
                 else
                 {
                     MessageBox.Show(this, "Error Saving Category", "Save Category", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 }
-                _util.Loading_spimmer(wloading, false);
+               
 
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
-                _util.Loading_spimmer(wloading, false);
+               
                 MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             catch (Exception)
             {
-                _util.Loading_spimmer(wloading, false);
+               
                 MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
     
@@ -316,7 +328,7 @@ namespace SIMA.Presentation.Views
             }
             catch (Exception)
             {
-                _util.Loading_spimmer(wloading, false);
+               
             }
         }
         private void btnRemove_Click(object sender, RoutedEventArgs e)
@@ -344,18 +356,18 @@ namespace SIMA.Presentation.Views
         }
         private void PagePrevious_Click(object sender, RoutedEventArgs e)
         {
-            NavigationGrid(Paging.DIRECTION.previous);
+            NavigationGrid(DIRECTION.previous);
         }
         private void PageNext_Click(object sender, RoutedEventArgs e)
         {
-            NavigationGrid(Paging.DIRECTION.next);
+            NavigationGrid(DIRECTION.next);
         }
-        private void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
+        private async void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
         {
             if (!_isloaded)
             {
                 _page.Limit = (int)pageControl.GetSelectedItemsPerPage();
-                Filter(activeFilters());
+                await Filter(activeFilters());
                 UpdatePaging();
             }
         }
@@ -365,14 +377,14 @@ namespace SIMA.Presentation.Views
             this.Visibility = Visibility.Hidden;
 
         }
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            _util.Loading_spimmer(wloading, true);
-            _page.Offset = (int?)pageControl.GetSelectedItemsPerPage() ?? _page.DefaulOffset;
+            
+            _page.Offset = (int?)pageControl.GetSelectedItemsPerPage() ?? _page.DefaultOffset;
             this.SupressEventComboBox();
-            FillLimitPageVal();
+            await _page.FillLimitPageVal(pageControl);
             UpdatePaging();
-            _util.Loading_spimmer(wloading, false);
+            Fill();
             this.SupressEventComboBox(false);
         }
         private void Window_Initialized(object sender, EventArgs e)
@@ -381,7 +393,7 @@ namespace SIMA.Presentation.Views
         }
         private void Vm_ShowErrorFromModel(string mensaje)
         {
-            _util.Loading_spimmer(wloading, false);
+           
             MessageBox.Show(this, mensaje, "Model Error", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -393,3 +405,5 @@ namespace SIMA.Presentation.Views
 
     }
 }
+
+
