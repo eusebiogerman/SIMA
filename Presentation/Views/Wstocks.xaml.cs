@@ -3,6 +3,7 @@ using SIMA.Domain.Models;
 using SIMA.ExtensionsHelper;
 using SIMA.Helper;
 using SIMA.Infrastructure.Repositories;
+using SIMA.Infrastructure.Repositories.Interfaces;
 using SIMA.Presentation.ViewModel;
 using SIMA.Templates;
 using System;
@@ -116,7 +117,7 @@ namespace SIMA.Presentation.Views
         /// Control the Paging Previous and Next Page Number,Offset and Limit 
         /// </summary>
         /// <param name="direction"></param>
-        public void NavigationGrid(Paging.DIRECTION direction)
+        public void NavigationGrid(DIRECTION direction)
         {
             throw new NotImplementedException();
         }
@@ -254,7 +255,7 @@ namespace SIMA.Presentation.Views
         /// Filter the GridView given the Stock Category param
         /// </summary>
         /// <param name="param"></param>
-        public async void Filter(StockProductParam param)
+        public async Task Filter(StockProductParam param)
         {
             try
             {
@@ -307,19 +308,6 @@ namespace SIMA.Presentation.Views
 
 
 
-        }
-        /// <summary>
-        /// Fill the Page Limit Values
-        /// </summary>
-        public async void FillLimitPageVal()
-        {
-            IEnumerable<string> lim = await _page.GetLimitPaging();
-            pageControl.SetItemsPerPageSource(lim);
-            var selected = pageControl.GetSelectedItemsPerPage();
-            var cmblimit = selected != null
-                ? int.Parse(selected.ToString())
-                : _page.DefaulLimit;
-            _page.Limit = cmblimit;
         }
         /// <summary>
         /// Open the Edit Form for the Stock select in th gridview
@@ -380,7 +368,7 @@ namespace SIMA.Presentation.Views
                 {
                     MessageBox.Show(this, "Stock Sucessfully saved", "Save Stock", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                     ClearFilters();
-                    Filter(activeFilters());
+                    await Filter(activeFilters());
                 }
                 else
                 {
@@ -400,6 +388,7 @@ namespace SIMA.Presentation.Views
         }
         private void btnNewBrand_Click(object sender, RoutedEventArgs e)
         {
+            ClearFilters();
             Edit(new StockProductParam());
  
             
@@ -415,27 +404,27 @@ namespace SIMA.Presentation.Views
         }
         private void PagePrevious_Click(object sender, RoutedEventArgs e)
         {
-            NavigationGrid(Paging.DIRECTION.previous);
+            NavigationGrid(DIRECTION.previous);
         }
         private void PageNext_Click(object sender, RoutedEventArgs e)
         {
-            NavigationGrid(Paging.DIRECTION.next);
+            NavigationGrid(DIRECTION.next);
         }
-        private void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
+        private async void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
         {
             if (!_isloaded)
             {
                 _page.Limit = (int)pageControl.GetSelectedItemsPerPage();
                 if(!_fromMain) {
-                    Filter(activeFilters());
+                    await Filter(activeFilters());
                 }
                 UpdatePaging();
             }
         }
-        private void btnRefresh_Click(object sender, RoutedEventArgs e)
+        private async void btnRefresh_Click(object sender, RoutedEventArgs e)
         {
             _page.Limit = (int)pageControl.GetSelectedItemsPerPage();
-            Filter(activeFilters());
+            await Filter(activeFilters());
             UpdatePaging();
         }
         private async void cmbPropduct_SelectionChanged(object sender, RoutedEventArgs e)
@@ -479,7 +468,7 @@ namespace SIMA.Presentation.Views
                     bool valid = await _stockservices.Delete(rowData.IdStock) > 0;
                     if (valid)
                     {
-                        Filter(activeFilters());
+                        await Filter(activeFilters());
                         MessageBox.Show(this, "Stock Succesfully removed", "Remove Stock", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     else
@@ -541,11 +530,11 @@ namespace SIMA.Presentation.Views
             e.Cancel = true;
             this.Visibility = Visibility.Hidden;
         }
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
 
-            _page.Offset = (int?)pageControl.GetSelectedItemsPerPage() ?? _page.DefaulOffset;
-             FillLimitPageVal();
+            _page.Offset = (int?)pageControl.GetSelectedItemsPerPage() ?? _page.DefaultOffset;
+            await _page.FillLimitPageVal(pageControl);
             UpdatePaging();
             this.SupressEventComboBox(false);
 
@@ -558,7 +547,7 @@ namespace SIMA.Presentation.Views
         {
             MessageBox.Show(this, mensaje, "Model Error", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
-        private void Window_ContentRendered(object sender, EventArgs e)
+        private async void Window_ContentRendered(object sender, EventArgs e)
         {
             if (_rowData != null)
             {
@@ -573,7 +562,7 @@ namespace SIMA.Presentation.Views
                     brands = _rowData.Brands
                 });
                 _fromMain = false;
-                Filter(new StockProductParam { idBrand = _rowData.IdBrand });
+                await Filter(new StockProductParam { idBrand = _rowData.IdBrand });
             }
 
         }

@@ -16,6 +16,8 @@ using System.Xml.Linq;
 using SIMA.Templates;
 using System.Reflection.PortableExecutable;
 using System.Windows.Media.Media3D;
+using SIMA.Infrastructure.Repositories.Interfaces;
+
 namespace SIMA.Presentation
 {
     /// <summary>
@@ -90,14 +92,14 @@ namespace SIMA.Presentation
         /// Control the Paging Previous and Next Page Number,Offset and Limit 
         /// </summary>
         /// <param name="direction"></param>
-        public void NavigationGrid(Paging.DIRECTION direction)
+        public async void NavigationGrid(DIRECTION direction)
         {
 
             if (_page.isvalidPaging())
             {
                 _page.movePage(direction);
                 pageControl.ItemsPerPage = _page.Offset;
-                Filter(activeFilters());
+                await Filter(activeFilters());
             }
 
 
@@ -220,7 +222,7 @@ namespace SIMA.Presentation
         /// Filter the GridView given the Stock Product param
         /// </summary>
         /// <param name="param"></param>
-        public void Filter(StockProductParam param)
+        public async Task Filter(StockProductParam param)
         {
             try
             {
@@ -248,12 +250,12 @@ namespace SIMA.Presentation
         /// Filter the GridView given the Description of product
         /// </summary>
         /// <param name="param"></param>
-        public void FilterbyText(StockProductParam param)
+        public async void FilterbyText(StockProductParam param)
         {
             try
             {
                 _page.resetPage();
-                Filter(param);
+                await Filter(param);
 
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
@@ -276,7 +278,7 @@ namespace SIMA.Presentation
             var selected = pageControl.GetSelectedItemsPerPage();
             var cmblimit = selected != null
                 ? int.Parse(selected.ToString())
-                : _page.DefaulLimit;
+                : _page.DefaultLimit;
             _page.Limit = cmblimit;
 
         }
@@ -301,7 +303,7 @@ namespace SIMA.Presentation
 
 
         }
-        private void cmbCategory_SelectionChanged(object sender, RoutedEventArgs e)
+        private async void cmbCategory_SelectionChanged(object sender, RoutedEventArgs e)
         {
             var sendobj = cmbCategory.getSelectedItem(sender);
             if (!_isloaded && sendobj != null)
@@ -311,17 +313,15 @@ namespace SIMA.Presentation
                     idCategory = sendobj.Id
                 };
                 _page.resetPage();
-                Filter(param);
-
+                await Filter(param);
             }
-
         }
-        private void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
+        private async void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
         {
             if (!_isloaded)
             {
                 _page.Limit = (int)pageControl.GetSelectedItemsPerPage();
-                Filter(activeFilters());
+                await Filter(activeFilters());
                 UpdatePaging();
             }
         }
@@ -385,11 +385,11 @@ namespace SIMA.Presentation
         }
         private void PagePrevious_Click(object sender, RoutedEventArgs e)
         {
-            NavigationGrid(Paging.DIRECTION.previous);
+            NavigationGrid(DIRECTION.previous);
         }
         private void PageNext_Click(object sender, RoutedEventArgs e)
         {
-            NavigationGrid(Paging.DIRECTION.next);
+            NavigationGrid(DIRECTION.next);
 
         }
         private void btnClose_Click(object sender, RoutedEventArgs e)
@@ -446,11 +446,11 @@ namespace SIMA.Presentation
                 FilterbyText(activeFilters());
 
         }
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            _page.Offset = (int?)pageControl.GetSelectedItemsPerPage() ?? _page.DefaulOffset;
+            _page.Offset = (int?)pageControl.GetSelectedItemsPerPage() ?? _page.DefaultOffset;
             this.SupressEventComboBox();
-            FillLimitPageVal();
+            await _page.FillLimitPageVal(pageControl);
             UpdatePaging();
             this.SupressEventComboBox(false);
 
