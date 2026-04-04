@@ -120,7 +120,7 @@ namespace SIMA.Templates
                 try
                 {
                    RunProgress(isloading, message, delay);
-                   new Task(() => { }).WaitAsync(TimeSpan.FromMilliseconds(Delay)).GetAwaiter().OnCompleted(() =>
+                   new Task(() => {}).WaitAsync(TimeSpan.FromMilliseconds(Delay)).GetAwaiter().OnCompleted(() =>
                     {
                         process.Invoke();
                         StopProgress();

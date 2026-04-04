@@ -25,13 +25,13 @@ namespace SIMA.Infrastructure.Repositories
         public CategoryParam()
         {
         }
-        public CategoryParam(Paging page)
+        public CategoryParam(IPaging page)
         {
             offset = page.Offset;
             limit = page.Limit;
         }
 
-        public void SetPage(Paging page)
+        public void SetPage(IPaging page)
         {
             offset = page.Offset;
             limit = page.Limit;
@@ -41,10 +41,17 @@ namespace SIMA.Infrastructure.Repositories
             throw new NotImplementedException();
         }
     }
-    public class CategoryServices : IContextservices<Category>
+    public class CategoryServices : IContextservices<Category, Category, CategoryParam>
     {
         private readonly IConfiguration _config;
         private JsonFile<StockProduct> _stockProductFile;
+        private int? _currentIdSave;
+        private decimal _totalvalue;
+        private int _totalfound;
+
+        public int? CurrentIdSave => _currentIdSave;
+        public int TotalFound => _totalfound;
+        public decimal TotalValue => _totalvalue;
 
         public CategoryServices()
         {
@@ -62,7 +69,9 @@ namespace SIMA.Infrastructure.Repositories
         {
             using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
             {
-                return await conn.QueryAsync<Category>("[dbo].[getCategory]", param, commandType: System.Data.CommandType.StoredProcedure);
+                IEnumerable<Category> result = await conn.QueryAsync<Category>("[dbo].[getCategory]", param, commandType: System.Data.CommandType.StoredProcedure);
+                _totalfound = result.Count();
+                return result;
             }
         }
         private async Task<int> setCategory(Category param) {
@@ -76,6 +85,18 @@ namespace SIMA.Infrastructure.Repositories
         #endregion
 
         #region Abstractions
+        public Task<IEnumerable<Category>> GetViewAll(IPaging page)
+        {
+            throw new NotImplementedException();
+        }
+        public async Task<IEnumerable<Category>> GetAll(IPaging page)
+        {
+            return await getCategory(new CategoryParam(page));
+        }
+        public async Task<IEnumerable<Category>> GetbyId(int? id)
+        {
+            return await getCategory(new CategoryParam { IdCategory = id });
+        }
         public async Task<int> Add(Category entitiy)
         {
             return await setCategory(entitiy);
@@ -87,15 +108,7 @@ namespace SIMA.Infrastructure.Repositories
         public async Task<int> Delete(int? id)
         {
             using var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
-            return await conn.ExecuteScalarAsync<int>("[dbo].[delCategory]", new { IdCategory = id } , commandType: System.Data.CommandType.StoredProcedure);
-        }
-        public async Task<IEnumerable<Category>> GetAll(Paging page)
-        {
-            return await getCategory(new CategoryParam(page));
-        }
-        public async Task<IEnumerable<Category>> GetbyId(int? id)
-        {
-            return await getCategory(new CategoryParam { IdCategory = id });
+            return await conn.ExecuteScalarAsync<int>("[dbo].[delCategory]", new { IdCategory = id }, commandType: System.Data.CommandType.StoredProcedure);
         }
         public async Task<bool> Set(Category entitiy)
         {
@@ -117,7 +130,11 @@ namespace SIMA.Infrastructure.Repositories
             IEnumerable<Category> res = await getCategory(param);
             return res.Where(p=> p.IdCategory != null).Count();
         }
-        public async Task<int?> GetNextId()
+        public Task<decimal> GetTotalValue()
+        {
+            throw new NotImplementedException();
+        }
+        public async Task<object?> GetNextId()
         {
             throw new NotImplementedException();
         }

@@ -11,7 +11,7 @@ namespace SIMA.Helper
         void FillCombobox(int? id = null);
         void Fill();
         void Filter();
-        Task Filter(T param );
+        void Filter(T param );
         void FilterbyText(T param);
         void ClearFilters();
         void Edit(T param);

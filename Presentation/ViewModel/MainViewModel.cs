@@ -32,30 +32,33 @@ namespace SIMA.Presentation.ViewModel
 
         public MainViewModel() : base()
         {
-            
-            InitializeModel(() => {
+
+            InitializeModel(async () => {
                 _stockservices = new StockProductServices(Config);
                 _categoryservices = new CategoryServices(Config);
-                FillLovCat();
+                await FillLovCat();
+                await FillGridStock();
             });
         }
-        public MainViewModel(Paging page) : base(page)
+        public MainViewModel(IPaging page) : base(page)
         {
 
-            
-            InitializeModel(() => {
+
+            InitializeModel(async () => {
                 _stockservices = new StockProductServices(Config);
                 _categoryservices = new CategoryServices(Config);
-                FillLovCat();
+                await FillLovCat();
+                await FillGridStock();
             });
         }
-        public MainViewModel(Paging page,IConfiguration config) : base(page, config) 
+        public MainViewModel(IPaging page,IConfiguration config) : base(page, config) 
         {
 
-            InitializeModel(() => {
+            InitializeModel(async () => {
                 _stockservices = new StockProductServices(Config);
                 _categoryservices = new CategoryServices(Config);
-                FillLovCat();
+                await FillLovCat();
+                await FillGridStock();
             });
 
         }
@@ -64,7 +67,7 @@ namespace SIMA.Presentation.ViewModel
         /// <summary>
         /// get the Category data
         /// </summary>
-        private async void FillLovCat()
+        private async Task FillLovCat()
         {
             try
             {
@@ -81,8 +84,26 @@ namespace SIMA.Presentation.ViewModel
             }
 
         }
+        /// <summary>
+        /// get the Stock data
+        /// </summary>    
+        private async Task FillGridStock()
+        {
+            try
+            {
+                IEnumerable<StockProductView> prod = await _stockservices.GetViewAll(Page);
+                StockProducts = new ObservableCollection<StockProductView>(prod);
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex)
+            {
+                InvokeError("DataBase Error Failed");
+            }
+            catch (Exception)
+            {
+                InvokeError("System Error Failed");
+            }
+
+        }
         #endregion
-
-
     }
 }

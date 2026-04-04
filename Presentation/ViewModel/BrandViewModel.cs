@@ -2,6 +2,7 @@
 using SIMA.Domain.Models;
 using SIMA.Helper;
 using SIMA.Infrastructure.Repositories;
+using SIMA.Infrastructure.Repositories.Interfaces;
 using SIMA.Presentation.ViewModel;
 using SIMA.Templates;
 using System;
@@ -73,7 +74,7 @@ namespace SIMA.Presentation.Views
                 FillBrand();
             });
         }
-        public BrandViewModel(Paging page, IConfiguration config):base()
+        public BrandViewModel(IPaging page, IConfiguration config):base()
         {
 
             InitializeModel(() => {

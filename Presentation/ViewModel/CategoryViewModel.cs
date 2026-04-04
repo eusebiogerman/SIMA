@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using SIMA.Domain.Models;
 using SIMA.Infrastructure.Repositories;
+using SIMA.Infrastructure.Repositories.Interfaces;
 using SIMA.Presentation.Views;
 using System;
 using System.Collections;
@@ -38,7 +39,7 @@ namespace SIMA.Presentation.ViewModel
         {
             InitializeModel(() => {});
         }
-        public CategoryViewModel(Paging page, IConfiguration config) : base(page, config) 
+        public CategoryViewModel(IPaging page, IConfiguration config) : base(page, config) 
         {
             InitializeModel(() => {});
         }

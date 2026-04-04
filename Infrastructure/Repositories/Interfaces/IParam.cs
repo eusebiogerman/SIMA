@@ -2,7 +2,7 @@
 {
     public interface IParam
     {
-        void SetPage(Paging page);
+        void SetPage(IPaging page);
         void ResetParam(int? inoffset = 0, int? inlimit = 10);
      }
         

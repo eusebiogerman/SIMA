@@ -28,7 +28,7 @@ namespace SIMA.Presentation.Views
     public partial class Wcategory : Window, IUtilServices<Category, CategoryParam>, IUtil
     {
         private CategoryServices _categoryservices;
-        private Paging _page;
+        private IPaging _page;
         private Util _util;
         private CancellationTokenSource _cts;
         private readonly IConfiguration _config;
@@ -65,7 +65,7 @@ namespace SIMA.Presentation.Views
         /// Return and Update the message of the render Category result
         /// <param name="total"></param>
         /// <returns></returns>
-        public string getResultMsgAsync(int total)
+        public string getResultMessage(int total)
         {
             pageControl.TotalFound = total;
             return $"📊 Show {total} products found";
@@ -106,11 +106,11 @@ namespace SIMA.Presentation.Views
         /// Update the Total result of the rows and update the labels on the grid 
         /// </summary>
         /// <param name="total"></param>
-        public async void UpdatePaging(int total = 0)
+        public void UpdatePaging(int total = 0)
         {
-            int intotal = (total == 0) ? await _categoryservices.GetTotalFound(activeFilters()) : total;
+            int intotal = (total == 0) ?  _categoryservices.TotalFound : total;
             _page.parsePageData(intotal);
-            txtResults.Text = getResultMsgAsync(intotal);
+            txtResults.Text = getResultMessage(intotal);
             pagingLabels(intotal);
         }
         /// <summary>
@@ -155,7 +155,7 @@ namespace SIMA.Presentation.Views
         /// <summary>
         /// Fill the Category ComboBox
         /// </summary>
-        public async void FillCombobox(int? id = null)
+        public void FillCombobox(int? id = null)
         {
             throw new NotImplementedException();
         }
@@ -171,7 +171,7 @@ namespace SIMA.Presentation.Views
                 {
                     IEnumerable<Category> cat = await _categoryservices.GetAll(_page);
                     gridCategory.ItemsSource = cat.Where(p => p.IdCategory != null);
-                    UpdatePaging();
+                     UpdatePaging();
                 }, _config, true, "Loading Category...");
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
@@ -190,7 +190,7 @@ namespace SIMA.Presentation.Views
         /// <summary>
         /// Filter the GridView given the activeFilters() : function
         /// </summary>
-        public async void Filter()
+        public void Filter()
         {
             throw new NotImplementedException();
         }
@@ -198,7 +198,7 @@ namespace SIMA.Presentation.Views
         /// Filter the GridView given the Stock Category param
         /// </summary>
         /// <param name="param"></param>
-        public async Task Filter(CategoryParam param)
+        public void Filter(CategoryParam param)
         {
             try
             {
@@ -206,7 +206,7 @@ namespace SIMA.Presentation.Views
                 {
                     IEnumerable<Category> cat = await _categoryservices.GetByFilter(param);
                     gridCategory.ItemsSource = cat.Where(p => p.IdCategory != null);
-                    UpdatePaging();
+                     UpdatePaging();
                 }, _config, true, "Loading Category...");
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
@@ -226,15 +226,17 @@ namespace SIMA.Presentation.Views
         /// Filter the GridView given the Search text description
         /// </summary>
         /// <param name="param"></param>
-        public async void FilterbyText(CategoryParam param)
+        public void FilterbyText(CategoryParam param)
         {
             try
             {
-                
-                IEnumerable<Category> cat = await _categoryservices.GetByFilter(param);
+                progress.SetLoadingStateDataBase(async () =>
+                {
+                    IEnumerable<Category> cat = await _categoryservices.GetByFilter(param);
                 gridCategory.ItemsSource = cat.Where(p => p.IdCategory != null);
-                UpdatePaging();
-               
+                 UpdatePaging();
+                }, _config, true, "Loading Category...");
+
 
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
@@ -268,7 +270,7 @@ namespace SIMA.Presentation.Views
         #endregion
 
         #region Events
-        private async void btnsSaveCategory_Click(object sender, RoutedEventArgs e)
+        private void btnsSaveCategory_Click(object sender, RoutedEventArgs e)
         {
             
             int? id = string.IsNullOrEmpty(txtIdCategory.Text) ? null : int.Parse(txtIdCategory.Text);
@@ -288,7 +290,7 @@ namespace SIMA.Presentation.Views
                 {
                     MessageBox.Show(this, "Category Sucessfully saved", "Save Category", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                     ClearFilters();
-                    await Filter(activeFilters());
+                    Filter(activeFilters());
                 }
                 else
                 {
@@ -367,8 +369,8 @@ namespace SIMA.Presentation.Views
             if (!_isloaded)
             {
                 _page.Limit = (int)pageControl.GetSelectedItemsPerPage();
-                await Filter(activeFilters());
-                UpdatePaging();
+                Filter(activeFilters());
+                 UpdatePaging();
             }
         }
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -383,7 +385,7 @@ namespace SIMA.Presentation.Views
             _page.Offset = (int?)pageControl.GetSelectedItemsPerPage() ?? _page.DefaultOffset;
             this.SupressEventComboBox();
             await _page.FillLimitPageVal(pageControl);
-            UpdatePaging();
+             UpdatePaging();
             Fill();
             this.SupressEventComboBox(false);
         }

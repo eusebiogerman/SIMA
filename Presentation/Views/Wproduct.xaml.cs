@@ -38,7 +38,7 @@ namespace SIMA.Presentation.Views
         private CategoryServices _categoryervices;
         private StockProductServices _StockProductservices;
         private Product _currentProduct;
-        private Paging _page;
+        private IPaging _page;
         private Util _util;
         private CancellationTokenSource _cts;
         private readonly IConfiguration _config;
@@ -78,7 +78,7 @@ namespace SIMA.Presentation.Views
         /// Return and Update the message of the render Category result
         /// <param name="total"></param>
         /// <returns></returns>
-        public string getResultMsgAsync(int total)
+        public string getResultMessage(int total)
         {
             pageControl.TotalFound = total;
             return $"📊 Show {total} products found";
@@ -129,11 +129,11 @@ namespace SIMA.Presentation.Views
         /// Update the Total result of the rows and update the labels on the grid 
         /// </summary>
         /// <param name="total"></param>
-        public async void UpdatePaging(int total = 0)
+        public void UpdatePaging(int total = 0)
         {
-            int intotal = (total == 0) ? await _productservices.GetTotalFound(activeFilters()) : total;
+            int intotal = (total == 0) ?  _productservices.TotalFound : total;
             _page.parsePageData(intotal);
-            txtResults.Text = getResultMsgAsync(intotal);
+            txtResults.Text = getResultMessage(intotal);
             pagingLabels(intotal);
         }
         /// <summary>
@@ -175,7 +175,7 @@ namespace SIMA.Presentation.Views
         /// <summary>
         /// Fill the Category ComboBox
         /// </summary>
-        public async void FillCombobox(int? id = null)
+        public void FillCombobox(int? id = null)
         {
             throw new NotImplementedException();
         }
@@ -190,7 +190,7 @@ namespace SIMA.Presentation.Views
         /// <summary>
         /// Filter the GridView given the activeFilters() : function
         /// </summary>
-        public async void Filter()
+        public void Filter()
         {
             throw new NotImplementedException();
         }
@@ -198,7 +198,7 @@ namespace SIMA.Presentation.Views
         /// Filter the GridView given the Stock Category param
         /// </summary>
         /// <param name="param"></param>
-        public async Task Filter(ProductParam param)
+        public void Filter(ProductParam param)
         {
             try
             {
@@ -206,7 +206,7 @@ namespace SIMA.Presentation.Views
                 {
                     IEnumerable<ProductView> cat = await _productservices.GetByFilter(param);
                     gridProducts.ItemsSource = cat.Where(p => p.IdProduct != null);
-                    UpdatePaging();
+                     UpdatePaging();
                 }, _config, true, "Loading Products...");
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
@@ -226,16 +226,16 @@ namespace SIMA.Presentation.Views
         /// Filter the GridView given the Search text description
         /// </summary>
         /// <param name="param"></param>
-        public async void FilterbyText(ProductParam param)
+        public void FilterbyText(ProductParam param)
         {
             try
             {
-
-                IEnumerable<ProductView> cat = await _productservices.GetByFilter(param);
-                gridProducts.ItemsSource = cat.Where(p => p.IdProduct != null);
-                UpdatePaging();
-
-
+                progress.SetLoadingStateDataBase(async () =>
+                {
+                    IEnumerable<ProductView> cat = await _productservices.GetByFilter(param);
+                    gridProducts.ItemsSource = cat.Where(p => p.IdProduct != null);
+                     UpdatePaging();
+                }, _config, true, "Loading Products...");
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
@@ -304,7 +304,7 @@ namespace SIMA.Presentation.Views
                 {
                     MessageBox.Show(this, "Product Sucessfully saved", "Save Product", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                     ClearFilters();
-                    await Filter(activeFilters());
+                    Filter(activeFilters());
                 }
                 else
                 {
@@ -351,8 +351,8 @@ namespace SIMA.Presentation.Views
             if (!_isloaded)
             {
                 _page.Limit = (int)pageControl.GetSelectedItemsPerPage();
-                await Filter(activeFilters());
-                UpdatePaging();
+                Filter(activeFilters());
+                 UpdatePaging();
             }
         }
         private async void txtSearch_TextChanged(object sender, TextChangedEventArgs e)
@@ -388,7 +388,7 @@ namespace SIMA.Presentation.Views
                     bool valid = await _productservices.Delete(rowData.IdProduct) > 0;
                     if (valid)
                     {
-                        await Filter(activeFilters());
+                         Filter(activeFilters());
                         MessageBox.Show(this, "Product Succesfully removed", "Product Stock", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     else
@@ -444,7 +444,7 @@ namespace SIMA.Presentation.Views
             _page.Offset = (int?)pageControl.GetSelectedItemsPerPage() ?? _page.DefaultOffset;
             this.SupressEventComboBox();
             await _page.FillLimitPageVal(pageControl);
-            UpdatePaging();
+             UpdatePaging();
 
             this.SupressEventComboBox(false);
         }

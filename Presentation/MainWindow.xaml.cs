@@ -17,6 +17,7 @@ using SIMA.Templates;
 using System.Reflection.PortableExecutable;
 using System.Windows.Media.Media3D;
 using SIMA.Infrastructure.Repositories.Interfaces;
+using System.Data.Common;
 
 namespace SIMA.Presentation
 {
@@ -27,7 +28,7 @@ namespace SIMA.Presentation
     {
         private StockProductServices _stockservices;
         private CategoryServices _categoryservices;
-        private Paging _page;
+        private IPaging _page;
         private Wstocks _windowStock;
         private Wproduct _wproduct;
         private Wcategory _wcategory;
@@ -71,7 +72,7 @@ namespace SIMA.Presentation
         /// </summary>
         /// <param name="total"></param>
         /// <returns></returns>
-        public string getResultMsgAsync(int total)
+        public string getResultMessage(int total)
         {
             pageControl.TotalFound = total;
             return $"📊 Show {total} products found";
@@ -92,14 +93,14 @@ namespace SIMA.Presentation
         /// Control the Paging Previous and Next Page Number,Offset and Limit 
         /// </summary>
         /// <param name="direction"></param>
-        public async void NavigationGrid(DIRECTION direction)
+        public void NavigationGrid(DIRECTION direction)
         {
 
             if (_page.isvalidPaging())
             {
                 _page.movePage(direction);
                 pageControl.ItemsPerPage = _page.Offset;
-                await Filter(activeFilters());
+                 Filter(activeFilters());
             }
 
 
@@ -116,11 +117,11 @@ namespace SIMA.Presentation
         /// Update the Total result of the rows and update the labels on the grid 
         /// </summary>
         /// <param name="total"></param>
-        public async void UpdatePaging(int total = 0)
+        public void UpdatePaging(int total = 0)
         {
-            int intotal = (total == 0) ? await _stockservices.GetTotalFound(activeFilters()) : total;
+            int intotal = (total == 0) ?  _stockservices.TotalFound : total;
             _page.parsePageData(intotal);
-            txtResults.Text = getResultMsgAsync(intotal);
+            txtResults.Text = getResultMessage(intotal);
             pagingLabels(intotal);
         }
         /// <summary>
@@ -159,6 +160,7 @@ namespace SIMA.Presentation
             {
 
                 idCategory = catcmb != null ? catcmb.Id : null,
+                products = txtSearch?.Text,
                 offset = _page.Offset,
                 limit = _page.Limit
                 //,Name = txtSearch.Text
@@ -174,24 +176,9 @@ namespace SIMA.Presentation
         /// <summary>
         /// Fill the stock
         /// </summary>
-        public async void Fill()
+        public void Fill()
         {
-            try
-            {
-                IEnumerable<StockProductView> prod = await _stockservices.GetViewAll(_page);
-                int total = await _stockservices.GetTotalFound(activeFilters());
-                gridProducts.ItemsSource = prod;
-                UpdatePaging(total);
-
-            }
-            catch (Microsoft.Data.SqlClient.SqlException ex)
-            {
-                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-            catch (Exception)
-            {
-                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
+            throw new NotImplementedException();
 
         }
         /// <summary>
@@ -203,11 +190,10 @@ namespace SIMA.Presentation
             {
                 progress.SetLoadingStateDataBase(async () =>
                 {
-                    IEnumerable<StockProductView> prod = await _stockservices.GetViewAll(_page);
-                    int total = await _stockservices.GetTotalFound(activeFilters());
-                    gridProducts.ItemsSource = prod;
-                    UpdatePaging(total);
-                },_config,true,"Loading stock...");
+                    IEnumerable<StockProductView> cat = await _stockservices.GetViewAll(_page);
+                    gridProducts.ItemsSource = cat.Where(p => p.IdBrand != null);
+                    UpdatePaging();
+                }, _config, true, "Loading Stock...");
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
@@ -222,27 +208,26 @@ namespace SIMA.Presentation
         /// Filter the GridView given the Stock Product param
         /// </summary>
         /// <param name="param"></param>
-        public async Task Filter(StockProductParam param)
+        public async void Filter(StockProductParam param)
         {
             try
             {
-
-                 progress.SetLoadingStateDataBase( async () =>
+                progress.SetLoadingStateDataBase(async () =>
                 {
-                    param.SetPage(_page);
-                    IEnumerable<StockProductView> prod = await _stockservices.GetByFilter(param);
-                    int total = await _stockservices.GetTotalFound(param);
-                    gridProducts.ItemsSource = prod;
-                    UpdatePaging(total);
-                }, _config, true, "Loading Stock... ");
+                    IEnumerable<StockProductView> cat = await _stockservices.GetByFilter(param);
+                    gridProducts.ItemsSource = cat.Where(p => p.IdBrand != null);
+                    UpdatePaging();
+                }, _config, true, "Loading Stock...");
 
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
+
                 MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             catch (Exception)
             {
+
                 MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
@@ -250,37 +235,10 @@ namespace SIMA.Presentation
         /// Filter the GridView given the Description of product
         /// </summary>
         /// <param name="param"></param>
-        public async void FilterbyText(StockProductParam param)
+        public void FilterbyText(StockProductParam param)
         {
-            try
-            {
-                _page.resetPage();
-                await Filter(param);
 
-            }
-            catch (Microsoft.Data.SqlClient.SqlException ex)
-            {
-                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-            catch (Exception)
-            {
-                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-
-        }
-        /// <summary>
-        /// Fill the Page Limit Values
-        /// </summary>
-        public async void FillLimitPageVal()
-        {
-            IEnumerable<string> lim = await _page.GetLimitPaging();
-            pageControl.SetItemsPerPageSource(lim);
-            var selected = pageControl.GetSelectedItemsPerPage();
-            var cmblimit = selected != null
-                ? int.Parse(selected.ToString())
-                : _page.DefaultLimit;
-            _page.Limit = cmblimit;
-
+            throw new NotImplementedException();
         }
         /// <summary>
         /// Open the Edit Form for the Stock select in th gridview
@@ -298,12 +256,13 @@ namespace SIMA.Presentation
         {
             if (!_isloaded)
             {
-                FilterbyText(activeFilters());
+                Filter(activeFilters());
+                
             }
 
 
         }
-        private async void cmbCategory_SelectionChanged(object sender, RoutedEventArgs e)
+        private void cmbCategory_SelectionChanged(object sender, RoutedEventArgs e)
         {
             var sendobj = cmbCategory.getSelectedItem(sender);
             if (!_isloaded && sendobj != null)
@@ -313,7 +272,7 @@ namespace SIMA.Presentation
                     idCategory = sendobj.Id
                 };
                 _page.resetPage();
-                await Filter(param);
+                 Filter(param);
             }
         }
         private async void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
@@ -321,8 +280,8 @@ namespace SIMA.Presentation
             if (!_isloaded)
             {
                 _page.Limit = (int)pageControl.GetSelectedItemsPerPage();
-                await Filter(activeFilters());
-                UpdatePaging();
+                 Filter(activeFilters());
+                 UpdatePaging();
             }
         }
         private void btnClear_Click(object sender, RoutedEventArgs e)
@@ -443,7 +402,7 @@ namespace SIMA.Presentation
                 _stockservices = new StockProductServices();
                 gridProducts.ItemsSource = null;
                 gridProducts.Items.Clear();
-                FilterbyText(activeFilters());
+                Filter(activeFilters());
 
         }
         private async void Window_Loaded(object sender, RoutedEventArgs e)
@@ -468,15 +427,16 @@ namespace SIMA.Presentation
         {
             ResizeGrid("60%");
         }
+
+
+
+
+
+
+
+
+
         #endregion
-
-
-
-
-
-
-
-
 
 
     }

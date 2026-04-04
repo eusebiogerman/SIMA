@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using SIMA.Domain.Models;
 using SIMA.Infrastructure.Repositories;
+using SIMA.Infrastructure.Repositories.Interfaces;
 using SIMA.Presentation.ViewModel;
 using SIMA.Templates;
 using System;
@@ -22,7 +23,6 @@ namespace SIMA.Presentation.Views
         private ObservableCollection<LovObject> _category;
         private ObservableCollection<ProductView> _product;
         private CategoryServices _categoryservices;
-        private ProductServices _productservices;
 
         public string Name
         {
@@ -64,12 +64,11 @@ namespace SIMA.Presentation.Views
                 FillLovCat();
             });
         }
-        public ProductViewModel(Paging page, IConfiguration config) : base(page, config) 
+        public ProductViewModel(IPaging page, IConfiguration config) : base(page, config) 
         {
             InitializeModel(() =>
             {
                 _categoryservices = new CategoryServices(Config);
-                _productservices = new ProductServices(Config);
                 FillLovCat();
             });
         }
@@ -117,7 +116,7 @@ namespace SIMA.Presentation.Views
             }
 
         }
-          #endregion
+        #endregion
 
 
 

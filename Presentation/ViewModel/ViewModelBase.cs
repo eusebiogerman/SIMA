@@ -23,7 +23,7 @@ namespace SIMA.Presentation.ViewModel
         private readonly Dictionary<string, List<string>> _errors = new();
         private bool _isSupressed;
         private IConfiguration _config;
-        private Paging _page;
+        private IPaging _page;
         private bool _isBusy;
         private string _message;
         private int _delay;
@@ -42,7 +42,7 @@ namespace SIMA.Presentation.ViewModel
             return _errors.GetValueOrDefault(propertyName ?? string.Empty, new List<string>());
         }
         public IConfiguration Config { get => _config; set => _config = value; }
-        public Paging Page { get => _page; set => _page = value; }
+        public IPaging Page { get => _page; set => _page = value; }
         public int Delay { set => _delay = value; }
         public object PassingParameter { get => _passingParameter; set => _passingParameter = value; }
         #endregion
@@ -65,12 +65,12 @@ namespace SIMA.Presentation.ViewModel
             _page = new Paging();
             _config = new Util().CustomConfiguration();
         }
-        protected ViewModelBase(Paging page)
+        protected ViewModelBase(IPaging page)
         {
             _page = page ?? new Paging();
             _config = new Util().CustomConfiguration();
         }
-        protected ViewModelBase(Paging page,IConfiguration config)
+        protected ViewModelBase(IPaging page,IConfiguration config)
         {
             _page = page ?? new Paging();
             _config = config ?? new Util().CustomConfiguration();
