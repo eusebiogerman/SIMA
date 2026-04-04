@@ -1,7 +1,8 @@
 ﻿using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
-using SIMA.Domain.Models;
+using SIMA.Domain.Models.Objects;
+using SIMA.Domain.Models.Params;
 using SIMA.ExtensionsHelper;
 using SIMA.Helper;
 using SIMA.Infrastructure.Repositories.Interfaces;
@@ -14,33 +15,6 @@ using System.Threading.Tasks;
 
 namespace SIMA.Infrastructure.Repositories
 {
-
-    public class CategoryParam : IParam
-    {
-        public int? IdCategory { get; set; } = null;
-        public string? Name { get; set; } = null;
-        public int? offset { get; set; } = 0;
-        public int? limit { get; set; } = 10;
-
-        public CategoryParam()
-        {
-        }
-        public CategoryParam(IPaging page)
-        {
-            offset = page.Offset;
-            limit = page.Limit;
-        }
-
-        public void SetPage(IPaging page)
-        {
-            offset = page.Offset;
-            limit = page.Limit;
-        }
-        public void ResetParam(int? inoffset = 0, int? inlimit = 10)
-        {
-            throw new NotImplementedException();
-        }
-    }
     public class CategoryServices : IContextservices<Category, Category, CategoryParam>
     {
         private readonly IConfiguration _config;
@@ -75,12 +49,11 @@ namespace SIMA.Infrastructure.Repositories
             }
         }
         private async Task<int> setCategory(Category param) {
-
             using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
             {
-                return await conn.ExecuteScalarAsync<int>("[dbo].[setCategory]", param, commandType: System.Data.CommandType.StoredProcedure);
+                var test = await conn.ExecuteScalarAsync<int>("[dbo].[setCategory]", param, commandType: System.Data.CommandType.StoredProcedure);
+                return test;
             }
-           
         }
         #endregion
 

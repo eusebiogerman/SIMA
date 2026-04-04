@@ -11,7 +11,7 @@
         Background="#F5F5F5"
         Loaded="Window_Loaded" 
         Initialized="Window_Initialized" 
-        SizeChanged="Window_SizeChanged" WindowState="Maximized">
+        SizeChanged="Window_SizeChanged" WindowState="Maximized" ContentRendered="Window_ContentRendered">
 
     <Grid Margin="5">
         <Grid.RowDefinitions>

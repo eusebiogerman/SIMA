@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
-using SIMA.Domain.Models;
+using SIMA.Domain.Models.Views;
 using SIMA.Infrastructure.Repositories;
 using SIMA.Infrastructure.Repositories.Interfaces;
 using SIMA.Presentation.ViewModel;
@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace SIMA.Presentation.Views
 {
- public class StockViewModel : ViewModelBase
+    public class StockViewModel : ViewModelBase
     {
         private int? _stockcount;
         private ObservableCollection<StockProductView> _stockproduct;

@@ -1,5 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
-using SIMA.Domain.Models;
+using SIMA.Domain.Models.Intefaces;
+using SIMA.Domain.Models.Objects;
+using SIMA.Domain.Models.Params;
+using SIMA.Domain.Models.Views;
 using SIMA.ExtensionsHelper;
 using SIMA.Helper;
 using SIMA.Infrastructure.Repositories;
@@ -34,14 +37,15 @@ namespace SIMA.Presentation.Views
     public partial class Wstocks : Window, IUtilServices<StockProduct, StockProductParam>, IUtil
     {
 
-        private StockProductServices _stockservices;
-        private BrandServices _brandsrervices;
+        private IContextservices<StockProduct, StockProductView, StockProductParam> _service;
+        private IContextservices<Brand, BrandView, BrandParam> _brandsrervices;
         private IPaging _page;
+        private IConfiguration _config;
+
         private Util _util;
         private CancellationTokenSource _cts;
         private StockProductView? _rowData;
         private StockViewModel _vm;
-        private IConfiguration _config;
         private bool _isloaded;
         private bool _editmode = false;
         private bool _fromMain = false;
@@ -75,7 +79,7 @@ namespace SIMA.Presentation.Views
             _vm = new StockViewModel(_page, _config);
             this.DataContext = _vm;
             _vm.ShowErrorFromModel += Vm_ShowErrorFromModel;
-            _stockservices = new StockProductServices(_config);
+            _service = new StockProductServices(_config);
             _brandsrervices = new BrandServices(_config);
             _rowData = rowData;
             _editmode = _rowData != null;
@@ -159,7 +163,7 @@ namespace SIMA.Presentation.Views
         /// <param name="total"></param>
         public void UpdatePaging(int total = 0)
         {
-            int intotal = (total == 0) ? _stockservices.TotalFound : total;
+            int intotal = (total == 0) ? _service.TotalFound : total;
             _page.parsePageData(intotal);
             txtResults.Text = getResultMessage(intotal);
             pagingLabels(intotal);
@@ -256,7 +260,7 @@ namespace SIMA.Presentation.Views
             {
                 progress.SetLoadingStateDataBase(async () =>
                 {
-                    IEnumerable<StockProductView> cat = await _stockservices.GetByFilter(param);
+                    IEnumerable<StockProductView> cat = await _service.GetByFilter(param);
                     gridStocks.ItemsSource = cat.Where(p => p.IdBrand != null);
                      UpdatePaging();
                 }, _config, true, "Loading Stock...");
@@ -285,7 +289,7 @@ namespace SIMA.Presentation.Views
             {
                 progress.SetLoadingStateDataBase(async () =>
                 {
-                    IEnumerable<StockProductView> cat = await _stockservices.GetByFilter(param);
+                    IEnumerable<StockProductView> cat = await _service.GetByFilter(param);
                     gridStocks.ItemsSource = cat.Where(p => p.IdBrand != null);
                      UpdatePaging();
                 }, _config, true, "Loading Stock...");
@@ -342,20 +346,22 @@ namespace SIMA.Presentation.Views
         #endregion
 
         #region Events
-        private void btnsSaveStock_Click(object sender, RoutedEventArgs e)
+        private async void btnsSaveStock_Click(object sender, RoutedEventArgs e)
         {
             int? id = string.IsNullOrEmpty(txtIdStock.Text) ? null : int.Parse(txtIdStock.Text.ToString());
             int? idbrand = cmbBrand.getSelectedItem().Id;
             int stock = int.Parse(txtStock.Text.ToString());
             try
             {
-                bool isset = progress.SetLoadingStateDataBaseResult
-                    (async () => await _stockservices.Set(new StockProduct
-                    {
-                        IdStock = id,
-                        IdBrand = idbrand,
-                        Stock = stock
-                    }), _config, true, "Saving Stock...");
+                progress.RunProgress(true, "Saving Stock...");
+                await progress.DelayProgress();
+                bool isset = await _service.Set(new StockProduct
+                {
+                    IdStock = id,
+                    IdBrand = idbrand,
+                    Stock = stock
+                });
+                progress.StopProgress();
 
                 if (isset)
                 {
@@ -370,12 +376,12 @@ namespace SIMA.Presentation.Views
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
-
+                progress.StopProgress();
                 MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             catch (Exception)
             {
-
+                progress.StopProgress();
                 MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
@@ -450,7 +456,7 @@ namespace SIMA.Presentation.Views
         }
         private async void btnRemove_Click(object sender, RoutedEventArgs e)
         {
-            MessageBoxResult result = MessageBox.Show(this, "Confirm remove Stock ?", "Remove Stock", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+            MessageBoxResult result = MessageBox.Show(this, "Confirm removing Stock ?", "Remove Stock", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
             try
             {
                 if (result == MessageBoxResult.Yes)
@@ -458,7 +464,7 @@ namespace SIMA.Presentation.Views
 
                     Button btn = sender as Button;
                     StockProductView rowData = (StockProductView)btn.DataContext;
-                    bool valid = await _stockservices.Delete(rowData.IdStock) > 0;
+                    bool valid = await _service.Delete(rowData.IdStock) > 0;
                     if (valid)
                     {
                         Filter(activeFilters());
@@ -483,10 +489,6 @@ namespace SIMA.Presentation.Views
 
                 MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
-
-
-
-
         }
         private void btnUpdate_Click(object sender, RoutedEventArgs e)
         {
@@ -560,12 +562,6 @@ namespace SIMA.Presentation.Views
 
         }
         #endregion
-
-
-
-
-
-
     }
 }
 

@@ -1,24 +1,20 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
-using SIMA.Domain.Models;
 using SIMA.Helper;
 using SIMA.Infrastructure.Repositories;
 using SIMA.Infrastructure.Repositories.Interfaces;
-using SIMA.Templates;
+using SIMA.Presentation.Interfaces;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SIMA.Presentation.ViewModel
 {
-    public abstract class ViewModelBase : INotifyDataErrorInfo, INotifyPropertyChanged
+    public abstract class ViewModelBase : INotifyDataErrorInfo, INotifyPropertyChanged,IViewModel
     {
         private readonly Dictionary<string, List<string>> _errors = new();
         private bool _isSupressed;

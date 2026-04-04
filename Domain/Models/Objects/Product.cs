@@ -1,13 +1,14 @@
-﻿using System;
+﻿using SIMA.Domain.Models.Intefaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SIMA.Domain.Models
+namespace SIMA.Domain.Models.Objects
 {
 
-    public class Product
+    public class Product : IObjects
     {
         public int? IdProduct { get; set; }
         public string Name { get; set; }

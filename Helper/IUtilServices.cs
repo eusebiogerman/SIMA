@@ -1,5 +1,8 @@
-﻿using SIMA.Infrastructure.Repositories;
+﻿using SIMA.Domain.Models.Intefaces;
+using SIMA.Infrastructure.Repositories;
 using SIMA.Presentation.ViewModel;
+using SIMA.Templates;
+using System;
 using System.Threading.Tasks;
 
 namespace SIMA.Helper

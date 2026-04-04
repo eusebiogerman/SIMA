@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
-using SIMA.Domain.Models;
+using SIMA.Domain.Models.Objects;
+using SIMA.Domain.Models.Params;
+using SIMA.Domain.Models.Views;
 using SIMA.ExtensionsHelper;
 using SIMA.Helper;
 using SIMA.Infrastructure.Repositories;
@@ -33,14 +35,14 @@ namespace SIMA.Presentation.Views
     public partial class Wbrand : Window, IUtilServices<Brand, BrandParam>, IUtil
     {
 
-        private BrandServices _Brandservices;
-        private ProductServices _productervices;
+        private IContextservices<Brand, BrandView, BrandParam> _service;
+        private IContextservices<Product, ProductView, ProductParam> _productervices;
         private IPaging _page;
-        private Util _util;
-        private CancellationTokenSource _cts;
         private readonly IConfiguration _config;
+
+        private Util _util;
+        private CancellationTokenSource? _cts;
         private bool _isloaded;
-        private bool _isNewStock = false;
         private bool _editmode = false;
 
         public Wbrand()
@@ -55,7 +57,7 @@ namespace SIMA.Presentation.Views
             var Vm = new BrandViewModel(_page, _config);
             this.DataContext = Vm;
             Vm.ShowErrorFromModel += Vm_ShowErrorFromModel;
-            _Brandservices = new BrandServices(_config);
+            _service = new BrandServices(_config);
             _productervices = new ProductServices(_config);
         }
 
@@ -143,7 +145,7 @@ namespace SIMA.Presentation.Views
         /// <param name="total"></param>
         public void UpdatePaging(int total = 0)
         {
-            int intotal = (total == 0) ? _Brandservices.TotalFound : total;
+            int intotal = (total == 0) ? _service.TotalFound : total;
             _page.parsePageData(intotal);
             txtResults.Text = getResultMessage(intotal);
             pagingLabels(intotal);
@@ -240,7 +242,7 @@ namespace SIMA.Presentation.Views
             {
                 progress.SetLoadingStateDataBase(async () =>
                 {
-                    IEnumerable<BrandView> cat = await _Brandservices.GetByFilter(param);
+                    IEnumerable<BrandView> cat = await _service.GetByFilter(param);
                     gridBrands.ItemsSource = cat.Where(p => p.IdBrand != null);
                      UpdatePaging();
                 }, _config, true, "Loading Brands...");
@@ -268,7 +270,7 @@ namespace SIMA.Presentation.Views
             {
                 progress.SetLoadingStateDataBase(async () =>
                 {
-                    IEnumerable<BrandView> cat = await _Brandservices.GetByFilter(param);
+                    IEnumerable<BrandView> cat = await _service.GetByFilter(param);
                     gridBrands.ItemsSource = cat.Where(p => p.IdBrand != null);
                      UpdatePaging();
                 }, _config, true, "Loading Brands...");
@@ -327,7 +329,7 @@ namespace SIMA.Presentation.Views
         #endregion
 
         #region Events
-        private void btnsSaveBrand_Click(object sender, RoutedEventArgs e)
+        private async void btnsSaveBrand_Click(object sender, RoutedEventArgs e)
         {
 
             int? id = string.IsNullOrEmpty(txtIdBrand.Text) ? null : int.Parse(txtIdBrand.Text);
@@ -336,15 +338,16 @@ namespace SIMA.Presentation.Views
             decimal price = decimal.Parse(txtPrice.Text);
             try
             {
-                bool isset = progress.SetLoadingStateDataBaseResult
-                    (async () => await _Brandservices.Set(new Brand
-                    {
-                        IdBrand = id,
-                        IdProduct = idprod,
-                        Name = name,
-                        Price = price,
-                    }), _config, true, "Saving Brands...");
-
+                progress.RunProgress(true, "Saving Brands...");
+                await progress.DelayProgress();
+                bool isset = await _service.Set(new Brand
+                {
+                    IdBrand = id,
+                    IdProduct = idprod,
+                    Name = name,
+                    Price = price,
+                });
+                progress.StopProgress();
 
                 if (isset)
                 {
@@ -361,12 +364,12 @@ namespace SIMA.Presentation.Views
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
-
+                progress.StopProgress();
                 MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             catch (Exception)
             {
-
+                progress.StopProgress();
                 MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
@@ -392,13 +395,13 @@ namespace SIMA.Presentation.Views
         {
             NavigationGrid(DIRECTION.next);
         }
-        private async void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
+        private void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
         {
             if (!_isloaded)
             {
                 _page.Limit = (int)pageControl.GetSelectedItemsPerPage();
                 Filter(activeFilters());
-                 UpdatePaging();
+                UpdatePaging();
             }
         }
         private void cmbCategory_SelectionChanged(object sender, RoutedEventArgs e)
@@ -431,7 +434,7 @@ namespace SIMA.Presentation.Views
         }
         private async void btnRemove_Click(object sender, RoutedEventArgs e)
         {
-            MessageBoxResult result = MessageBox.Show(this, "Confirm remove Brand ?", "Remove Brand", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+            MessageBoxResult result = MessageBox.Show(this, "Confirm removing Brand ?", "Remove Brand", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
             try
             {
                 if (result == MessageBoxResult.Yes)
@@ -439,7 +442,7 @@ namespace SIMA.Presentation.Views
 
                     Button btn = sender as Button;
                     BrandView rowData = (BrandView)btn.DataContext;
-                    bool valid = await _Brandservices.Delete(rowData.IdBrand) > 0;
+                    bool valid = await _service.Delete(rowData.IdBrand) > 0;
                     if (valid)
                     {
                         Filter(activeFilters());
@@ -456,12 +459,12 @@ namespace SIMA.Presentation.Views
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
 
-                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(this, "DataBase Error Failed" + ex.Message, "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
 
-                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(this, "System Error Failed" + ex.Message, "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
 
 

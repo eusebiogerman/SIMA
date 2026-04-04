@@ -1,5 +1,4 @@
-﻿using SIMA.Domain.Models;
-using SIMA.Helper;
+﻿using SIMA.Helper;
 using SIMA.Presentation.Views;
 using System;
 using System.Collections.Generic;
@@ -13,39 +12,12 @@ using Microsoft.Extensions.Configuration;
 using Dapper;
 using static Dapper.SqlMapper;
 using SIMA.Infrastructure.Repositories.Interfaces;
+using SIMA.Domain.Models.Objects;
+using SIMA.Domain.Models.Views;
+using SIMA.Domain.Models.Params;
 
 namespace SIMA.Infrastructure.Repositories
 {
-
-    public class ProductParam : IParam
-    {
-        public int? idProduct { get; set; } = null;
-        public int? idCategory { get; set; } = null;
-        public string? name { get; set; } = null;
-        public string? categorys { get; set; } = null;
-        public decimal? price { get; set; } = null;
-        public int? offset { get; set; } = 0;
-        public int? limit { get; set; } = 10;
-
-        public ProductParam()
-        {
-        }
-        public ProductParam(IPaging page)
-        {
-            offset = page.Offset;
-            limit = page.Limit;
-        }
-
-        public void SetPage(IPaging page)
-        {
-            offset = page.Offset;
-            limit = page.Limit;
-        }
-        public void ResetParam(int? inoffset = 0, int? inlimit = 10)
-        {
-            throw new NotImplementedException();
-        }
-    }
     public class ProductServices : IContextservices<Product, ProductView, ProductParam>
     {
         private readonly IConfiguration _config;
@@ -57,8 +29,6 @@ namespace SIMA.Infrastructure.Repositories
         public int? CurrentIdSave => _currentIdSave; 
         public int TotalFound => _totalfound;
         public decimal TotalValue => _totalvalue;
-
-
 
         public ProductServices()
         {

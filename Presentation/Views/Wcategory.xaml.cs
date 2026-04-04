@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Configuration;
-using SIMA.Domain.Models;
 using SIMA.Helper;
 using SIMA.Infrastructure.Repositories;
 using SIMA.Presentation.ViewModel;
@@ -19,6 +18,11 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using SIMA.Infrastructure.Repositories.Interfaces;
+using SIMA.Domain.Models.Objects;
+using SIMA.Domain.Models.Params;
+using SIMA.Domain.Models.Intefaces;
+using SIMA.Templates;
+using SIMA.Domain.Models.Views;
 
 namespace SIMA.Presentation.Views
 {
@@ -27,11 +31,12 @@ namespace SIMA.Presentation.Views
     /// </summary>
     public partial class Wcategory : Window, IUtilServices<Category, CategoryParam>, IUtil
     {
-        private CategoryServices _categoryservices;
+        private IContextservices<Category, Category, CategoryParam>  _service;
         private IPaging _page;
+        private readonly IConfiguration _config;
+
         private Util _util;
         private CancellationTokenSource _cts;
-        private readonly IConfiguration _config;
         private bool _isloaded;
 
         public Wcategory()
@@ -46,7 +51,7 @@ namespace SIMA.Presentation.Views
             var Vm = new CategoryViewModel(_page, _config);
             this.DataContext = Vm;
             Vm.ShowErrorFromModel += Vm_ShowErrorFromModel;
-           _categoryservices = new CategoryServices(_config);
+           _service = new CategoryServices(_config);
 
         }
 
@@ -108,7 +113,7 @@ namespace SIMA.Presentation.Views
         /// <param name="total"></param>
         public void UpdatePaging(int total = 0)
         {
-            int intotal = (total == 0) ?  _categoryservices.TotalFound : total;
+            int intotal = (total == 0) ?  _service.TotalFound : total;
             _page.parsePageData(intotal);
             txtResults.Text = getResultMessage(intotal);
             pagingLabels(intotal);
@@ -169,7 +174,7 @@ namespace SIMA.Presentation.Views
             {
                 progress.SetLoadingStateDataBase(async () =>
                 {
-                    IEnumerable<Category> cat = await _categoryservices.GetAll(_page);
+                    IEnumerable<Category> cat = await _service.GetAll(_page);
                     gridCategory.ItemsSource = cat.Where(p => p.IdCategory != null);
                      UpdatePaging();
                 }, _config, true, "Loading Category...");
@@ -204,7 +209,7 @@ namespace SIMA.Presentation.Views
             {
                 progress.SetLoadingStateDataBase(async () =>
                 {
-                    IEnumerable<Category> cat = await _categoryservices.GetByFilter(param);
+                    IEnumerable<Category> cat = await _service.GetByFilter(param);
                     gridCategory.ItemsSource = cat.Where(p => p.IdCategory != null);
                      UpdatePaging();
                 }, _config, true, "Loading Category...");
@@ -232,7 +237,7 @@ namespace SIMA.Presentation.Views
             {
                 progress.SetLoadingStateDataBase(async () =>
                 {
-                    IEnumerable<Category> cat = await _categoryservices.GetByFilter(param);
+                    IEnumerable<Category> cat = await _service.GetByFilter(param);
                 gridCategory.ItemsSource = cat.Where(p => p.IdCategory != null);
                  UpdatePaging();
                 }, _config, true, "Loading Category...");
@@ -270,20 +275,18 @@ namespace SIMA.Presentation.Views
         #endregion
 
         #region Events
-        private void btnsSaveCategory_Click(object sender, RoutedEventArgs e)
+        private async void btnsSaveCategory_Click(object sender, RoutedEventArgs e)
         {
             
             int? id = string.IsNullOrEmpty(txtIdCategory.Text) ? null : int.Parse(txtIdCategory.Text);
-            bool isset = false;
-            progress.SetLoadingStateDataBase(async () =>
-            {
-                isset = await _categoryservices.Set(new Category
+            progress.RunProgress(true, "Saving Category....");
+            await progress.DelayProgress();
+            bool isset =  await _service.Set(new Category
                 {
                     IdCategory = id,
                     Name = txtName.Text
                 });
-            }, _config, true, "Saving Category...");
-
+            progress.StopProgress();
             try
             {
                 if (isset)
@@ -301,12 +304,12 @@ namespace SIMA.Presentation.Views
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
-               
+                progress.StopProgress();
                 MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             catch (Exception)
             {
-               
+                progress.StopProgress();
                 MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
     
@@ -333,8 +336,40 @@ namespace SIMA.Presentation.Views
                
             }
         }
-        private void btnRemove_Click(object sender, RoutedEventArgs e)
+        private async void btnRemove_Click(object sender, RoutedEventArgs e)
         {
+            MessageBoxResult result = MessageBox.Show(this, "Confirm removing Category ?", "Remove Category", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+            try
+            {
+                if (result == MessageBoxResult.Yes)
+                {
+
+                    Button btn = sender as Button;
+                    Category rowData = (Category)btn.DataContext;
+                    bool valid = await _service.Delete(rowData.IdCategory) > 0;
+                    if (valid)
+                    {
+                        Filter(activeFilters());
+                        MessageBox.Show(this, "Category Succesfully removed", "Remove Category", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show(this, "Category removing the Brand", "Remove Category", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                }
+
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex)
+            {
+
+                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (Exception)
+            {
+
+                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+
 
         }
         private void btnNewStock_Click(object sender, RoutedEventArgs e)
@@ -364,7 +399,7 @@ namespace SIMA.Presentation.Views
         {
             NavigationGrid(DIRECTION.next);
         }
-        private async void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
+        private void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
         {
             if (!_isloaded)
             {

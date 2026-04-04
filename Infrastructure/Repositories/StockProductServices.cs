@@ -10,60 +10,18 @@ using System.Xml;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Microsoft.Data.SqlClient;
-using SIMA.Domain.Models;
 using SIMA.Helper;
 using Dapper;
 using SIMA.Presentation.Views;
 using static Dapper.SqlMapper;
 using SIMA.Infrastructure.Repositories.Interfaces;
 using SIMA.ExtensionsHelper;
+using SIMA.Domain.Models.Objects;
+using SIMA.Domain.Models.Views;
+using SIMA.Domain.Models.Params;
 
 namespace SIMA.Infrastructure.Repositories
 {
-
-    public class StockProductParam : IParam
-    {
-        public int? idStock { get; set; } = null;
-        public int? idBrand { get; set; } = null;
-        public int? idProduct { get; set; } = null;
-        public int? idCategory { get; set; } = null;
-        public string? brands { get; set; } = null;
-        public string? products { get; set; } = null;
-        public string? categorys { get; set; } = null;
-        public decimal? price { get; set; } = null;
-        public int? stock { get; set; } = null;
-        public int? offset { get; set; } = 0;
-        public int? limit { get; set; } = 10;
-
-        public StockProductParam()
-        {
-        }
-        public StockProductParam(IPaging page) {
-            offset = page.Offset;
-            limit = page.Limit;
-        }
-
-        public void SetPage(IPaging page)
-        {
-            offset = page.Offset;
-            limit = page.Limit;
-        }
-        public void ResetParam(int? inoffset = 0, int? inlimit = 10)
-        {
-            idStock = null;
-            idBrand = null;
-            idProduct = null;
-            idCategory = null;
-            brands = null;
-            products = null;
-            categorys = null;
-            price = null;
-            stock = null;
-            offset = inoffset;
-            limit = inlimit;
-
-        }
-    }
 
     public class StockProductServices : IContextservices<StockProduct, StockProductView, StockProductParam>
     {
@@ -89,6 +47,9 @@ namespace SIMA.Infrastructure.Repositories
             _stockProductFile = new JsonFile<StockProduct>();
         }
 
+        /// <summary>
+        /// Cast to Sotck Param
+        /// </summary>
         class GetStockParam 
         {
             public int? idStock { get; private set; } = null;
@@ -110,8 +71,6 @@ namespace SIMA.Infrastructure.Repositories
                 limit = param?.limit;
             }
         }
-
-
 
         #region Database Action
         private async Task<IEnumerable<StockProductView>> getStock(StockProductParam param)

@@ -14,12 +14,14 @@ namespace SIMA.Helper
 
         public Dictionary<int, string> CommonSizeGrid { 
           get{
-                Dictionary<int, string> columns_width = new Dictionary<int, string>();
-                columns_width.Add(0, "4%");
-                columns_width.Add(1, "40%");
-                columns_width.Add(2, "33%");
-                columns_width.Add(3, "12%");
-                columns_width.Add(4, "7%");
+                Dictionary<int, string> columns_width = new Dictionary<int, string>
+                {
+                    { 0, "4%" },
+                    { 1, "40%" },
+                    { 2, "33%" },
+                    { 3, "12%" },
+                    { 4, "7%" }
+                };
                 return columns_width;
             } 
                 

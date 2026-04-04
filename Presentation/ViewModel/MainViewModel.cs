@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Configuration;
-using SIMA.Domain.Models;
 using SIMA.Infrastructure.Repositories;
 using System;
 using System.Collections.Generic;
@@ -12,17 +11,25 @@ using System.Threading.Tasks;
 using System.Windows;
 using SIMA.Templates;
 using SIMA.Infrastructure.Repositories.Interfaces;
+using SIMA.Domain.Models.Objects;
+using SIMA.Domain.Models.Views;
+using SIMA.Domain.Models.Params;
 
 namespace SIMA.Presentation.ViewModel
 {
     public class MainViewModel : ViewModelBase
     {
-        private StockProductServices _stockservices;
-        private CategoryServices _categoryservices;
+        private IContextservices<StockProduct, StockProductView, StockProductParam> _stockservices;
+        private IContextservices<Category, Category, CategoryParam> _categoryservices;
+        private ObservableCollection<StockProductView> _stockproduct;
         private ObservableCollection<LovObject> _category;
 
         #region Observable Collection Property
-        public ObservableCollection<StockProductView> StockProducts { get; set; }
+        public ObservableCollection<StockProductView> StockProducts
+        {
+            get => _stockproduct;
+            set { _stockproduct = value; OnPropertyChanged(nameof(StockProducts)); }
+        }
         public ObservableCollection<LovObject> Category
         {
             get => _category;
