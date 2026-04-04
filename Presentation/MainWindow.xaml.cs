@@ -1,5 +1,4 @@
-﻿using SIMA.Domain.Models;
-using SIMA.Infrastructure.Repositories;
+﻿using SIMA.Infrastructure.Repositories;
 using SIMA.ExtensionsHelper;
 using System;
 using System.Collections.Generic;
@@ -17,6 +16,11 @@ using SIMA.Templates;
 using System.Reflection.PortableExecutable;
 using System.Windows.Media.Media3D;
 using SIMA.Infrastructure.Repositories.Interfaces;
+using System.Data.Common;
+using SIMA.Domain.Models.Objects;
+using SIMA.Domain.Models.Views;
+using SIMA.Domain.Models.Params;
+using SIMA.Domain.Models.Intefaces;
 
 namespace SIMA.Presentation
 {
@@ -25,9 +29,9 @@ namespace SIMA.Presentation
     /// </summary>
     public partial class MainWindow : Window, IUtilServices<StockProduct, StockProductParam>, IUtil
     {
-        private StockProductServices _stockservices;
-        private CategoryServices _categoryservices;
-        private Paging _page;
+        private IContextservices<StockProduct, StockProductView, StockProductParam> _service;
+        private IContextservices<Category, Category, CategoryParam> _categoryservices;
+        private IPaging _page;
         private Wstocks _windowStock;
         private Wproduct _wproduct;
         private Wcategory _wcategory;
@@ -51,7 +55,7 @@ namespace SIMA.Presentation
             this.DataContext = _vm;
             _vm.ShowErrorFromModel += Vm_ShowErrorFromModel;
 
-            _stockservices = new StockProductServices(_config);
+            _service = new StockProductServices(_config);
             _categoryservices = new CategoryServices(_config);
 
         }
@@ -71,7 +75,7 @@ namespace SIMA.Presentation
         /// </summary>
         /// <param name="total"></param>
         /// <returns></returns>
-        public string getResultMsgAsync(int total)
+        public string getResultMessage(int total)
         {
             pageControl.TotalFound = total;
             return $"📊 Show {total} products found";
@@ -92,14 +96,14 @@ namespace SIMA.Presentation
         /// Control the Paging Previous and Next Page Number,Offset and Limit 
         /// </summary>
         /// <param name="direction"></param>
-        public async void NavigationGrid(DIRECTION direction)
+        public void NavigationGrid(DIRECTION direction)
         {
 
             if (_page.isvalidPaging())
             {
                 _page.movePage(direction);
                 pageControl.ItemsPerPage = _page.Offset;
-                await Filter(activeFilters());
+                 Filter(activeFilters());
             }
 
 
@@ -116,11 +120,11 @@ namespace SIMA.Presentation
         /// Update the Total result of the rows and update the labels on the grid 
         /// </summary>
         /// <param name="total"></param>
-        public async void UpdatePaging(int total = 0)
+        public void UpdatePaging(int total = 0)
         {
-            int intotal = (total == 0) ? await _stockservices.GetTotalFound(activeFilters()) : total;
+            int intotal = (total == 0) ?  _service.TotalFound : total;
             _page.parsePageData(intotal);
-            txtResults.Text = getResultMsgAsync(intotal);
+            txtResults.Text = getResultMessage(intotal);
             pagingLabels(intotal);
         }
         /// <summary>
@@ -129,14 +133,16 @@ namespace SIMA.Presentation
         /// <param name="gridheight">Size Height = Only Numeric string percent {Size}% or Size}</param>
         public void ResizeGrid(string gridheight)
         {
-            Dictionary<int, string> columns_width = new Dictionary<int, string>();
-            columns_width.Add(0, "4%");
-            columns_width.Add(1, "25%");
-            columns_width.Add(2, "18%");
-            columns_width.Add(3, "18%");
-            columns_width.Add(4, "12%");
-            columns_width.Add(5, "12%");
-            columns_width.Add(6, "7%");
+            Dictionary<int, string> columns_width = new Dictionary<int, string>
+            {
+                { 0, "4%" },
+                { 1, "25%" },
+                { 2, "18%" },
+                { 3, "18%" },
+                { 4, "12%" },
+                { 5, "12%" },
+                { 6, "7%" }
+            };
             _util.ResponsiveListViewHeight(gridProducts, this.ActualHeight, gridheight);
             _util.ResponsiveGridWidth(gridCellProduct, this.ActualWidth - 220, columns_width);
         }
@@ -159,6 +165,7 @@ namespace SIMA.Presentation
             {
 
                 idCategory = catcmb != null ? catcmb.Id : null,
+                products = txtSearch?.Text,
                 offset = _page.Offset,
                 limit = _page.Limit
                 //,Name = txtSearch.Text
@@ -174,24 +181,9 @@ namespace SIMA.Presentation
         /// <summary>
         /// Fill the stock
         /// </summary>
-        public async void Fill()
+        public void Fill()
         {
-            try
-            {
-                IEnumerable<StockProductView> prod = await _stockservices.GetViewAll(_page);
-                int total = await _stockservices.GetTotalFound(activeFilters());
-                gridProducts.ItemsSource = prod;
-                UpdatePaging(total);
-
-            }
-            catch (Microsoft.Data.SqlClient.SqlException ex)
-            {
-                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-            catch (Exception)
-            {
-                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
+            throw new NotImplementedException();
 
         }
         /// <summary>
@@ -203,11 +195,10 @@ namespace SIMA.Presentation
             {
                 progress.SetLoadingStateDataBase(async () =>
                 {
-                    IEnumerable<StockProductView> prod = await _stockservices.GetViewAll(_page);
-                    int total = await _stockservices.GetTotalFound(activeFilters());
-                    gridProducts.ItemsSource = prod;
-                    UpdatePaging(total);
-                },_config,true,"Loading stock...");
+                    IEnumerable<StockProductView> cat = await _service.GetViewAll(_page);
+                    gridProducts.ItemsSource = cat.Where(p => p.IdBrand != null);
+                    UpdatePaging();
+                }, _config, true, "Loading Stock...");
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
@@ -222,27 +213,26 @@ namespace SIMA.Presentation
         /// Filter the GridView given the Stock Product param
         /// </summary>
         /// <param name="param"></param>
-        public async Task Filter(StockProductParam param)
+        public async void Filter(StockProductParam param)
         {
             try
             {
-
-                 progress.SetLoadingStateDataBase( async () =>
+                progress.SetLoadingStateDataBase(async () =>
                 {
-                    param.SetPage(_page);
-                    IEnumerable<StockProductView> prod = await _stockservices.GetByFilter(param);
-                    int total = await _stockservices.GetTotalFound(param);
-                    gridProducts.ItemsSource = prod;
-                    UpdatePaging(total);
-                }, _config, true, "Loading Stock... ");
+                    IEnumerable<StockProductView> cat = await _service.GetByFilter(param);
+                    gridProducts.ItemsSource = cat.Where(p => p.IdBrand != null);
+                    UpdatePaging();
+                }, _config, true, "Loading Stock...");
 
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
+
                 MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             catch (Exception)
             {
+
                 MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
@@ -250,37 +240,10 @@ namespace SIMA.Presentation
         /// Filter the GridView given the Description of product
         /// </summary>
         /// <param name="param"></param>
-        public async void FilterbyText(StockProductParam param)
+        public void FilterbyText(StockProductParam param)
         {
-            try
-            {
-                _page.resetPage();
-                await Filter(param);
 
-            }
-            catch (Microsoft.Data.SqlClient.SqlException ex)
-            {
-                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-            catch (Exception)
-            {
-                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-
-        }
-        /// <summary>
-        /// Fill the Page Limit Values
-        /// </summary>
-        public async void FillLimitPageVal()
-        {
-            IEnumerable<string> lim = await _page.GetLimitPaging();
-            pageControl.SetItemsPerPageSource(lim);
-            var selected = pageControl.GetSelectedItemsPerPage();
-            var cmblimit = selected != null
-                ? int.Parse(selected.ToString())
-                : _page.DefaultLimit;
-            _page.Limit = cmblimit;
-
+            throw new NotImplementedException();
         }
         /// <summary>
         /// Open the Edit Form for the Stock select in th gridview
@@ -298,12 +261,13 @@ namespace SIMA.Presentation
         {
             if (!_isloaded)
             {
-                FilterbyText(activeFilters());
+                Filter(activeFilters());
+                
             }
 
 
         }
-        private async void cmbCategory_SelectionChanged(object sender, RoutedEventArgs e)
+        private void cmbCategory_SelectionChanged(object sender, RoutedEventArgs e)
         {
             var sendobj = cmbCategory.getSelectedItem(sender);
             if (!_isloaded && sendobj != null)
@@ -313,16 +277,16 @@ namespace SIMA.Presentation
                     idCategory = sendobj.Id
                 };
                 _page.resetPage();
-                await Filter(param);
+                 Filter(param);
             }
         }
-        private async void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
+        private void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
         {
             if (!_isloaded)
             {
                 _page.Limit = (int)pageControl.GetSelectedItemsPerPage();
-                await Filter(activeFilters());
-                UpdatePaging();
+                 Filter(activeFilters());
+                 UpdatePaging();
             }
         }
         private void btnClear_Click(object sender, RoutedEventArgs e)
@@ -422,32 +386,51 @@ namespace SIMA.Presentation
         }
         private async void btnRemove_Click(object sender, RoutedEventArgs e)
         {
-            MessageBoxResult result = MessageBox.Show(this, "Confirm remove Stock ?", "Remove Stock", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
-
-            if (result == MessageBoxResult.Yes)
+            MessageBoxResult result = MessageBox.Show(this, "Confirm removing Stock ?", "Remove Stock", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+            try
             {
-                Button btn = sender as Button;
-                StockProductView rowData = (StockProductView)btn.DataContext;
-                bool valid = await _stockservices.Delete(rowData.IdStock) > 0;
-                if (valid)
+                if (result == MessageBoxResult.Yes)
                 {
-                    Filter();
-                    MessageBox.Show(this, "Stock Succesfully removed", "Remove Stock", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    Button btn = sender as Button;
+                    StockProductView rowData = (StockProductView)btn.DataContext;
+                    bool valid = await _service.Delete(rowData.IdStock) > 0;
+                    if (valid)
+                    {
+                        Filter(activeFilters());
+                        MessageBox.Show(this, "Stock Succesfully removed", "Remove Stock", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show(this, "Error removing the Brand", "Remove Stock", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
                 }
+
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex)
+            {
+
+                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (Exception)
+            {
+
+                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
 
         }
         private void btnRefresh_Click(object sender, RoutedEventArgs e)
         {
-                _stockservices = null;
-                _stockservices = new StockProductServices();
+                _service = null;
+                _service = new StockProductServices();
                 gridProducts.ItemsSource = null;
                 gridProducts.Items.Clear();
-                FilterbyText(activeFilters());
+                Filter(activeFilters());
 
         }
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            progress.RunProgress(true, "Init Window....");
             _page.Offset = (int?)pageControl.GetSelectedItemsPerPage() ?? _page.DefaultOffset;
             this.SupressEventComboBox();
             await _page.FillLimitPageVal(pageControl);
@@ -458,7 +441,6 @@ namespace SIMA.Presentation
         private void Window_Initialized(object sender, EventArgs e)
         {
             this.SupressEventComboBox();
-
         }
         private void Vm_ShowErrorFromModel(string mensaje)
         {
@@ -468,15 +450,11 @@ namespace SIMA.Presentation
         {
             ResizeGrid("60%");
         }
+        private void Window_ContentRendered(object sender, EventArgs e)
+        {
+            progress.StopProgress();
+        }
         #endregion
-
-
-
-
-
-
-
-
 
 
     }

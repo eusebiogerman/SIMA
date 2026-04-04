@@ -1,6 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
-using SIMA.Domain.Models;
+using SIMA.Domain.Models.Objects;
+using SIMA.Domain.Models.Params;
+using SIMA.Domain.Models.Views;
 using SIMA.Infrastructure.Repositories;
+using SIMA.Infrastructure.Repositories.Interfaces;
 using SIMA.Presentation.ViewModel;
 using SIMA.Templates;
 using System;
@@ -15,14 +18,14 @@ using System.Threading.Tasks;
 
 namespace SIMA.Presentation.Views
 {
-  public class ProductViewModel : ViewModelBase
+    public class ProductViewModel : ViewModelBase
     {
         private string _name;
         private decimal _price;
         private ObservableCollection<LovObject> _category;
         private ObservableCollection<ProductView> _product;
-        private CategoryServices _categoryservices;
-        private ProductServices _productservices;
+        private IContextservices<Category, Category, CategoryParam> _categoryservices;
+        
 
         public string Name
         {
@@ -64,12 +67,11 @@ namespace SIMA.Presentation.Views
                 FillLovCat();
             });
         }
-        public ProductViewModel(Paging page, IConfiguration config) : base(page, config) 
+        public ProductViewModel(IPaging page, IConfiguration config) : base(page, config) 
         {
             InitializeModel(() =>
             {
                 _categoryservices = new CategoryServices(Config);
-                _productservices = new ProductServices(Config);
                 FillLovCat();
             });
         }
@@ -104,7 +106,7 @@ namespace SIMA.Presentation.Views
         {
             try
             {
-                IEnumerable<Category> cat = await _categoryservices.GetAll(Page);
+                IEnumerable<Category> cat = await _categoryservices.GetAll(new Paging { Offset = 0,Limit = 2000});
                 Category = new ObservableCollection<LovObject>(cat.Select((p) => new LovObject { Id = p.IdCategory, Value = p.Name }));
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
@@ -117,7 +119,7 @@ namespace SIMA.Presentation.Views
             }
 
         }
-          #endregion
+        #endregion
 
 
 

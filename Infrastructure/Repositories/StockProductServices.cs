@@ -10,70 +10,34 @@ using System.Xml;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Microsoft.Data.SqlClient;
-using SIMA.Domain.Models;
 using SIMA.Helper;
 using Dapper;
 using SIMA.Presentation.Views;
 using static Dapper.SqlMapper;
 using SIMA.Infrastructure.Repositories.Interfaces;
 using SIMA.ExtensionsHelper;
+using SIMA.Domain.Models.Objects;
+using SIMA.Domain.Models.Views;
+using SIMA.Domain.Models.Params;
 
 namespace SIMA.Infrastructure.Repositories
 {
 
-    public class StockProductParam : IParam
+    public class StockProductServices : IContextservices<StockProduct, StockProductView, StockProductParam>
     {
-        public int? idStock { get; set; } = null;
-        public int? idBrand { get; set; } = null;
-        public int? idProduct { get; set; } = null;
-        public int? idCategory { get; set; } = null;
-        public string? brands { get; set; } = null;
-        public string? products { get; set; } = null;
-        public string? categorys { get; set; } = null;
-        public decimal? price { get; set; } = null;
-        public int? stock { get; set; } = null;
-        public int? offset { get; set; } = 0;
-        public int? limit { get; set; } = 10;
-
-        public StockProductParam()
-        {
-        }
-        public StockProductParam(Paging page) {
-            offset = page.Offset;
-            limit = page.Limit;
-        }
-
-        public void SetPage(Paging page)
-        {
-            offset = page.Offset;
-            limit = page.Limit;
-        }
-        public void ResetParam(int? inoffset = 0, int? inlimit = 10)
-        {
-            idStock = null;
-            idBrand = null;
-            idProduct = null;
-            idCategory = null;
-            brands = null;
-            products = null;
-            categorys = null;
-            price = null;
-            stock = null;
-            offset = inoffset;
-            limit = inlimit;
-
-        }
-    }
-
-    public class StockProductServices : IContextservices<StockProduct>
-    {
-        private readonly IConfiguration _config;
+        private IConfiguration _config;
         private JsonFile<StockProduct> _stockProductFile;
         private int? _currentIdSave;
+        private int _totalfound;
+        private decimal _totalvalue;
 
         public int? CurrentIdSave { get => _currentIdSave; }
+        public int TotalFound => _totalfound;
+        public decimal TotalValue => _totalvalue;
+
         public StockProductServices()
         {
+            _config = new Util().CustomConfiguration();
             _stockProductFile = new JsonFile<StockProduct>();
             _stockProductFile.loadData();
         }
@@ -83,23 +47,51 @@ namespace SIMA.Infrastructure.Repositories
             _stockProductFile = new JsonFile<StockProduct>();
         }
 
+        /// <summary>
+        /// Cast to Sotck Param
+        /// </summary>
+        class GetStockParam 
+        {
+            public int? idStock { get; private set; } = null;
+            public int? idBrand { get; private set; } = null;
+            public int? idProduct { get; private set; } = null;
+            public int? idCategory { get; private set; } = null;
+            public string? textSearch { get; private set; } = null;
+            public int? offset { get; private set; } = null;
+            public int? limit { get; private set; } = null;
+
+            public GetStockParam(StockProductParam param)
+            {
+                idStock = param?.idStock;
+                idBrand = param?.idBrand;
+                idProduct = param?.idProduct;
+                idCategory = param?.idCategory;
+                textSearch = param?.brands.isNull(param?.products.isNull(param?.categorys));
+                offset = param?.offset;
+                limit = param?.limit;
+            }
+        }
+
         #region Database Action
         private async Task<IEnumerable<StockProductView>> getStock(StockProductParam param)
         {
-            using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
+            IEnumerable<StockProductView> result;
+             var getparam = new GetStockParam(param);
+            try
             {
-                object inparam = new
+
+                using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
                 {
-                    idStock = param.idStock,
-                    idBrand = param.idBrand,
-                    idProduct = param.idProduct,
-                    idCategory = param.idCategory,
-                    textSearch = param.brands.isNull(param.products).isNull(param.categorys),
-                    offset = param.offset,
-                    limit = param.limit
-                };
-                return await conn.QueryAsync<StockProductView>("[dbo].[getStock]", inparam, commandType: System.Data.CommandType.StoredProcedure);
+                    result = await conn.QueryAsync<StockProductView>("[dbo].[getStock]", getparam, commandType: System.Data.CommandType.StoredProcedure);
+                    _totalfound = result.Count();
+                }
+
             }
+            catch (Exception ex)
+            {
+                result = new List<StockProductView>();
+            }
+            return result;
         }
         private async Task<int> setStock(StockProduct param)
         {
@@ -133,11 +125,11 @@ namespace SIMA.Infrastructure.Repositories
                 return await conn.ExecuteScalarAsync<int>("[dbo].[delStock]", new { IdStock = id }, commandType: System.Data.CommandType.StoredProcedure);
             }
         }
-        public async Task<IEnumerable<StockProductView>> GetViewAll(Paging page)
+        public async Task<IEnumerable<StockProductView>> GetViewAll(IPaging page)
         {
             return await getStock(new StockProductParam(page));
         }
-        public async Task<IEnumerable<StockProduct>> GetAll(Paging page)
+        public async Task<IEnumerable<StockProduct>> GetAll(IPaging page)
         {
             throw new NotImplementedException();
         }
@@ -165,7 +157,7 @@ namespace SIMA.Infrastructure.Repositories
         {
             throw new NotImplementedException();
         }
-        public async Task<int?> GetNextId()
+        public async Task<object?> GetNextId()
         {
             throw new NotImplementedException();
         }

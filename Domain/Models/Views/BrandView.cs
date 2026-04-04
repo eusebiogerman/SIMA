@@ -1,6 +1,8 @@
-﻿namespace SIMA.Domain.Models
+﻿using SIMA.Domain.Models.Intefaces;
+
+namespace SIMA.Domain.Models.Views
 {
-    public class BrandView
+    public class BrandView : IView
     {
         public int? IdBrand { get; set; }
         public string? Name { get; set; }

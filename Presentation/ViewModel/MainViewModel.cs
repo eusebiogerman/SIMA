@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Configuration;
-using SIMA.Domain.Models;
 using SIMA.Infrastructure.Repositories;
 using System;
 using System.Collections.Generic;
@@ -12,17 +11,25 @@ using System.Threading.Tasks;
 using System.Windows;
 using SIMA.Templates;
 using SIMA.Infrastructure.Repositories.Interfaces;
+using SIMA.Domain.Models.Objects;
+using SIMA.Domain.Models.Views;
+using SIMA.Domain.Models.Params;
 
 namespace SIMA.Presentation.ViewModel
 {
     public class MainViewModel : ViewModelBase
     {
-        private StockProductServices _stockservices;
-        private CategoryServices _categoryservices;
+        private IContextservices<StockProduct, StockProductView, StockProductParam> _stockservices;
+        private IContextservices<Category, Category, CategoryParam> _categoryservices;
+        private ObservableCollection<StockProductView> _stockproduct;
         private ObservableCollection<LovObject> _category;
 
         #region Observable Collection Property
-        public ObservableCollection<StockProductView> StockProducts { get; set; }
+        public ObservableCollection<StockProductView> StockProducts
+        {
+            get => _stockproduct;
+            set { _stockproduct = value; OnPropertyChanged(nameof(StockProducts)); }
+        }
         public ObservableCollection<LovObject> Category
         {
             get => _category;
@@ -32,30 +39,33 @@ namespace SIMA.Presentation.ViewModel
 
         public MainViewModel() : base()
         {
-            
-            InitializeModel(() => {
+
+            InitializeModel(async () => {
                 _stockservices = new StockProductServices(Config);
                 _categoryservices = new CategoryServices(Config);
-                FillLovCat();
+                await FillLovCat();
+                await FillGridStock();
             });
         }
-        public MainViewModel(Paging page) : base(page)
+        public MainViewModel(IPaging page) : base(page)
         {
 
-            
-            InitializeModel(() => {
+
+            InitializeModel(async () => {
                 _stockservices = new StockProductServices(Config);
                 _categoryservices = new CategoryServices(Config);
-                FillLovCat();
+                await FillLovCat();
+                await FillGridStock();
             });
         }
-        public MainViewModel(Paging page,IConfiguration config) : base(page, config) 
+        public MainViewModel(IPaging page,IConfiguration config) : base(page, config) 
         {
 
-            InitializeModel(() => {
+            InitializeModel(async () => {
                 _stockservices = new StockProductServices(Config);
                 _categoryservices = new CategoryServices(Config);
-                FillLovCat();
+                await FillLovCat();
+                await FillGridStock();
             });
 
         }
@@ -64,7 +74,7 @@ namespace SIMA.Presentation.ViewModel
         /// <summary>
         /// get the Category data
         /// </summary>
-        private async void FillLovCat()
+        private async Task FillLovCat()
         {
             try
             {
@@ -81,8 +91,26 @@ namespace SIMA.Presentation.ViewModel
             }
 
         }
+        /// <summary>
+        /// get the Stock data
+        /// </summary>    
+        private async Task FillGridStock()
+        {
+            try
+            {
+                IEnumerable<StockProductView> prod = await _stockservices.GetViewAll(Page);
+                StockProducts = new ObservableCollection<StockProductView>(prod);
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex)
+            {
+                InvokeError("DataBase Error Failed");
+            }
+            catch (Exception)
+            {
+                InvokeError("System Error Failed");
+            }
+
+        }
         #endregion
-
-
     }
 }

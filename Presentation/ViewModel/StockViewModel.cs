@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
-using SIMA.Domain.Models;
+using SIMA.Domain.Models.Views;
 using SIMA.Infrastructure.Repositories;
+using SIMA.Infrastructure.Repositories.Interfaces;
 using SIMA.Presentation.ViewModel;
 using SIMA.Templates;
 using System;
@@ -15,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace SIMA.Presentation.Views
 {
- public class StockViewModel : ViewModelBase
+    public class StockViewModel : ViewModelBase
     {
         private int? _stockcount;
         private ObservableCollection<StockProductView> _stockproduct;
@@ -33,7 +34,6 @@ namespace SIMA.Presentation.Views
                 OnPropertyChanged(nameof(StockCount));
             }
         }
-
         #region Observable Collection Properties
         public ObservableCollection<LovObject> Product
         {
@@ -61,7 +61,7 @@ namespace SIMA.Presentation.Views
                 FillLovProd();
             });
         }
-        public StockViewModel(Paging page, IConfiguration config,bool fillgrid = true) :base(page, config) 
+        public StockViewModel(IPaging page, IConfiguration config,bool fillgrid = true) :base(page, config) 
         {
             InitializeModel(() =>
             {

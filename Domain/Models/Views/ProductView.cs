@@ -1,6 +1,8 @@
-﻿namespace SIMA.Domain.Models
+﻿using SIMA.Domain.Models.Intefaces;
+
+namespace SIMA.Domain.Models.Views
 {
-    public class ProductView
+    public class ProductView : IView
     {
         public int? IdProduct { get; set; }
         public string? Name { get; set; }

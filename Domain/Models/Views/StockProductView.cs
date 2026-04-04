@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls.Primitives;
+using SIMA.Domain.Models.Intefaces;
 
-namespace SIMA.Domain.Models
+namespace SIMA.Domain.Models.Views
 {
-    public class StockProductView
+    public class StockProductView : IView
     {
         public int? IdStock { get; set; }
         public int? IdBrand { get; set; }

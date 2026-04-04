@@ -16,6 +16,11 @@ namespace SIMA.Infrastructure.Repositories
 
         public DataBaseServices(IConfiguration config) => _config = config;
 
+        /// <summary>
+        /// Test Latency Database 
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
         public static int PingSqlServer(IConfiguration config)
         {
             _config = config;

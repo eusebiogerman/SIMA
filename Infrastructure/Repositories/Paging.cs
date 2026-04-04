@@ -71,11 +71,11 @@ namespace SIMA.Infrastructure.Repositories
             {
                 case DIRECTION.previous:
                     _pagenumber = _pagenumber - 1;
-                    _offset     = _offset - _defaulOffset;
+                    _offset     = Math.Abs(_offset - _defaulOffset);
                     break;
                 case DIRECTION.next:
                     _pagenumber = _pagenumber + 1;
-                    _offset     = _offset  + _defaulOffset;
+                    _offset     = Math.Abs(_offset  + _defaulOffset);
                     break;
                 default:
                     _pagenumber = 1;
@@ -100,9 +100,8 @@ namespace SIMA.Infrastructure.Repositories
             IEnumerable<string> lim = await GetLimitPaging();
             pageControl.SetItemsPerPageSource(lim);
             var selected = pageControl.GetSelectedItemsPerPage();
-            Limit = selected != null
-                ? int.Parse(selected.ToString())
-                : DefaultLimit;
+            var _lim = selected != null ? selected.ToString() : _defaulLimit.ToString();
+            _limit = int.Parse(_lim.ToString());
         }
     }
 }

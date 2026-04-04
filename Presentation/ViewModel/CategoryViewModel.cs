@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
-using SIMA.Domain.Models;
+using SIMA.Domain.Models.Objects;
 using SIMA.Infrastructure.Repositories;
+using SIMA.Infrastructure.Repositories.Interfaces;
 using SIMA.Presentation.Views;
 using System;
 using System.Collections;
@@ -15,11 +16,10 @@ using System.Threading.Tasks;
 
 namespace SIMA.Presentation.ViewModel
 {
-  public class CategoryViewModel : ViewModelBase
+    public class CategoryViewModel : ViewModelBase
     {
         private ObservableCollection<Category> _category;
         private ObservableCollection<Category> _categoryCombo;
-        private CategoryServices _categoryservices;
 
         #region Observable Collection Properties
         public ObservableCollection<Category> Categorys
@@ -38,7 +38,7 @@ namespace SIMA.Presentation.ViewModel
         {
             InitializeModel(() => {});
         }
-        public CategoryViewModel(Paging page, IConfiguration config) : base(page, config) 
+        public CategoryViewModel(IPaging page, IConfiguration config) : base(page, config) 
         {
             InitializeModel(() => {});
         }

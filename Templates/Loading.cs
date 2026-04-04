@@ -24,7 +24,6 @@ namespace SIMA.Templates
     {
         private Popup? _popup;
         private Ellipse? _ellipse;
-
         public const int DefaulDelay = 500; 
 
         static Loading()
@@ -120,11 +119,41 @@ namespace SIMA.Templates
                 try
                 {
                    RunProgress(isloading, message, delay);
-                   new Task(() => { }).WaitAsync(TimeSpan.FromMilliseconds(Delay)).GetAwaiter().OnCompleted(() =>
+                   new Task(() => {}).WaitAsync(TimeSpan.FromMilliseconds(Delay)).GetAwaiter().OnCompleted(() =>
                     {
                         process.Invoke();
                         StopProgress();
                     });
+                }
+                catch (Exception ex)
+                {
+                    StopProgress();
+                    throw ex;
+                }
+            }
+        }
+        /// <summary>
+        ///  Open loading for Not Async Data Base Processing(Delay = ping the DB result) Async given the action delegated
+        /// </summary>
+        /// <param name="process">Action delegated</param>
+        /// <param name="isloading">Open load popup {True/False}</param>
+        /// <param name="message">Loadind Message</param>
+        public async Task SetLoadingStateDataBaseASync(Action process, IConfiguration config, bool isloading = true, string message = "Loading....")
+        {
+
+            int delay = DataBaseServices.PingSqlServer(config) + DefaulDelay;
+            IsLoading = isloading;
+            Message = message;
+
+            if (_popup != null)
+            {
+                try
+                {
+                    RunProgress(isloading, message, delay);
+                    await Task.Delay(delay);
+                    process.Invoke();
+                    StopProgress();
+                    
                 }
                 catch (Exception ex)
                 {
@@ -193,6 +222,17 @@ namespace SIMA.Templates
                 IsLoading = false;
                 Message = string.Empty;
                 Delay = 0;
+            }
+        }
+        /// <summary>
+        /// Delay process given the Delay property setted or Default Dealy
+        /// </summary>
+        /// <returns></returns>
+        public async Task DelayProgress() {
+            if (_popup != null)
+            {
+                if (IsLoading)
+                    await Task.Delay(Delay);
             }
         }
         #endregion
