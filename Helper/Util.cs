@@ -102,6 +102,11 @@ namespace SIMA.Helper
             }
 
         }
+
+        internal void ResponsiveGridWidth(object gridView, double v, Dictionary<int, string> columns_width)
+        {
+            throw new NotImplementedException();
+        }
     }
 
 }

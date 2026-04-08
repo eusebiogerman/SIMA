@@ -48,26 +48,28 @@ namespace SIMA.Presentation.Views
         public ObservableCollection<StockProductView> StockProducts
         {
             get => _stockproduct;
-            set { _stockproduct = value; OnPropertyChanged(nameof(Brand)); }
+            set { _stockproduct = value; OnPropertyChanged(nameof(StockProducts)); }
         }
         #endregion
 
         public StockViewModel() : base()
         {
-            InitializeModel(() =>
+            InitializeModel(async () =>
             {
                 _stockservices = new StockProductServices(Config);
                 _productservices = new ProductServices(Config);
-                FillLovProd();
+                await FillLovProd();
+                await FillStockProd();
             });
         }
         public StockViewModel(IPaging page, IConfiguration config,bool fillgrid = true) :base(page, config) 
         {
-            InitializeModel(() =>
+            InitializeModel(async () =>
             {
                 _stockservices = new StockProductServices(Config);
                 _productservices = new ProductServices(Config);
-                 FillLovProd();
+                await FillLovProd();
+                await FillStockProd();
             });
         }
 
@@ -91,7 +93,7 @@ namespace SIMA.Presentation.Views
         /// <summary>
         /// get the Category data
         /// </summary>
-        private async void FillLovProd()
+        private async Task FillLovProd()
         {
             try
             {
@@ -105,6 +107,26 @@ namespace SIMA.Presentation.Views
             catch (Exception)
             {
                 InvokeError("PopupLov Product System Error Failed");
+            }
+        }
+
+        /// <summary>
+        /// get the Stock data
+        /// </summary>
+        private async Task FillStockProd()
+        {
+            try
+            {
+                IEnumerable<StockProductView> prod = await _stockservices.GetViewAll(new Paging { Offset = 0, Limit = 2000 });
+                StockProducts = new ObservableCollection<StockProductView>(prod.Where(p => p.IdStock != null));
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex)
+            {
+                InvokeError("PopupLov DataBase Error Failed");
+            }
+            catch (Exception)
+            {
+                InvokeError("PopupLov System Error Failed");
             }
         }
         #endregion

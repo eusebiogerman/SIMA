@@ -1,8 +1,10 @@
 ﻿using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
+using SIMA.Domain.Models.Intefaces;
 using SIMA.Domain.Models.Objects;
 using SIMA.Domain.Models.Params;
+using SIMA.Domain.Models.Views;
 using SIMA.ExtensionsHelper;
 using SIMA.Helper;
 using SIMA.Infrastructure.Repositories.Interfaces;
@@ -34,10 +36,8 @@ namespace SIMA.Infrastructure.Repositories
         }
         public CategoryServices(IConfiguration config) {
             _config = config;
-            _stockProductFile = new JsonFile<StockProduct>();
-            _stockProductFile.loadData();
         }
-
+       
         #region DataBase Action
         private async Task<IEnumerable<Category>> getCategory(CategoryParam param)
         {
@@ -111,6 +111,10 @@ namespace SIMA.Infrastructure.Repositories
         {
             throw new NotImplementedException();
         }
+
+
+
+
         #endregion
     }
 }

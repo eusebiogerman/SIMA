@@ -4,18 +4,22 @@ using SIMA.Helper;
 using SIMA.Infrastructure.Repositories;
 using SIMA.Infrastructure.Repositories.Interfaces;
 using SIMA.Presentation.Interfaces;
+using SIMA.Presentation.Repository;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using System.Windows.Media;
 
 namespace SIMA.Presentation.ViewModel
 {
     public abstract class ViewModelBase : INotifyDataErrorInfo, INotifyPropertyChanged,IViewModel
     {
+        private ObservableCollection<StatusItem> _statusitem;
         private readonly Dictionary<string, List<string>> _errors = new();
         private bool _isSupressed;
         private IConfiguration _config;
@@ -24,6 +28,7 @@ namespace SIMA.Presentation.ViewModel
         private string _message;
         private int _delay;
         private object _passingParameter;
+        
 
         #region Event Validation Properties
         public bool HasErrors => _errors.Any();
@@ -53,6 +58,11 @@ namespace SIMA.Presentation.ViewModel
         {
             get => _message;
             set => SetProperty(ref _message, value, nameof(Message));
+        }
+        public ObservableCollection<StatusItem> StatusItems
+        {
+            get => _statusitem;
+            set { _statusitem = value; OnPropertyChanged(nameof(StatusItems)); }
         }
         #endregion
 
@@ -117,6 +127,14 @@ namespace SIMA.Presentation.ViewModel
         public void InvokeEvent(object execute)
         {
             ObjectEventFromModel?.Invoke(execute);
+        }
+        public void AddStatusLog(string texto, Brush color)
+        {
+            //StatusItems.Insert(0,new StatusItem
+            //{
+            //    Message = texto,
+            //    Color = color
+            //});
         }
         #endregion
 

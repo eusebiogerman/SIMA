@@ -1,4 +1,7 @@
 ﻿using SIMA.Domain.Models;
+using SIMA.Domain.Models.Intefaces;
+using SIMA.Domain.Models.Objects;
+using SIMA.Domain.Models.Params;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,7 +11,9 @@ using System.Threading.Tasks;
 
 namespace SIMA.Infrastructure.Repositories.Interfaces
 {
-    public interface IContextservices<T,V,P>
+
+
+    public interface IContextservices<T, V, P> 
     {
         int? CurrentIdSave { get; }
         int TotalFound { get; }
@@ -28,4 +33,6 @@ namespace SIMA.Infrastructure.Repositories.Interfaces
         Task<object?> GetNextId();
 
     }
+
+
 }

@@ -16,6 +16,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media;
 
 namespace SIMA.Presentation.Views
 {
@@ -69,21 +70,21 @@ namespace SIMA.Presentation.Views
         public BrandViewModel() :base()
         {
 
-            InitializeModel(() => {
+            InitializeModel(async () => {
                 _categoryservices = new CategoryServices(Config);
                 _brandservices = new BrandServices(Config);
-                FillLovCat();
-                FillBrand();
+                await FillLovCat();
+                await FillBrand();
             });
         }
         public BrandViewModel(IPaging page, IConfiguration config):base()
         {
 
-            InitializeModel(() => {
+            InitializeModel(async () => {
                 _categoryservices = new CategoryServices(Config);
                 _brandservices = new BrandServices(Config);
-                FillLovCat();
-                FillBrand();
+                await FillLovCat();
+                await FillBrand();
             });
         }
 
@@ -113,10 +114,11 @@ namespace SIMA.Presentation.Views
         /// <summary>
         /// get the Category data
         /// </summary>
-        private async void FillLovCat()
+        private async Task FillLovCat()
         {
             try
             {
+                AddStatusLog("Getting Category data......\n", Brushes.AliceBlue);
                 IEnumerable<Category> cat = await _categoryservices.GetAll(new Paging { Offset = 0, Limit = 2000 });
                 Category = new ObservableCollection<LovObject>(cat.Select((p) => new LovObject { Id = p.IdCategory, Value = p.Name }));
             }
@@ -132,22 +134,25 @@ namespace SIMA.Presentation.Views
         /// <summary>
         /// get the Brand data
         /// </summary>
-        private async void FillBrand()
+        private async Task FillBrand()
         {
             try
             {
-                IEnumerable<BrandView> br = await _brandservices.GetViewAll(Page);
-                Brand = new ObservableCollection<BrandView>(br);
+                AddStatusLog( "Getting Brand data......\n",Brushes.AliceBlue);
+                IEnumerable<BrandView> prod = await _brandservices.GetViewAll(new Paging { Offset = 0, Limit = 2000 });
+                Brand = new ObservableCollection<BrandView>(prod.Where(p => p.IdBrand != null));
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
-                InvokeError("List Brand DataBase Error Failed");
+                InvokeError("Grid DataBase Error Failed");
             }
             catch (Exception)
             {
-                InvokeError("List Brand System Error Failed");
+                InvokeError("Grid System Error Failed");
             }
+
         }
+
         #endregion
 
 

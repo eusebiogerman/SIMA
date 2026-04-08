@@ -21,119 +21,31 @@ using SIMA.Domain.Models.Objects;
 using SIMA.Domain.Models.Views;
 using SIMA.Domain.Models.Params;
 using SIMA.Domain.Models.Intefaces;
+using SIMA.Presentation.Repository;
 
 namespace SIMA.Presentation
 {
+    //public partial class MainWindow : Window, IUtilServices<StockProduct, StockProductParam>, IUtil
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, IUtilServices<StockProduct, StockProductParam>, IUtil
+    public partial class MainWindow : Window
     {
         private IContextservices<StockProduct, StockProductView, StockProductParam> _service;
         private IContextservices<Category, Category, CategoryParam> _categoryservices;
-        private IPaging _page;
+        private WindowServices<StockProduct, StockProductView, StockProductParam> _windowservices;
+
+     
         private Wstocks _windowStock;
         private Wproduct _wproduct;
         private Wcategory _wcategory;
         private Wbrand _wbrand;
-        private Util _util;
-        private Task _process;
-        private bool _isloaded;
-        private readonly IConfiguration _config;
-        private readonly ViewModelBase _vm;
-
-        private bool _isloadedCat;
-        private bool _isloadedStock;
-
+        private ViewModelBase _vm;
+        private readonly Dictionary<int, string> columns_width;
         public MainWindow()
         {
             InitializeComponent();
-            _page = new Paging();
-            _util = new Util();
-            _config = _util.CustomConfiguration();
-            _vm = new MainViewModel(_page, _config);
-            this.DataContext = _vm;
-            _vm.ShowErrorFromModel += Vm_ShowErrorFromModel;
-
-            _service = new StockProductServices(_config);
-            _categoryservices = new CategoryServices(_config);
-
-        }
-
-        #region Utils
-        public void SupressEventComboBox(bool val = true)
-        {
-            _isloadedCat = val;
-            _isloadedStock = val;
-            _isloaded = val;
-            if (this.DataContext != null)
-                ((MainViewModel)this.DataContext).IsSupressed = val;
-
-        }
-        /// <summary>
-        /// Return and Update the message of the render Stock length
-        /// </summary>
-        /// <param name="total"></param>
-        /// <returns></returns>
-        public string getResultMessage(int total)
-        {
-            pageControl.TotalFound = total;
-            return $"📊 Show {total} products found";
-        }
-        /// <summary>
-        /// Update the Paging Labels given the cuurent Offset and Limit Values
-        /// </summary>
-        /// <param name="total"></param>
-        public void pagingLabels(int total)
-        {
-            if (_page.isvalidPaging())
-            {
-                pageControl.TotalFound = total;
-                pageControl.PageNumber = _page.Pagenumber;
-            }
-        }
-        /// <summary>
-        /// Control the Paging Previous and Next Page Number,Offset and Limit 
-        /// </summary>
-        /// <param name="direction"></param>
-        public void NavigationGrid(DIRECTION direction)
-        {
-
-            if (_page.isvalidPaging())
-            {
-                _page.movePage(direction);
-                pageControl.ItemsPerPage = _page.Offset;
-                 Filter(activeFilters());
-            }
-
-
-        }
-        /// <summary>
-        /// Restore Initial set of Category and Stock  
-        /// </summary>
-        public void ClearFilters()
-        {
-            cmbCategory.SelectedIndex = 0;
-            txtSearch.Clear();
-        }
-        /// <summary>
-        /// Update the Total result of the rows and update the labels on the grid 
-        /// </summary>
-        /// <param name="total"></param>
-        public void UpdatePaging(int total = 0)
-        {
-            int intotal = (total == 0) ?  _service.TotalFound : total;
-            _page.parsePageData(intotal);
-            txtResults.Text = getResultMessage(intotal);
-            pagingLabels(intotal);
-        }
-        /// <summary>
-        /// Managment of Responsive Windows
-        /// </summary>
-        /// <param name="gridheight">Size Height = Only Numeric string percent {Size}% or Size}</param>
-        public void ResizeGrid(string gridheight)
-        {
-            Dictionary<int, string> columns_width = new Dictionary<int, string>
+            columns_width = new Dictionary<int, string>
             {
                 { 0, "4%" },
                 { 1, "25%" },
@@ -143,155 +55,54 @@ namespace SIMA.Presentation
                 { 5, "12%" },
                 { 6, "7%" }
             };
-            _util.ResponsiveListViewHeight(gridProducts, this.ActualHeight, gridheight);
-            _util.ResponsiveGridWidth(gridCellProduct, this.ActualWidth - 220, columns_width);
-        }
-        #endregion
-
-        #region Filling Methods
-        public StockProduct Result()
-        {
-            throw new NotImplementedException();
-        }
-        /// <summary>
-        /// Returns the object StockProduct with passing the values of the Active Filter controls 
-        /// </summary>
-        /// <returns></returns>
-        public StockProductParam activeFilters()
-        {
-            //Category catcmb = ((Category)cmbCategory.SelectedItem);
-            LovObject catcmb = ((LovObject)cmbCategory.SelectedItem);
-            return new StockProductParam
-            {
-
-                idCategory = catcmb != null ? catcmb.Id : null,
-                products = txtSearch?.Text,
-                offset = _page.Offset,
-                limit = _page.Limit
-                //,Name = txtSearch.Text
-            };
-        }
-        /// <summary>
-        /// Fill the Category ComboBox
-        /// </summary>
-        public void FillCombobox(int? id = null)
-        {
-            throw new NotImplementedException();
-        }
-        /// <summary>
-        /// Fill the stock
-        /// </summary>
-        public void Fill()
-        {
-            throw new NotImplementedException();
 
         }
-        /// <summary>
-        /// Filter the GridView given the activeFilters() : function
-        /// </summary>
-        public void Filter()
-        {
-            try
-            {
-                progress.SetLoadingStateDataBase(async () =>
-                {
-                    IEnumerable<StockProductView> cat = await _service.GetViewAll(_page);
-                    gridProducts.ItemsSource = cat.Where(p => p.IdBrand != null);
-                    UpdatePaging();
-                }, _config, true, "Loading Stock...");
-            }
-            catch (Microsoft.Data.SqlClient.SqlException ex)
-            {
-                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-            catch (Exception)
-            {
-                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-        }
-        /// <summary>
-        /// Filter the GridView given the Stock Product param
-        /// </summary>
-        /// <param name="param"></param>
-        public async void Filter(StockProductParam param)
-        {
-            try
-            {
-                progress.SetLoadingStateDataBase(async () =>
-                {
-                    IEnumerable<StockProductView> cat = await _service.GetByFilter(param);
-                    gridProducts.ItemsSource = cat.Where(p => p.IdBrand != null);
-                    UpdatePaging();
-                }, _config, true, "Loading Stock...");
 
-            }
-            catch (Microsoft.Data.SqlClient.SqlException ex)
-            {
 
-                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-            catch (Exception)
-            {
-
-                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-        }
-        /// <summary>
-        /// Filter the GridView given the Description of product
-        /// </summary>
-        /// <param name="param"></param>
-        public void FilterbyText(StockProductParam param)
+        private async Task FillGrid()
         {
+            var prod = await _service.GetByFilter(_windowservices.activeFilters("Name"));
+            _windowservices.Fill(prod);
+        }
 
-            throw new NotImplementedException();
-        }
-        /// <summary>
-        /// Open the Edit Form for the Stock select in th gridview
-        /// </summary>
-        /// <param name="param"></param>
-        /// <exception cref="NotImplementedException"></exception>
-        public void Edit(StockProductParam param)
-        {
-            throw new NotImplementedException();
-        }
-        #endregion
 
         #region Events
         private void txtSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (!_isloaded)
+            if (!_windowservices.Isloaded)
             {
-                Filter(activeFilters());
-                
+                progress.SetLoadingStateDataBase(async () =>
+                {
+                   await FillGrid();
+                }, _windowservices.Config, true, "Loading Stocks...");
             }
 
-
         }
-        private void cmbCategory_SelectionChanged(object sender, RoutedEventArgs e)
+        private async void cmbCategory_SelectionChanged(object sender, RoutedEventArgs e)
         {
-            var sendobj = cmbCategory.getSelectedItem(sender);
-            if (!_isloaded && sendobj != null)
+            LovObject sendobj = _windowservices.ParentLovtextbox.getSelectedItem(sender);
+            if (!_windowservices.Isloaded && sendobj != null)
             {
-                var param = new StockProductParam
+                var prod = await _service.GetByFilter(new StockProductParam
                 {
                     idCategory = sendobj.Id
-                };
-                _page.resetPage();
-                 Filter(param);
+                });
+                _windowservices.Page.resetPage();
+                _windowservices.Fill(prod);
             }
         }
-        private void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
+        private async void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
         {
-            if (!_isloaded)
+            if (!_windowservices.Isloaded)
             {
-                _page.Limit = (int)pageControl.GetSelectedItemsPerPage();
-                 Filter(activeFilters());
-                 UpdatePaging();
+                _windowservices.Page.Limit = (int)_windowservices.PageControl.GetSelectedItemsPerPage();
+                await FillGrid();
+                _windowservices.UpdatePaging();
             }
         }
-        private void btnClear_Click(object sender, RoutedEventArgs e)
+        private async void btnClear_Click(object sender, RoutedEventArgs e)
         {
-            ClearFilters();
+            await _windowservices.ClearFilters();
         }
         private void btnNewStock_Click(object sender, RoutedEventArgs e)
         {
@@ -300,10 +111,10 @@ namespace SIMA.Presentation
                 _windowStock = new Wstocks();
             }
             _windowStock.Owner = this;
-            _windowStock.SupressEventComboBox();
+            _windowStock.WindowServices.SupressEventComboBox();
             _windowStock.Activate();
             _windowStock.Show();
-            _windowStock.SupressEventComboBox(false);
+          
 
 
         }
@@ -314,10 +125,9 @@ namespace SIMA.Presentation
                 _wproduct = new Wproduct();
             }
             _wproduct.Owner = this;
-            _wproduct.SupressEventComboBox();
+            _wproduct.WindowServices.SupressEventComboBox();
             _wproduct.Activate();
             _wproduct.Show();
-            _wproduct.SupressEventComboBox(false);
 
         }
         private void btnBrand_Click(object sender, RoutedEventArgs e)
@@ -327,10 +137,9 @@ namespace SIMA.Presentation
                 _wbrand = new Wbrand();
             }
             _wbrand.Owner = this;
-            _wbrand.SupressEventComboBox();
+            _wbrand.WindowServices.SupressEventComboBox();
             _wbrand.Activate();
             _wbrand.Show();
-            _wbrand.SupressEventComboBox(false);
 
 
         }
@@ -341,19 +150,18 @@ namespace SIMA.Presentation
                 _wcategory = new Wcategory();
             }
             _wcategory.Owner = this;
-            _wcategory.SupressEventComboBox();
+            _wcategory.WindowServices.SupressEventComboBox();
             _wcategory.Activate();
             _wcategory.Show();
-            _wcategory.SupressEventComboBox(false);
 
         }
         private void PagePrevious_Click(object sender, RoutedEventArgs e)
         {
-            NavigationGrid(DIRECTION.previous);
+            _windowservices.NavigationGrid(DIRECTION.previous);
         }
         private void PageNext_Click(object sender, RoutedEventArgs e)
         {
-            NavigationGrid(DIRECTION.next);
+            _windowservices.NavigationGrid(DIRECTION.next);
 
         }
         private void btnClose_Click(object sender, RoutedEventArgs e)
@@ -397,7 +205,7 @@ namespace SIMA.Presentation
                     bool valid = await _service.Delete(rowData.IdStock) > 0;
                     if (valid)
                     {
-                        Filter(activeFilters());
+                        await FillGrid(); 
                         MessageBox.Show(this, "Stock Succesfully removed", "Remove Stock", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     else
@@ -419,28 +227,43 @@ namespace SIMA.Presentation
             }
 
         }
-        private void btnRefresh_Click(object sender, RoutedEventArgs e)
+        private async void btnRefresh_Click(object sender, RoutedEventArgs e)
         {
-                _service = null;
-                _service = new StockProductServices();
-                gridProducts.ItemsSource = null;
-                gridProducts.Items.Clear();
-                Filter(activeFilters());
-
-        }
-        private async void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            progress.RunProgress(true, "Init Window....");
-            _page.Offset = (int?)pageControl.GetSelectedItemsPerPage() ?? _page.DefaultOffset;
-            this.SupressEventComboBox();
-            await _page.FillLimitPageVal(pageControl);
-            UpdatePaging();
-            this.SupressEventComboBox(false);
-
+            _service = null;
+            _service = new StockProductServices();
+            _windowservices.GridListView.ItemsSource = null;
+            _windowservices.GridListView.Items.Clear();
+            await FillGrid();
         }
         private void Window_Initialized(object sender, EventArgs e)
         {
-            this.SupressEventComboBox();
+            IPaging _page = new Paging();
+            var _util = new Util();
+            IConfiguration _config = _util.CustomConfiguration();
+            _vm = new MainViewModel(_page, _config);
+            this.DataContext = _vm;
+            _vm.ShowErrorFromModel += Vm_ShowErrorFromModel;
+            _service = new StockProductServices(_config);
+            _categoryservices = new CategoryServices(_config);
+            _windowservices = new WindowServices<StockProduct, StockProductView, StockProductParam>(_config,_page, _service);
+            _windowservices.SupressEventComboBox();
+        }
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            _windowservices.DataContext = _vm;
+            _windowservices.PageControl = pageControl;
+            _windowservices.ParentLovtextbox = cmbCategory;
+            _windowservices.TxtSearch = txtSearch;
+            _windowservices.TxtResults = txtResults;
+            _windowservices.IngorePredicate = (x) => x.IdProduct != null;
+
+            progress.RunProgress(true, "Init Window....");
+            _windowservices.Page.Offset = (int?)_windowservices.PageControl.GetSelectedItemsPerPage() ?? _windowservices.Page.DefaultOffset;
+            _windowservices.SupressEventComboBox();
+            await _windowservices.Page.FillLimitPageVal(_windowservices.PageControl);
+            _windowservices.UpdatePaging();
+            _windowservices.SupressEventComboBox(false);
+
         }
         private void Vm_ShowErrorFromModel(string mensaje)
         {
@@ -448,12 +271,17 @@ namespace SIMA.Presentation
         }
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            ResizeGrid("60%");
+            _windowservices.CurrentWindow = this;
+            _windowservices.GridListView = _windowservices.GridListView ?? gridProducts;
+            _windowservices.GridView = _windowservices.GridView ?? gridCellProduct;
+            _windowservices.ResizeGrid("60%",this.ActualHeight,this.ActualWidth, columns_width);
         }
         private void Window_ContentRendered(object sender, EventArgs e)
         {
             progress.StopProgress();
         }
+
+
         #endregion
 
 

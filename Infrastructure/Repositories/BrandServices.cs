@@ -38,6 +38,7 @@ namespace SIMA.Infrastructure.Repositories
             _config = config;
         }
 
+
         #region DataBase Action
         private async Task<IEnumerable<BrandView>> getBrand(BrandParam param)
         {

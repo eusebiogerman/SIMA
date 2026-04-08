@@ -177,8 +177,8 @@
                                     <TextBlock Text="{TemplateBinding Message}"
                                                Foreground="DodgerBlue"/>
                                     <Ellipse x:Name="PART_Ellipse" 
-                                         Width="50" 
-                                         Height="50"                                  
+                                         Width="auto" 
+                                         Height="auto"                                  
                                          Stroke="DodgerBlue" 
                                          StrokeThickness="5" 
                                          StrokeDashArray="3, 1" 

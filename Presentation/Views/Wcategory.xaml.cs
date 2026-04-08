@@ -23,284 +23,111 @@ using SIMA.Domain.Models.Params;
 using SIMA.Domain.Models.Intefaces;
 using SIMA.Templates;
 using SIMA.Domain.Models.Views;
+using SIMA.Presentation.Repository;
+using System.ComponentModel;
 
 namespace SIMA.Presentation.Views
 {
     /// <summary>
     /// Interaction logic for Wcategory.xaml
     /// </summary>
-    public partial class Wcategory : Window, IUtilServices<Category, CategoryParam>, IUtil
+    public partial class Wcategory : Window
     {
-        private IContextservices<Category, Category, CategoryParam>  _service;
-        private IPaging _page;
-        private readonly IConfiguration _config;
 
-        private Util _util;
+        private IContextservices<Category, Category, CategoryParam> _service;
+        private WindowServices<Category, Category, CategoryParam> _windowservices;
+
         private CancellationTokenSource _cts;
-        private bool _isloaded;
-
+        private Category? _rowData;
+        private CategoryViewModel _vm;
+        private Util _util;
+        private readonly Dictionary<int, string> columns_width;
+        public WindowServices<Category, Category, CategoryParam> WindowServices { get => _windowservices; }
         public Wcategory()
         {
             InitializeComponent();
-            FormCategory.Visibility = Visibility.Hidden;
-            FormCategory.Height = 0;
-
-            _page = new Paging();
-            _util = new Util();
-            _config = _util.CustomConfiguration();
-            var Vm = new CategoryViewModel(_page, _config);
-            this.DataContext = Vm;
-            Vm.ShowErrorFromModel += Vm_ShowErrorFromModel;
-           _service = new CategoryServices(_config);
-
         }
+
+
+ 
 
         #region Util
         /// <summary>
+        /// Initialize Window
+        /// </summary>
+        /// <param name="rowData"></param>
+        private void InitializeWindow(Category? rowData = null)
+        {
+            _rowData = rowData;
+            _windowservices.EditMode = _rowData != null;
+            _windowservices.FromMain = _windowservices.EditMode;
+        }
+        /// <summary>
         /// 
         /// </summary>
-        /// <param name="val"></param>
-        public void SupressEventComboBox(bool val = true)
-        {
-            _isloaded = val;
-            if (this.DataContext != null)
-                ((CategoryViewModel)this.DataContext).IsSupressed = val;
-        }
-        /// <summary>
-        /// Return and Update the message of the render Category result
-        /// <param name="total"></param>
+        /// <param name="param"></param>
         /// <returns></returns>
-        public string getResultMessage(int total)
+        private async Task FillGrid(CategoryParam? param = null)
         {
-            pageControl.TotalFound = total;
-            return $"📊 Show {total} products found";
+            var prod = await _service.GetByFilter(param ?? _windowservices.activeFilters("Name"));
+            _windowservices.Fill(prod);
         }
         /// <summary>
-        /// Update the Paging Labels given the cuurent Offset and Limit Values
+        /// 
         /// </summary>
-        /// <param name="total"></param>
-        public void pagingLabels(int total)
+        /// <param name="rowData"></param>
+        /// <returns></returns>
+        private Action EditControl(CategoryParam? rowData = null)
         {
-            if (_page.isvalidPaging())
+            return () =>
             {
-                pageControl.TotalFound = total;
-                pageControl.PageNumber = _page.Pagenumber;
-            }
-        }
-        /// <summary>
-        /// Control the Paging Previous and Next Page Number,Offset and Limit 
-        /// </summary>
-        /// <param name="direction"></param>
-        public void NavigationGrid(DIRECTION direction)
-        {
-            throw new NotImplementedException();
-        }
-        /// <summary>
-        ///  Restore Initial set of Category and Stock  
-        /// </summary>
-        public void ClearFilters()
-        {
-            txtIdCategory.Text = string.Empty;
-            txtName.Text = string.Empty;
-            txtSearch.Text = string.Empty;
-            FormCategory.Visibility = Visibility.Hidden;
-            FormCategory.Height = 0;
-            ResizeGrid("60%");
-        }
-        /// <summary>
-        /// Update the Total result of the rows and update the labels on the grid 
-        /// </summary>
-        /// <param name="total"></param>
-        public void UpdatePaging(int total = 0)
-        {
-            int intotal = (total == 0) ?  _service.TotalFound : total;
-            _page.parsePageData(intotal);
-            txtResults.Text = getResultMessage(intotal);
-            pagingLabels(intotal);
-        }
-        /// <summary>
-        /// Managment of Responsive Windows
-        /// </summary>
-        /// <param name="gridheight">Size Height = Only Numeric string percent {Size}% or Size}</param>
-        public void ResizeGrid(string gridheight)
-        {
-            Dictionary<int, string> columns_width = new Dictionary<int, string>();
-            columns_width.Add(0, "4%");
-            columns_width.Add(1, "86%");
-            columns_width.Add(2, "7%");
-            _util.ResponsiveListViewHeight(gridCategory, this.ActualHeight, gridheight);
-            _util.ResponsiveGridWidth(gridCellCategory, this.ActualWidth, columns_width);
-        }
-        #endregion
 
-        #region Filling Methods
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        public Category Result()
-        {
-            throw new NotImplementedException();
-        }
-        /// <summary>
-        /// Returns the object CategoryParam with passing values of the Active Filter controls 
-        /// </summary>
-        /// <returns></returns>
-        public CategoryParam activeFilters()
-        {
-            return new CategoryParam
-            {
-                Name = txtSearch.Text,
-                offset = _page.Offset,
-                limit = _page.Limit
+                //Set the Field Values from the grid
+                txtIdCategory.Text = rowData?.IdCategory.ToString();
+                txtName.Text = rowData?.Name.ToString();
             };
-
         }
         /// <summary>
-        /// Fill the Category ComboBox
+        /// 
         /// </summary>
-        public void FillCombobox(int? id = null)
+        /// <returns></returns>
+        private async Task Clear(string windowheight = "40%")
         {
-            throw new NotImplementedException();
-        }
-        /// <summary>
-        /// Fill the Gridview
-        /// </summary>
-        /// <exception cref="NotImplementedException"></exception>
-        public void Fill()
-        {
-            try
+            await _windowservices.ClearFilters(windowheight, () =>
             {
-                progress.SetLoadingStateDataBase(async () =>
-                {
-                    IEnumerable<Category> cat = await _service.GetAll(_page);
-                    gridCategory.ItemsSource = cat.Where(p => p.IdCategory != null);
-                     UpdatePaging();
-                }, _config, true, "Loading Category...");
-            }
-            catch (Microsoft.Data.SqlClient.SqlException ex)
-            {
+                txtIdCategory.Text = string.Empty;
+                txtName.Text = string.Empty;
+            });
 
-                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-            catch (Exception)
-            {
-
-                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-
-
-        }
-        /// <summary>
-        /// Filter the GridView given the activeFilters() : function
-        /// </summary>
-        public void Filter()
-        {
-            throw new NotImplementedException();
-        }
-        /// <summary>
-        /// Filter the GridView given the Stock Category param
-        /// </summary>
-        /// <param name="param"></param>
-        public void Filter(CategoryParam param)
-        {
-            try
-            {
-                progress.SetLoadingStateDataBase(async () =>
-                {
-                    IEnumerable<Category> cat = await _service.GetByFilter(param);
-                    gridCategory.ItemsSource = cat.Where(p => p.IdCategory != null);
-                     UpdatePaging();
-                }, _config, true, "Loading Category...");
-            }
-            catch (Microsoft.Data.SqlClient.SqlException ex)
-            {
-               
-                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-            catch (Exception)
-            {
-               
-                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-
-
-        }
-        /// <summary>
-        /// Filter the GridView given the Search text description
-        /// </summary>
-        /// <param name="param"></param>
-        public void FilterbyText(CategoryParam param)
-        {
-            try
-            {
-                progress.SetLoadingStateDataBase(async () =>
-                {
-                    IEnumerable<Category> cat = await _service.GetByFilter(param);
-                gridCategory.ItemsSource = cat.Where(p => p.IdCategory != null);
-                 UpdatePaging();
-                }, _config, true, "Loading Category...");
-
-
-            }
-            catch (Microsoft.Data.SqlClient.SqlException ex)
-            {
-               
-                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-            catch (Exception)
-            {
-               
-                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-
-
-
-        }
-        /// <summary>
-        /// Open the Edit Form for the Stock select in th gridview
-        /// </summary>
-        /// <param name="param"></param>
-        public void Edit(CategoryParam param)
-        {
-            FormCategory.Visibility = Visibility.Visible;
-            FormCategory.Height = Double.NaN;
-            ResizeGrid("40%");
-
-            //Set the Field Values from the grid
-            txtIdCategory.Text = param.IdCategory.ToString();
-            txtName.Text = param.Name;
         }
         #endregion
 
         #region Events
-        private async void btnsSaveCategory_Click(object sender, RoutedEventArgs e)
+        private async void btnsSave_Click(object sender, RoutedEventArgs e)
         {
-            
-            int? id = string.IsNullOrEmpty(txtIdCategory.Text) ? null : int.Parse(txtIdCategory.Text);
-            progress.RunProgress(true, "Saving Category....");
-            await progress.DelayProgress();
-            bool isset =  await _service.Set(new Category
-                {
-                    IdCategory = id,
-                    Name = txtName.Text
-                });
-            progress.StopProgress();
+            int? id = string.IsNullOrEmpty(txtIdCategory.Text) ? null : int.Parse(txtIdCategory.Text.ToString());
+            string name = txtName.Text.ToString();
             try
             {
+                progress.RunProgress(true, "Saving Stock...");
+                await progress.DelayProgress();
+                bool isset = await _service.Set(new Category
+                {
+                    IdCategory = id,
+                    Name = name,
+                });
+                progress.StopProgress();
+
                 if (isset)
                 {
-                    MessageBox.Show(this, "Category Sucessfully saved", "Save Category", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                    ClearFilters();
-                    Filter(activeFilters());
+                    MessageBox.Show(this, "Stock Sucessfully saved", "Save Stock", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    await Clear();
+                    await FillGrid();
                 }
                 else
                 {
-                    MessageBox.Show(this, "Error Saving Category", "Save Category", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    MessageBox.Show(this, "Error Saving Stock", "Save Stock", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 }
-               
-
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
@@ -312,33 +139,73 @@ namespace SIMA.Presentation.Views
                 progress.StopProgress();
                 MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
-    
         }
-        private void btnsClear_Click(object sender, RoutedEventArgs e)
+        private async void btnNew_Click(object sender, RoutedEventArgs e)
         {
-            ClearFilters();
+            await Clear();
         }
-        private void btnsClose_Click(object sender, RoutedEventArgs e)
+        private async void btnsClear_Click(object sender, RoutedEventArgs e)
         {
-            ClearFilters();
+            await Clear(_windowservices.FormState ? "40%" : "60%");
+        }
+        private async void btnsClose_Click(object sender, RoutedEventArgs e)
+        {
+            await Clear();
             this.Close();
         }
-        private void btnUpdate_Click(object sender, RoutedEventArgs e)
+        private void PagePrevious_Click(object sender, RoutedEventArgs e)
         {
+            _windowservices.NavigationGrid(DIRECTION.previous);
+        }
+        private void PageNext_Click(object sender, RoutedEventArgs e)
+        {
+            _windowservices.NavigationGrid(DIRECTION.next);
+        }
+        private async void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+            if (!_windowservices.Isloaded)
+            {
+                _windowservices.Page.Limit = (int)_windowservices.PageControl.GetSelectedItemsPerPage();
+                if (!_windowservices.FromMain)
+                {
+                    await FillGrid();
+                }
+                _windowservices.UpdatePaging();
+            }
+        }
+        private async void btnRefresh_Click(object sender, RoutedEventArgs e)
+        {
+            _windowservices.Page.Limit = (int)_windowservices.PageControl.GetSelectedItemsPerPage();
+            await FillGrid();
+            _windowservices.UpdatePaging();
+        }
+        private async void parentCombobox_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+            await FillGrid();
+        }
+        private async void txtSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
+            _cts?.Cancel();
+            _cts = new CancellationTokenSource();
+
             try
             {
-                Button btn = sender as Button;
-                Category rowData = (Category)btn.DataContext;
-                Edit(new CategoryParam { IdCategory = rowData.IdCategory, Name = rowData.Name });
+                if (!_windowservices.Isloaded && !_windowservices.FromMain)
+                {
+                    await Task.Delay(300, _cts.Token);
+                    await FillGrid();
+                }
             }
-            catch (Exception)
+            catch (TaskCanceledException)
             {
-               
+                //Cancel
             }
+
         }
         private async void btnRemove_Click(object sender, RoutedEventArgs e)
         {
-            MessageBoxResult result = MessageBox.Show(this, "Confirm removing Category ?", "Remove Category", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+            MessageBoxResult result = MessageBox.Show(this, "Confirm removing Stock ?", "Remove Stock", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
             try
             {
                 if (result == MessageBoxResult.Yes)
@@ -349,12 +216,12 @@ namespace SIMA.Presentation.Views
                     bool valid = await _service.Delete(rowData.IdCategory) > 0;
                     if (valid)
                     {
-                        Filter(activeFilters());
-                        MessageBox.Show(this, "Category Succesfully removed", "Remove Category", MessageBoxButton.OK, MessageBoxImage.Information);
+                        await FillGrid();
+                        MessageBox.Show(this, "Stock Succesfully removed", "Remove Stock", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     else
                     {
-                        MessageBox.Show(this, "Category removing the Brand", "Remove Category", MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBox.Show(this, "Error removing the Brand", "Remove Stock", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                 }
 
@@ -369,75 +236,100 @@ namespace SIMA.Presentation.Views
 
                 MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
-
-
         }
-        private void btnNewStock_Click(object sender, RoutedEventArgs e)
+        private async void btnUpdate_Click(object sender, RoutedEventArgs e)
         {
-            Edit(new CategoryParam { IdCategory = null, Name = null });
-        }
-        private async void txtSearch_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            _cts?.Cancel();
-            _cts = new CancellationTokenSource();
-
             try
             {
-                await Task.Delay(300, _cts.Token);
-                FilterbyText(activeFilters());
+                Button btn = sender as Button;
+                Category rowData = (Category)btn.DataContext;
+                _windowservices.EditMode = true;
+                await _windowservices.Edit("40%", EditControl(new CategoryParam
+                {
+                    IdCategory = rowData.IdCategory,
+                    Name = rowData.Name
+                }));
+                _windowservices.EditMode = false;
             }
-            catch (TaskCanceledException)
+            catch (Exception)
             {
-                // Ignorar: se canceló porque el usuario siguió escribiendo
+                _windowservices.EditMode = false;
             }
+
         }
-        private void PagePrevious_Click(object sender, RoutedEventArgs e)
-        {
-            NavigationGrid(DIRECTION.previous);
-        }
-        private void PageNext_Click(object sender, RoutedEventArgs e)
-        {
-            NavigationGrid(DIRECTION.next);
-        }
-        private void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
-        {
-            if (!_isloaded)
-            {
-                _page.Limit = (int)pageControl.GetSelectedItemsPerPage();
-                Filter(activeFilters());
-                 UpdatePaging();
-            }
-        }
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void Window_Closing(object sender, CancelEventArgs e)
         {
             e.Cancel = true;
             this.Visibility = Visibility.Hidden;
+        }
+        private void Window_Initialized(object sender, EventArgs e)
+        {
+            _util = new Util();
+            IPaging _page = new Paging();
+            IConfiguration _config = _util.CustomConfiguration();
+            _vm = new CategoryViewModel(_page, _config);
+            this.DataContext = _vm;
+            _vm.ShowErrorFromModel += Vm_ShowErrorFromModel;
+            _service = new CategoryServices(_config);
+            _windowservices = new WindowServices<Category, Category, CategoryParam>(_config, _page, _service);
+            _windowservices.SupressEventComboBox();
+
 
         }
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            
-            _page.Offset = (int?)pageControl.GetSelectedItemsPerPage() ?? _page.DefaultOffset;
-            this.SupressEventComboBox();
-            await _page.FillLimitPageVal(pageControl);
-             UpdatePaging();
-            Fill();
-            this.SupressEventComboBox(false);
-        }
-        private void Window_Initialized(object sender, EventArgs e)
-        {
-            this.SupressEventComboBox();
-        }
-        private void Vm_ShowErrorFromModel(string mensaje)
-        {
-           
-            MessageBox.Show(this, mensaje, "Model Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+
+            _windowservices.DataContext = _vm;
+            _windowservices.PageControl = pageControl;
+            _windowservices.ParentLovtextbox = null;
+            _windowservices.ChildLovtextbox = null;
+            _windowservices.TxtSearch = txtSearch;
+            _windowservices.TxtResults = txtResults;
+            _windowservices.IngorePredicate = null;
+            _windowservices.Form = FormCategory;
+            _windowservices.FormIsOpen(false);
+
+            progress.RunProgress(true, "Init Window....");
+            _windowservices.Page.Offset = (int?)_windowservices.PageControl.GetSelectedItemsPerPage() ?? _windowservices.Page.DefaultOffset;
+            await _windowservices.Page.FillLimitPageVal(_windowservices.PageControl);
+            _windowservices.UpdatePaging();
+            _windowservices.SupressEventComboBox(false);
         }
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-           ResizeGrid("60%");
+            _windowservices.CurrentWindow = this;
+            _windowservices.GridListView = _windowservices.GridListView ?? gridCategory;
+            _windowservices.GridView = _windowservices.GridView ?? gridCellCategory;
+            _windowservices.ColumnsWidth = new Dictionary<int, string>
+            {
+                { 0, "4%" },
+                { 1, "86%" },
+                { 2, "7%" },
+            };
+            _windowservices.ResizeGrid("60%");
+        }
+        private void Vm_ShowErrorFromModel(string mensaje)
+        {
+            MessageBox.Show(this, mensaje, "Model Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        private async void Window_ContentRendered(object sender, EventArgs e)
+        {
+            progress.StopProgress();
+            if (_rowData != null)
+            {
+                _windowservices.SupressEventComboBox(false);
+                await _windowservices.Edit("40%", EditControl(new CategoryParam
+                {
+                    IdCategory = _rowData.IdCategory,
+                    Name = _rowData.Name
+                }));
+                _windowservices.FromMain = false;
+                await FillGrid(new CategoryParam { IdCategory = _rowData.IdCategory });
+            }
+
         }
         #endregion
+
 
 
     }

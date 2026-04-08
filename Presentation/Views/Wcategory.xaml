@@ -72,12 +72,12 @@
                                 <StaticResource ResourceKey="NameErrorTemplate"/>
                             </Validation.ErrorTemplate>
                         </TextBox>
-                        <Button Name="btnsSaveBrand" 
+                        <Button Name="btnsSave" 
                                 Content="&#x1F4BE; Save" 
                                 Style="{StaticResource CommunButton}"
                                 Background="#377d0c"
                                 Foreground="White"
-                                Click="btnsSaveCategory_Click" />
+                                Click="btnsSave_Click" />
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -174,13 +174,13 @@
                     <StackPanel Grid.Column="0" 
                     Style="{StaticResource ShortButtonStackPanel}">
 
-                        <Button Name="btnNewStock" 
+                        <Button Name="btnNew" 
                             Content="➕ New" 
                             Style="{StaticResource ShortButtonPanel}"        
                             Margin="0,0,0,0"
                             Background="#5069AA"
                             Foreground="White"                    
-                            Click="btnNewStock_Click" />
+                            Click="btnNew_Click" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" 

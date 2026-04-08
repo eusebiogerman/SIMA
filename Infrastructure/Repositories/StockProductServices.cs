@@ -19,6 +19,7 @@ using SIMA.ExtensionsHelper;
 using SIMA.Domain.Models.Objects;
 using SIMA.Domain.Models.Views;
 using SIMA.Domain.Models.Params;
+using SIMA.Domain.Models.Intefaces;
 
 namespace SIMA.Infrastructure.Repositories
 {
@@ -43,7 +44,7 @@ namespace SIMA.Infrastructure.Repositories
         }
         public StockProductServices(IConfiguration config)
         {
-            _config = config;   
+            _config = config;
             _stockProductFile = new JsonFile<StockProduct>();
         }
 
