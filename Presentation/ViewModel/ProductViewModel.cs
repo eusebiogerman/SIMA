@@ -25,7 +25,8 @@ namespace SIMA.Presentation.Views
         private ObservableCollection<LovObject> _category;
         private ObservableCollection<ProductView> _product;
         private IContextservices<Category, Category, CategoryParam> _categoryservices;
-        
+        private IContextservices<Product, ProductView, ProductParam> _productservices;
+
 
         public string Name
         {
@@ -59,20 +60,24 @@ namespace SIMA.Presentation.Views
         }
         #endregion
 
-        public ProductViewModel():base()
+        public ProductViewModel(ICacheService cache):base(cache)
         {
-            InitializeModel(() =>
+            InitializeModel(async () =>
             {
-                _categoryservices = new CategoryServices(Config);
-                FillLovCat();
+                _categoryservices = new CategoryServices(Config, cache);
+                _productservices = new ProductServices(Config, cache);
+                await FillLovCat();
+                await FillProd();
             });
         }
-        public ProductViewModel(IPaging page, IConfiguration config) : base(page, config) 
+        public ProductViewModel(IPaging page, IConfiguration config, ICacheService cache) : base(page, config, cache) 
         {
-            InitializeModel(() =>
+            InitializeModel(async () =>
             {
-                _categoryservices = new CategoryServices(Config);
-                FillLovCat();
+                _categoryservices = new CategoryServices(Config, cache);
+                _productservices = new ProductServices(Config, cache);
+                await FillLovCat();
+                await FillProd();
             });
         }
 
@@ -102,7 +107,7 @@ namespace SIMA.Presentation.Views
         /// <summary>
         /// get the Category data
         /// </summary>
-        private async void FillLovCat()
+        private async Task FillLovCat()
         {
             try
             {
@@ -119,10 +124,27 @@ namespace SIMA.Presentation.Views
             }
 
         }
+        /// <summary>
+        /// get the Category data
+        /// </summary>
+        private async Task FillProd()
+        {
+            try
+            {
+                IEnumerable<ProductView> prod = await _productservices.GetViewAll(new Paging { Offset = 0, Limit = 2000 });
+                Product = new ObservableCollection<ProductView>(prod.Where(p => p.IdProduct != null));
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex)
+            {
+                InvokeError("Grid DataBase Error Failed");
+            }
+            catch (Exception)
+            {
+                InvokeError("Grid System Error Failed");
+            }
+
+        }
         #endregion
-
-
-
 
     }
 }

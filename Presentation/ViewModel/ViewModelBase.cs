@@ -4,26 +4,34 @@ using SIMA.Helper;
 using SIMA.Infrastructure.Repositories;
 using SIMA.Infrastructure.Repositories.Interfaces;
 using SIMA.Presentation.Interfaces;
+using SIMA.Presentation.Repository;
+using SIMA.Templates;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using System.Windows.Media;
 
 namespace SIMA.Presentation.ViewModel
 {
     public abstract class ViewModelBase : INotifyDataErrorInfo, INotifyPropertyChanged,IViewModel
     {
-        private readonly Dictionary<string, List<string>> _errors = new();
-        private bool _isSupressed;
+        
         private IConfiguration _config;
         private IPaging _page;
+        private ICacheService _cache;
+
+        private ObservableCollection<StatusItem> _obsrverstatus;
+        private readonly Dictionary<string, List<string>> _errors = new();
+        private object _passingParameter;
+        private bool _isSupressed;
         private bool _isBusy;
         private string _message;
         private int _delay;
-        private object _passingParameter;
 
         #region Event Validation Properties
         public bool HasErrors => _errors.Any();
@@ -54,22 +62,24 @@ namespace SIMA.Presentation.ViewModel
             get => _message;
             set => SetProperty(ref _message, value, nameof(Message));
         }
+        public ObservableCollection<StatusItem> ObsrverStatus
+        {
+            get => _obsrverstatus;
+            set { _obsrverstatus = value; OnPropertyChanged(nameof(ObsrverStatus)); }
+        }
         #endregion
 
-        protected ViewModelBase()
+        protected ViewModelBase(ICacheService cache)
         {
-            _page = new Paging();
-            _config = new Util().CustomConfiguration();
+            InitBase(cache:cache);
         }
-        protected ViewModelBase(IPaging page)
+        protected ViewModelBase(IPaging page, ICacheService cache)
         {
-            _page = page ?? new Paging();
-            _config = new Util().CustomConfiguration();
+            InitBase(page:page, cache: cache);
         }
-        protected ViewModelBase(IPaging page,IConfiguration config)
+        protected ViewModelBase(IPaging page,IConfiguration config, ICacheService cache)
         {
-            _page = page ?? new Paging();
-            _config = config ?? new Util().CustomConfiguration();
+            InitBase(page: page, config: config, cache: cache);
         }
 
         #region View Model Events
@@ -93,6 +103,13 @@ namespace SIMA.Presentation.ViewModel
         #endregion
 
         #region Util Methods
+        private void InitBase(IPaging? page = null, IConfiguration? config=null, ICacheService? cache = null)
+        {
+            IsBusy = false;
+            _page = page ?? new Paging();
+            _config = config ?? new Util().CustomConfiguration();
+            _cache = cache ?? new MemoryCacheService();
+        }
         public void SetLoadingState(bool isbusy, string message = "Loading....", int delay = 1000) {
              IsBusy = isbusy;
              Message = message;
@@ -118,6 +135,14 @@ namespace SIMA.Presentation.ViewModel
         {
             ObjectEventFromModel?.Invoke(execute);
         }
+        public void AddStatusLog(string texto, Brush color)
+        {
+            //StatusItems.Insert(0,new StatusItem
+            //{
+            //    Message = texto,
+            //    Color = color
+            //});
+        }
         #endregion
 
         #region Handler Errors Methods 
@@ -135,7 +160,6 @@ namespace SIMA.Presentation.ViewModel
                 OnErrorsChanged(propertyName);
         }
         #endregion
-
 
     }
 

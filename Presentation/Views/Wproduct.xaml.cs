@@ -28,335 +28,215 @@ using SIMA.Domain.Models.Objects;
 using SIMA.Domain.Models.Views;
 using SIMA.Domain.Models.Params;
 using SIMA.Domain.Models.Intefaces;
+using SIMA.Presentation.Repository;
+using Azure;
+using System.Collections.ObjectModel;
+using Microsoft.Data.SqlClient;
 
 namespace SIMA.Presentation.Views
 {
     /// <summary>
     /// Interaction logic for Wproduct.xaml
     /// </summary>
-    public partial class Wproduct : Window, IUtilServices<Product, ProductParam>, IUtil
+    public partial class Wproduct : Window
     {
-
-
-        private IContextservices<Product, ProductView, ProductParam> _service;
-        private IPaging _page;
-        private readonly IConfiguration _config;
-
-        private Util _util;
+        private readonly ICacheService _cache;
+        private WindowServices<Product, ProductView, ProductParam> _windowservices;
         private CancellationTokenSource _cts;
-        private bool _isloaded;
-        private bool _editmode = false;
+        private ProductView? _rowData;
+        private ProductViewModel _vm;
+        private const string _editHeight = "40%";
 
-        public Wproduct()
+        public WindowServices<Product, ProductView, ProductParam> WindowServices { get => _windowservices; }
+
+        public Wproduct(ICacheService cache)
         {
-
+            _cache = cache;
             InitializeComponent();
-            FormProduct.Visibility = Visibility.Hidden;
-            FormProduct.Height = 0;
-            _page = new Paging();
-            _util = new Util();
-            _config = _util.CustomConfiguration();
-            var Vm = new ProductViewModel(_page, _config);
-            this.DataContext = Vm;
-            Vm.ShowErrorFromModel += Vm_ShowErrorFromModel;
-            _service = new ProductServices(_config);
+            InitializeWindow();
         }
 
         #region Util
         /// <summary>
-        /// 
+        /// Initialize Window
         /// </summary>
-        /// <param name="val"></param>
-        public void SupressEventComboBox(bool val = true)
+        /// <param name="rowData"></param>
+        private void InitializeWindow(ProductView? rowData = null)
         {
-            _isloaded = val;
-            if (this.DataContext != null)
-                ((ProductViewModel)this.DataContext).IsSupressed = val;
-
+            _rowData = rowData;
+            _windowservices.EditMode = _rowData != null;
+            _windowservices.FromMain = _windowservices.EditMode;
         }
-        /// <summary>
-        /// Return and Update the message of the render Category result
-        /// <param name="total"></param>
-        /// <returns></returns>
-        public string getResultMessage(int total)
-        {
-            pageControl.TotalFound = total;
-            return $"📊 Show {total} products found";
-        }
-        /// <summary>
-        /// Update the Paging Labels given the cuurent Offset and Limit Values
-        /// </summary>
-        /// <param name="total"></param>
-        public void pagingLabels(int total)
-        {
-            if (_page.isvalidPaging())
-            {
-                pageControl.TotalFound = total;
-                pageControl.PageNumber = _page.Pagenumber;
-            }
-        }
-        /// <summary>
-        /// Control the Paging Previous and Next Page Number,Offset and Limit 
-        /// </summary>
-        /// <param name="direction"></param>
-        public void NavigationGrid(DIRECTION direction)
-        {
-            throw new NotImplementedException();
-        }
-        /// <summary>
-        ///  Restore Initial set of Category and Stock  
-        /// </summary>
-        public void ClearFilters()
-        {
-            txtIdProduct.Text = string.Empty;
-            txtName.Text = string.Empty;
-            txtPrice.Text = string.Empty;
-            txtSearch.Text = string.Empty;
-
-            //Set the Field Default Values for Category
-            cmbCategory.Text = " "; //dumny select
-            LovObject? itemCat = cmbCategory.OriginalSource.FirstOrDefault(p => p.Id == null);
-            cmbCategory.SelectedItem = itemCat;
-            cmbCategory.Commit();
-            cmbCategory.Close();
-
-            //Edit panel Closing
-            FormProduct.Visibility = Visibility.Hidden;
-            FormProduct.Height = 0;
-            ResizeGrid("60%");
-        }
-        /// <summary>
-        /// Update the Total result of the rows and update the labels on the grid 
-        /// </summary>
-        /// <param name="total"></param>
-        public void UpdatePaging(int total = 0)
-        {
-            int intotal = (total == 0) ?  _service.TotalFound : total;
-            _page.parsePageData(intotal);
-            txtResults.Text = getResultMessage(intotal);
-            pagingLabels(intotal);
-        }
-        /// <summary>
-        /// Managment of Responsive Windows
-        /// </summary>
-        /// <param name="gridheight">Size Height = Only Numeric string percent {Size}% or Size}</param>
-        public void ResizeGrid(string gridheight)
-        {
-            gridheight = this.WindowState == WindowState.Maximized ? "60%" : gridheight;
-            _util.ResponsiveListViewHeight(gridProducts, this.ActualHeight, gridheight);
-            _util.ResponsiveGridWidth(gridCellProducts, this.ActualWidth, _util.CommonSizeGrid);
-        }
-        #endregion
-
-        #region Filling Methods
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="rowData"></param>
         /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        public Product Result()
+        private Action EditControl(ProductParam? rowData = null)
         {
-            throw new NotImplementedException();
-        }
-        /// <summary>
-        /// Returns the object CategoryParam with passing values of the Active Filter controls 
-        /// </summary>
-        /// <returns></returns>
-        public ProductParam activeFilters()
-        {
-            return new ProductParam
-            {
-                name = txtSearch.Text,
-                offset = _page.Offset,
-                limit = _page.Limit
-            };
-
-        }
-        /// <summary>
-        /// Fill the Category ComboBox
-        /// </summary>
-        public void FillCombobox(int? id = null)
-        {
-            throw new NotImplementedException();
-        }
-        /// <summary>
-        /// Fill the Gridview
-        /// </summary>
-        /// <exception cref="NotImplementedException"></exception>
-        public void Fill()
-        {
-            throw new NotImplementedException();
-        }
-        /// <summary>
-        /// Filter the GridView given the activeFilters() : function
-        /// </summary>
-        public void Filter()
-        {
-            throw new NotImplementedException();
-        }
-        /// <summary>
-        /// Filter the GridView given the Stock Category param
-        /// </summary>
-        /// <param name="param"></param>
-        public void Filter(ProductParam param)
-        {
-            try
-            {
-                progress.SetLoadingStateDataBase(async () =>
-                {
-                    IEnumerable<ProductView> cat = await _service.GetByFilter(param);
-                    gridProducts.ItemsSource = cat.Where(p => p.IdProduct != null);
-                     UpdatePaging();
-                }, _config, true, "Loading Products...");
-            }
-            catch (Microsoft.Data.SqlClient.SqlException ex)
+            return () =>
             {
 
-                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-            catch (Exception)
-            {
+                //Set the Field Values from the grid
+                txtIdProduct.Text = rowData?.idProduct.ToString();
+                txtName.Text = rowData?.name;
+                txtPrice.Text = rowData?.price.ToString();
 
-                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-
-
-        }
-        /// <summary>
-        /// Filter the GridView given the Search text description
-        /// </summary>
-        /// <param name="param"></param>
-        public void FilterbyText(ProductParam param)
-        {
-            try
-            {
-                progress.SetLoadingStateDataBase(async () =>
-                {
-                    IEnumerable<ProductView> cat = await _service.GetByFilter(param);
-                    gridProducts.ItemsSource = cat.Where(p => p.IdProduct != null);
-                     UpdatePaging();
-                }, _config, true, "Loading Products...");
-            }
-            catch (Microsoft.Data.SqlClient.SqlException ex)
-            {
-
-                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-            catch (Exception)
-            {
-
-                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-
-
-
-        }
-        /// <summary>
-        /// Open the Edit Form for the Stock select in th gridview
-        /// </summary>
-        /// <param name="param"></param>
-        public void Edit(ProductParam param)
-        {
-            //Edit panel visualization
-            FormProduct.Visibility = Visibility.Visible;
-            FormProduct.Height = Double.NaN;
-            ResizeGrid("40%");
-
-            //Set the Field Values from the grid
-            txtIdProduct.Text = param.idProduct.ToString();
-            txtName.Text = param.name;
-            txtPrice.Text = param.price.ToString();
-
-            if (_editmode)
-            {
                 //Set the Field Values for Category
-                cmbCategory.Text = param.categorys; //var dummy  
-                var itemCat = cmbCategory.OriginalSource.FirstOrDefault(p => p.Id == param.idCategory);
-                cmbCategory.SelectedItem = itemCat;
-                cmbCategory.Close();
-                _editmode = false;
-            }
-            else
-                cmbCategory.SelectedIndex = 0;
+                _windowservices.SetLoveValueItem(_windowservices?.ParentLovtextbox, rowData?.categorys, rowData?.idCategory);
+
+            };
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private async Task Clear(string windowheight = _editHeight) {
+            await _windowservices.ClearFilters(windowheight, () =>
+            {
+                txtIdProduct.Text = string.Empty;
+                txtName.Text = string.Empty;
+                txtPrice.Text = string.Empty;
+            });
+
         }
         #endregion
 
         #region Events
-        private async void btnsSaveProduct_Click(object sender, RoutedEventArgs e)
+        private async void btnsSave_Click(object sender, RoutedEventArgs e)
         {
-
-            int? id = string.IsNullOrEmpty(txtIdProduct.Text) ? null : int.Parse(txtIdProduct.Text);
-            int? idcat = ((LovObject)cmbCategory.SelectedItem).Id;
-            string name = txtName.Text;
-            decimal price = decimal.Parse(txtPrice.Text);
-
-            progress.RunProgress(true,"Saving Product...");
-            await progress.DelayProgress();
-            bool isset = await _service.Set(new Product
-            {
-                IdProduct = id,
-                IdCategory = idcat,
-                Name = name,
-                Price = price,
-            });
-            progress.StopProgress();
-            
+            int? id = string.IsNullOrEmpty(txtIdProduct.Text) ? null : int.Parse(txtIdProduct.Text.ToString());
+            int? idcat = _windowservices.ParentLovtextbox?.getSelectedItem().Id;
+            string name = txtName.Text.ToString();
+            decimal price = decimal.Parse(txtPrice.Text.isNull("0"));
             try
             {
+                _windowservices.InsertStatus("Saving Product...", BrushesStatus.DBProcess);
+                await _windowservices.Status.DelayProgress();
+                bool isset = await _windowservices.SetAsync(new Product
+                {
+                    IdProduct = id,
+                    IdCategory = idcat,
+                    Name = name,
+                    Price = price
+                });
+
                 if (isset)
                 {
+                    _windowservices.InsertStatus("Product Sucessfully removed", BrushesStatus.DBProcess, false);
                     MessageBox.Show(this, "Product Sucessfully saved", "Save Product", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                    ClearFilters();
-                    Filter(activeFilters());
+                    await Clear();
+                    await _windowservices.FillAsync(_windowservices.activeFilters("name"));
+                    _windowservices?.Status?.StopProgress();
                 }
                 else
-                {
-                    MessageBox.Show(this, "Error Saving Product", "Save Product", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                }
-
-
+                    _windowservices.CatchExceptionAndMsg(new Exception("Error Saving Product"));
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
-                progress.StopProgress();
-                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                _windowservices.CatchExceptionAndMsg(ex);
+            }
+            catch (Exception se)
+            {
+                _windowservices.CatchExceptionAndMsg(se);
+            }
+        }
+        private async void btnRemove_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBoxResult result = MessageBox.Show(this, "Confirm removing Product ?", "Remove Product", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+            try
+            {
+                if (result == MessageBoxResult.Yes)
+                {
+                    _windowservices.InsertStatus("Deleting Product...", BrushesStatus.DBProcess);
+                    await _windowservices.Status.DelayProgress();
+                    Button btn = sender as Button;
+                    ProductView rowData = (ProductView)btn.DataContext;
+                    bool valid = await _windowservices.DeleteAsync(rowData.IdProduct) > 0;
+                    if (valid)
+                    {
+                        _windowservices.InsertStatus("Product Sucessfully removed", BrushesStatus.DBProcess, false);
+                        await _windowservices.FillAsync(_windowservices.activeFilters("name"));
+                        MessageBox.Show(this, "Product Succesfully removed", "Remove Product", MessageBoxButton.OK, MessageBoxImage.Information);
+                        _windowservices.Status.StopProgress();
+                    }
+                    else
+                        _windowservices.CatchExceptionAndMsg(new Exception("Error removing the Product"));
+                }
+            }
+            catch (SqlException ex)
+            {
+                _windowservices.CatchExceptionAndMsg(ex);
+            }
+            catch (Exception se)
+            {
+                _windowservices.CatchExceptionAndMsg(se);
+            }
+        }
+        private async void btnUpdate_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Button btn = sender as Button;
+                ProductView rowData = (ProductView)btn.DataContext;
+                _windowservices.EditMode = true;
+                await _windowservices.Edit(_editHeight, EditControl(new ProductParam
+                {
+                    idProduct = rowData.IdProduct,
+                    idCategory = rowData.IdCategory,
+                    categorys = rowData.Categorys,
+                    name = rowData.Name,
+                    price = rowData.Price
+                }));
+                _windowservices.EditMode = false;
             }
             catch (Exception)
             {
-                progress.StopProgress();
-                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                _windowservices.EditMode = false;
             }
+
         }
-        private void btnNewProduct_Click(object sender, RoutedEventArgs e)
+        private async void btnNew_Click(object sender, RoutedEventArgs e)
         {
-            _editmode = false;
-            Edit(new ProductParam());
+            await Clear();
         }
-        private void btnsClear_Click(object sender, RoutedEventArgs e)
+        private async void btnsClear_Click(object sender, RoutedEventArgs e)
         {
-            ClearFilters();
+            await Clear(_windowservices.FormState ? _editHeight : _windowservices.StandarHeight);
         }
-        private void btnsClose_Click(object sender, RoutedEventArgs e)
+        private async void btnsClose_Click(object sender, RoutedEventArgs e)
         {
-            ClearFilters();
+            await Clear();
             this.Close();
         }
         private void PagePrevious_Click(object sender, RoutedEventArgs e)
         {
-            NavigationGrid(DIRECTION.previous);
+            _windowservices.NavigationGrid(DIRECTION.previous);
         }
         private void PageNext_Click(object sender, RoutedEventArgs e)
         {
-            NavigationGrid(DIRECTION.next);
+            _windowservices.NavigationGrid(DIRECTION.next);
         }
-        private void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
+        private async void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
         {
-            if (!_isloaded)
+            if (!_windowservices.Isloaded)
             {
-                _page.Limit = (int)pageControl.GetSelectedItemsPerPage();
-                Filter(activeFilters());
-                 UpdatePaging();
+                _windowservices.Page.Limit = (int)_windowservices.PageControl.GetSelectedItemsPerPage();
+                if (!_windowservices.FromMain)
+                {
+                    await _windowservices.FillAsync(_windowservices.activeFilters("name"));
+                }
+                _windowservices.UpdatePaging();
             }
+        }
+        private async void btnRefresh_Click(object sender, RoutedEventArgs e)
+        {
+            _windowservices.Page.Limit = (int)_windowservices.PageControl.GetSelectedItemsPerPage();
+            await _windowservices.FillAsync(_windowservices.activeFilters("name"));
+        }
+        private async void parentCombobox_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+            await _windowservices.FillAsync(_windowservices.activeFilters("name"));
         }
         private async void txtSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -366,102 +246,92 @@ namespace SIMA.Presentation.Views
 
             try
             {
-                if (!_isloaded)
+                if (!_windowservices.Isloaded && !_windowservices.FromMain)
                 {
                     await Task.Delay(300, _cts.Token);
-                    FilterbyText(activeFilters());
+                    await _windowservices.FillAsync(_windowservices.activeFilters("name"));
                 }
             }
             catch (TaskCanceledException)
             {
-                // Ignorar: se canceló porque el usuario siguió escribiendo
+                //Cancel
             }
 
-        }
-        private async void btnRemove_Click(object sender, RoutedEventArgs e)
-        {
-            MessageBoxResult result = MessageBox.Show(this, "Confirm removing Product ?", "Remove Product", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
-            try
-            {
-                if (result == MessageBoxResult.Yes)
-                {
-
-                    Button btn = sender as Button;
-                    ProductView rowData = (ProductView)btn.DataContext;
-                    bool valid = await _service.Delete(rowData.IdProduct) > 0;
-                    if (valid)
-                    {
-                         Filter(activeFilters());
-                        MessageBox.Show(this, "Product Succesfully removed", "Product Stock", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-                    else
-                    {
-                        MessageBox.Show(this, "Error removing the Product", "Product Stock", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-
-
-                }
-            }
-            catch (Microsoft.Data.SqlClient.SqlException ex)
-            {
-
-                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-            catch (Exception)
-            {
-
-                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-
-
-
-
-        }
-        private void btnUpdate_Click(object sender, RoutedEventArgs e)
-        {
-            Button btn = sender as Button;
-            ProductView rowData = (ProductView)btn.DataContext;
-            _editmode = true;
-            Edit(new ProductParam
-            {
-                idProduct = rowData.IdProduct,
-                idCategory = rowData.IdCategory,
-                name = rowData.Name,
-                categorys = rowData.Categorys,
-                price = rowData.Price
-            });
-
-        }
-        private void Window_Initialized(object sender, EventArgs e)
-        {
-            this.SupressEventComboBox();
         }
         private void Window_Closing(object sender, CancelEventArgs e)
         {
+           // _windowservices = null;
             e.Cancel = true;
             this.Visibility = Visibility.Hidden;
+        }
+        private void Window_Initialized(object sender, EventArgs e)
+        {
+             IPaging _page = new Paging();
+             IConfiguration _config = new Util().CustomConfiguration();
+             _vm = new ProductViewModel(_page, _config,_cache);
+             this.DataContext = _vm;
+             _vm.ShowErrorFromModel += Vm_ShowErrorFromModel;
+             _windowservices = new WindowServices<Product,ProductView,ProductParam>(_config, _page, new ProductServices(_config,_cache));
+             _windowservices.SupressEventComboBox();
+
         }
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
 
-            _page.Offset = (int?)pageControl.GetSelectedItemsPerPage() ?? _page.DefaultOffset;
-            this.SupressEventComboBox();
-            await _page.FillLimitPageVal(pageControl);
-             UpdatePaging();
+            _windowservices.DataContext = _vm;
+            _windowservices.PageControl = pageControl;
+            _windowservices.ParentLovtextbox = cmbCategory;
+            _windowservices.ChildLovtextbox = null;
+            _windowservices.TxtSearch = txtSearch;
+            _windowservices.TxtResults = txtResults;
+            _windowservices.Form = FormProduct;
+            _windowservices.FormIsOpen(false);
+            _windowservices.Status = statusbox;
+            _windowservices.ObsrverStatus = new ObservableCollection<StatusItem>();
+            _windowservices.Status.ItemsSource = _windowservices.ObsrverStatus;
 
-            this.SupressEventComboBox(false);
-        }
-        private void Vm_ShowErrorFromModel(string mensaje)
-        {
-
-            MessageBox.Show(this, mensaje, "Model Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            _windowservices.InsertStatus("Initializing Product Window.......", BrushesStatus.Progress);
+            await _windowservices.Status.DelayProgress();
+            _windowservices.Page.Offset = (int?)_windowservices.PageControl.GetSelectedItemsPerPage() ?? _windowservices.Page.DefaultOffset;
+            _windowservices.InsertStatus("Retriving Products.......", BrushesStatus.Progress, false);
+            await _windowservices.Page.FillLimitPageVal(_windowservices.PageControl);
+            _windowservices.UpdatePaging();
+            _windowservices.SupressEventComboBox(false);
+            _windowservices.InsertStatus("Window ready.......", BrushesStatus.Progress);
+            _windowservices.Status.StopProgress();
         }
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            ResizeGrid("60%");
+            _windowservices.CurrentWindow = this;
+            _windowservices.GridListView = _windowservices.GridListView ?? gridProducts;
+            _windowservices.GridView = _windowservices.GridView ?? gridCellProducts;
+            _windowservices.StandarHeight = "50%";
+            _windowservices.ResizeGrid();
+        }
+        private void Vm_ShowErrorFromModel(string mensaje)
+        {
+            _windowservices.CatchExceptionAndMsg(new Exception(mensaje), "Model Error");
+        }
+        private async void Window_ContentRendered(object sender, EventArgs e)
+        {
+            _windowservices.InsertStatus("Product Window Ready.......", BrushesStatus.Progress);
+            if (_rowData != null)
+            {
+                _windowservices.SupressEventComboBox(false);
+                await _windowservices.Edit(_editHeight, EditControl(new ProductParam
+                {
+                    idProduct = _rowData.IdProduct,
+                    idCategory = _rowData.IdCategory,
+                    categorys = _rowData.Categorys,
+                    name = _rowData.Name,
+                    price = _rowData.Price
+                }));
+                _windowservices.FromMain = false;
+                await _windowservices.FillAsync(new ProductParam { idProduct = _rowData.IdProduct });
+            }
+            _windowservices?.Status?.StopProgress();
         }
         #endregion
-
 
     }
 }

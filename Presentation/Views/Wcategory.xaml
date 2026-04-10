@@ -14,17 +14,18 @@
         SizeChanged="Window_SizeChanged">
     <Grid Margin="5">
         <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="96*"/>
+            <RowDefinition Height="4*"/>
         </Grid.RowDefinitions>
-        <Grid>
+        <Grid Grid.Row="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Border Grid.Row="0" 
                 Style="{StaticResource SectionBorder}">
@@ -72,12 +73,12 @@
                                 <StaticResource ResourceKey="NameErrorTemplate"/>
                             </Validation.ErrorTemplate>
                         </TextBox>
-                        <Button Name="btnsSaveBrand" 
+                        <Button Name="btnsSave" 
                                 Content="&#x1F4BE; Save" 
                                 Style="{StaticResource CommunButton}"
                                 Background="#377d0c"
                                 Foreground="White"
-                                Click="btnsSaveCategory_Click" />
+                                Click="btnsSave_Click" />
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -174,13 +175,13 @@
                     <StackPanel Grid.Column="0" 
                     Style="{StaticResource ShortButtonStackPanel}">
 
-                        <Button Name="btnNewStock" 
+                        <Button Name="btnNew" 
                             Content="➕ New" 
                             Style="{StaticResource ShortButtonPanel}"        
                             Margin="0,0,0,0"
                             Background="#5069AA"
                             Foreground="White"                    
-                            Click="btnNewStock_Click" />
+                            Click="btnNew_Click" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" 
@@ -200,10 +201,13 @@
                 </Grid>
             </Border>
         </Grid>
-        <ctrl:Loading x:Name="progress" 
-                      HorizontalAlignment="Center"
-                      VerticalAlignment="Center"        
-                      IsLoading="{Binding IsBusy}" 
-                      Message="{Binding Message}"/>
+        <Grid Grid.Row="1">
+            <ctrl:StatusbarLoading 
+                x:Name="statusbox" 
+                Height="auto"
+                IsLoading="{Binding IsBusy}"
+                Message="{Binding Message}"
+                Color="{Binding Color}"/>
+        </Grid>
     </Grid>
 </Window> 

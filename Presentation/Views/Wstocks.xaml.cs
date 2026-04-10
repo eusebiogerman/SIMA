@@ -1,18 +1,26 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Azure;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 using SIMA.Domain.Models.Intefaces;
 using SIMA.Domain.Models.Objects;
 using SIMA.Domain.Models.Params;
 using SIMA.Domain.Models.Views;
 using SIMA.ExtensionsHelper;
 using SIMA.Helper;
+using SIMA.Helper.Interfaces;
 using SIMA.Infrastructure.Repositories;
 using SIMA.Infrastructure.Repositories.Interfaces;
+using SIMA.Presentation.Repository;
 using SIMA.Presentation.ViewModel;
+using SIMA.Presentation.Views;
 using SIMA.Templates;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Data;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO.Pipelines;
 using System.Linq;
 using System.Text;
@@ -26,6 +34,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Xml.Linq;
 using static System.Net.Mime.MediaTypeNames;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -34,32 +43,30 @@ namespace SIMA.Presentation.Views
     /// <summary>
     /// Interaction logic for Wbrand.xaml
     /// </summary>
-    public partial class Wstocks : Window, IUtilServices<StockProduct, StockProductParam>, IUtil
+    public partial class Wstocks : Window
     {
+        private readonly ICacheService _cache;
 
-        private IContextservices<StockProduct, StockProductView, StockProductParam> _service;
-        private IContextservices<Brand, BrandView, BrandParam> _brandsrervices;
-        private IPaging _page;
-        private IConfiguration _config;
-
-        private Util _util;
+        private WindowServices<StockProduct, StockProductView, StockProductParam> _windowservices;
         private CancellationTokenSource _cts;
         private StockProductView? _rowData;
         private StockViewModel _vm;
-        private bool _isloaded;
-        private bool _editmode = false;
-        private bool _fromMain = false;
+        private const string _editHeight = "40%";
 
-        public Wstocks()
+        public WindowServices<StockProduct, StockProductView, StockProductParam> WindowServices { get => _windowservices; }
+
+        public Wstocks(ICacheService cache)
         {
+            _cache = cache;
             InitializeComponent();
-            InitializeWstock();
+            InitializeWindow();
 
         }
-        public Wstocks(StockProductView rowData)
+        public Wstocks(StockProductView rowData, ICacheService cache)
         {
+            _cache = cache;
             InitializeComponent();
-            InitializeWstock(rowData);
+            InitializeWindow(rowData);
         }
 
         #region Util
@@ -67,392 +74,90 @@ namespace SIMA.Presentation.Views
         /// Initialize Window
         /// </summary>
         /// <param name="rowData"></param>
-        private void InitializeWstock(StockProductView? rowData = null)
+        private void InitializeWindow(StockProductView? rowData = null)
         {
 
-            FormStock.Visibility = Visibility.Hidden;
-            FormStock.Height = 0;
-
-            _page = new Paging();
-            _util = new Util();
-            _config = _util.CustomConfiguration();
-            _vm = new StockViewModel(_page, _config);
-            this.DataContext = _vm;
-            _vm.ShowErrorFromModel += Vm_ShowErrorFromModel;
-            _service = new StockProductServices(_config);
-            _brandsrervices = new BrandServices(_config);
             _rowData = rowData;
-            _editmode = _rowData != null;
-            _fromMain = _editmode;
+            _windowservices.EditMode = _rowData != null;
+            _windowservices.FromMain = _windowservices.EditMode;
         }
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="val"></param>
-        public void SupressEventComboBox(bool val = true)
-        {
-            _isloaded = val;
-            if (this.DataContext != null)
-                ((StockViewModel)this.DataContext).IsSupressed = val;
-
-        }
-        /// <summary>
-        /// Return and Update the message of the render Category result
-        /// <param name="total"></param>
+        /// <param name="rowData"></param>
         /// <returns></returns>
-        public string getResultMessage(int total)
+        private Action EditControl(StockProductParam? rowData = null)
         {
-            pageControl.TotalFound = total;
-            return $"📊 Show {total} products found";
-        }
-        /// <summary>
-        /// Update the Paging Labels given the cuurent Offset and Limit Values
-        /// </summary>
-        /// <param name="total"></param>
-        public void pagingLabels(int total)
-        {
-            if (_page.isvalidPaging())
+            return () =>
             {
-                pageControl.TotalFound = total;
-                pageControl.PageNumber = _page.Pagenumber;
-            }
-        }
-        /// <summary>
-        /// Control the Paging Previous and Next Page Number,Offset and Limit 
-        /// </summary>
-        /// <param name="direction"></param>
-        public void NavigationGrid(DIRECTION direction)
-        {
-            throw new NotImplementedException();
-        }
-        /// <summary>
-        ///  Restore Initial set of Category and Stock  
-        /// </summary>
-        public void ClearFilters()
-        {
-            txtIdStock.Text = string.Empty;
-            txtStock.Text = "0";
-            txtSearch.Text = string.Empty;
-
-            cmbBrand.Clear();
-
-            //Set the Field Default Values for Product
-            cmbPropduct.Text = " ";
-            LovObject? itemProd = cmbPropduct.OriginalSource.FirstOrDefault(p => p.Id == null);
-            cmbPropduct.SelectedItem = itemProd;
-            cmbPropduct.Commit();
-            cmbPropduct.Close();
-
-            //Set the Field Default Values for Brands
-            cmbBrand.Text = " "; //dumny select
-            LovObject? itemBrand = ((IEnumerable<LovObject>)cmbBrand.ItemsSource)?.FirstOrDefault(p => p.Id == null);
-            cmbBrand.SelectedItem = itemBrand;
-            cmbBrand.Commit();
-            cmbBrand.Close();
-
-            //Edit panel Closing
-            FormStock.Visibility = Visibility.Hidden;
-            FormStock.Height = 0;
-            ResizeGrid("60%");
-
-
-        }
-        /// <summary>
-        /// Update the Total result of the rows and update the labels on the grid 
-        /// </summary>
-        /// <param name="total"></param>
-        public void UpdatePaging(int total = 0)
-        {
-            int intotal = (total == 0) ? _service.TotalFound : total;
-            _page.parsePageData(intotal);
-            txtResults.Text = getResultMessage(intotal);
-            pagingLabels(intotal);
-        }
-        /// <summary>
-        /// Managment of Responsive Windows
-        /// </summary>
-        /// <param name="gridheight">Size Height = Only Numeric string percent {Size}% or Size}</param>
-        public void ResizeGrid(string gridheight)
-        {
-            gridheight = this.WindowState == WindowState.Maximized ? "60%" : gridheight;
-            _util.ResponsiveListViewHeight(gridStocks, this.ActualHeight, gridheight);
-            _util.ResponsiveGridWidth(gridCellStocks, this.ActualWidth, _util.CommonSizeGrid);
-        }
-        #endregion
-
-        #region Filling Methods
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        public StockProduct Result()
-        {
-            throw new NotImplementedException();
-        }
-        /// <summary>
-        /// Returns the object CategoryParam with passing values of the Active Filter controls 
-        /// </summary>
-        /// <returns></returns>
-        public StockProductParam activeFilters()
-        {
-            return new StockProductParam
-            {
-                brands = txtSearch.Text,
-                offset = 0,
-                limit = 10
-            };
-
-        }
-        /// <summary>
-        /// Fill the Category ComboBox
-        /// </summary>
-        public void FillCombobox(int? id = null)
-        {
-            try
-            {
-                progress.SetLoadingStateDataBase(async () =>
+                if (rowData.idProduct == null)
                 {
-                    int? dummy = (id == 0 || !id.HasValue) ? -1 : null;
-                    var param = new BrandParam { idProduct = id, idBrand = dummy };
-                    IEnumerable<BrandView> cat = await _brandsrervices.GetByFilter(param);
-                    cmbBrand.ItemsSource = cat.Select(p => new LovObject { Id = p.IdBrand, Value = p.Name });
-                    if (!_editmode || !_fromMain)
-                    {
-                        cmbBrand.SelectedIndex = 0;
-                    }
-                }, _config, true, "Loading Brand list...");
-            }
-            catch (Microsoft.Data.SqlClient.SqlException ex)
-            {
-                _editmode = false;
+                    _windowservices.ChildLovtextbox.Clear();
+                }
 
-            }
-            catch (Exception)
-            {
-                _editmode = false;
+                //Set the Field Values from the grid
+                txtIdStock.Text = rowData.idStock.ToString();
+                txtStock.Text = rowData.stock.ToString();
 
-            }
-
-        }
-        /// <summary>
-        /// Fill the Gridview
-        /// </summary>
-        /// <exception cref="NotImplementedException"></exception>
-        public void Fill()
-        {
-            throw new NotImplementedException();
-        }
-        /// <summary>
-        /// Filter the GridView given the activeFilters() : function
-        /// </summary>
-        public void Filter()
-        {
-            throw new NotImplementedException();
-        }
-        /// <summary>
-        /// Filter the GridView given the Stock Category param
-        /// </summary>
-        /// <param name="param"></param>
-        public void Filter(StockProductParam param)
-        {
-            try
-            {
-                progress.SetLoadingStateDataBase(async () =>
-                {
-                    IEnumerable<StockProductView> cat = await _service.GetByFilter(param);
-                    gridStocks.ItemsSource = cat.Where(p => p.IdBrand != null);
-                     UpdatePaging();
-                }, _config, true, "Loading Stock...");
-
-            }
-            catch (Microsoft.Data.SqlClient.SqlException ex)
-            {
-
-                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-            catch (Exception)
-            {
-
-                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-
-
-        }
-        /// <summary>
-        /// Filter the GridView given the Search text description
-        /// </summary>
-        /// <param name="param"></param>
-        public void FilterbyText(StockProductParam param)
-        {
-            try
-            {
-                progress.SetLoadingStateDataBase(async () =>
-                {
-                    IEnumerable<StockProductView> cat = await _service.GetByFilter(param);
-                    gridStocks.ItemsSource = cat.Where(p => p.IdBrand != null);
-                     UpdatePaging();
-                }, _config, true, "Loading Stock...");
-            }
-            catch (Microsoft.Data.SqlClient.SqlException ex)
-            {
-
-                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-            catch (Exception)
-            {
-
-                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-
-        }
-        /// <summary>
-        /// Open the Edit Form for the Stock select in th gridview
-        /// </summary>
-        /// <param name="param"></param>
-        public void Edit(StockProductParam param)
-        {
-
-            //Edit panel visualization
-            FormStock.Visibility = Visibility.Visible;
-            FormStock.Height = Double.NaN;
-            ResizeGrid("40%");
-
-            //Set the Field Values from the grid
-            txtIdStock.Text = param.idStock.ToString();
-            txtStock.Text = param.stock.ToString();
-
-            if (_editmode || _fromMain)
-            {
                 //Set the Field Values for Product
-                cmbPropduct.Text = param.products; //dumny select
-                var itemProd = cmbPropduct.OriginalSource.FirstOrDefault(p => p.Id == param.idProduct);
-                cmbPropduct.SelectedItem = itemProd;
-                cmbPropduct.Close();
+                _windowservices.SetLoveValueItem(_windowservices?.ParentLovtextbox,rowData.products, rowData.idProduct);
 
                 //Set the Field Values for Brand
-                cmbBrand.Text = param.brands; //dumny select
-                var itemBrand = ((IEnumerable<LovObject>)cmbBrand.ItemsSource)?.FirstOrDefault(p => p.Id == param.idBrand);
-                cmbBrand.SelectedItem = itemBrand;
-                cmbBrand.Close();
-            }
-            else {
-                cmbPropduct.SelectedIndex = 0;
-                cmbBrand.SelectedIndex = 0;
-            }
-       
-            _editmode = false;
+                _windowservices.SetLoveValueItem(_windowservices?.ChildLovtextbox, rowData.brands, rowData.idBrand);
+
+            };
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private async Task Clear(string windowheight = _editHeight)
+        {
+            await _windowservices.ClearFilters(windowheight, () =>
+            {
+                txtIdStock.Text = string.Empty;
+                txtStock.Text = string.Empty;
+            }, true);
+
         }
         #endregion
-
+        
         #region Events
-        private async void btnsSaveStock_Click(object sender, RoutedEventArgs e)
+        private async void btnsSave_Click(object sender, RoutedEventArgs e)
         {
             int? id = string.IsNullOrEmpty(txtIdStock.Text) ? null : int.Parse(txtIdStock.Text.ToString());
-            int? idbrand = cmbBrand.getSelectedItem().Id;
-            int stock = int.Parse(txtStock.Text.ToString());
+            int? idbrand = _windowservices.ChildLovtextbox?.getSelectedItem().Id;
+            int stock = int.Parse(txtStock.Text.isNull("0"));
             try
             {
-                progress.RunProgress(true, "Saving Stock...");
-                await progress.DelayProgress();
-                bool isset = await _service.Set(new StockProduct
+                _windowservices.InsertStatus("Saving Stock...", BrushesStatus.DBProcess);
+                await _windowservices.Status.DelayProgress();
+                bool isset = await _windowservices.SetAsync(new StockProduct
                 {
                     IdStock = id,
                     IdBrand = idbrand,
                     Stock = stock
                 });
-                progress.StopProgress();
 
                 if (isset)
                 {
+                    _windowservices.InsertStatus("Stock Sucessfully removed", BrushesStatus.DBProcess, false);
                     MessageBox.Show(this, "Stock Sucessfully saved", "Save Stock", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                    ClearFilters();
-                    Filter(activeFilters());
+                    await Clear();
+                    await _windowservices.FillAsync(_windowservices.activeFilters("product"));
+                    _windowservices?.Status?.StopProgress();
                 }
                 else
-                {
-                    MessageBox.Show(this, "Error Saving Stock", "Save Stock", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                }
+                    _windowservices.CatchExceptionAndMsg(new Exception("Error Saving Stock"));
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
-                progress.StopProgress();
-                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                _windowservices.CatchExceptionAndMsg(ex);
             }
-            catch (Exception)
+            catch (Exception se)
             {
-                progress.StopProgress();
-                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                _windowservices.CatchExceptionAndMsg(se);
             }
-        }
-        private void btnNewBrand_Click(object sender, RoutedEventArgs e)
-        {
-            ClearFilters();
-            Edit(new StockProductParam());
- 
-            
-        }
-        private void btnsClear_Click(object sender, RoutedEventArgs e)
-        {
-            ClearFilters();
-        }
-        private void btnsClose_Click(object sender, RoutedEventArgs e)
-        {
-            ClearFilters();
-            this.Close();
-        }
-        private void PagePrevious_Click(object sender, RoutedEventArgs e)
-        {
-            NavigationGrid(DIRECTION.previous);
-        }
-        private void PageNext_Click(object sender, RoutedEventArgs e)
-        {
-            NavigationGrid(DIRECTION.next);
-        }
-        private async void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
-        {
-            if (!_isloaded)
-            {
-                _page.Limit = (int)pageControl.GetSelectedItemsPerPage();
-                if(!_fromMain) {
-                    Filter(activeFilters());
-                }
-                 UpdatePaging();
-            }
-        }
-        private void btnRefresh_Click(object sender, RoutedEventArgs e)
-        {
-            _page.Limit = (int)pageControl.GetSelectedItemsPerPage();
-            Filter(activeFilters());
-            UpdatePaging();
-        }
-        private void cmbPropduct_SelectionChanged(object sender, RoutedEventArgs e)
-        {
-            if (!_isloaded && !_editmode)
-            {
-                var sendobj = cmbPropduct.getSelectedItem(sender);
-                FillCombobox(sendobj.Id);
-            }
-        }
-        private void txtSearch_TextChanged(object sender, TextChangedEventArgs e)
-        {
-
-            _cts?.Cancel();
-            _cts = new CancellationTokenSource();
-
-            try
-            {
-                if (!_isloaded && !_fromMain)
-                {
-                    Task.Delay(300, _cts.Token);
-                    FilterbyText(activeFilters());
-                }
-            }
-            catch (TaskCanceledException)
-            {
-                //Cancel
-            }
-
         }
         private async void btnRemove_Click(object sender, RoutedEventArgs e)
         {
@@ -461,44 +166,39 @@ namespace SIMA.Presentation.Views
             {
                 if (result == MessageBoxResult.Yes)
                 {
-
+                    _windowservices.InsertStatus("Deleting Stock...", BrushesStatus.DBProcess);
+                    await _windowservices.Status.DelayProgress();
                     Button btn = sender as Button;
                     StockProductView rowData = (StockProductView)btn.DataContext;
-                    bool valid = await _service.Delete(rowData.IdStock) > 0;
+                    bool valid = await _windowservices.DeleteAsync(rowData.IdStock) > 0;
                     if (valid)
                     {
-                        Filter(activeFilters());
+                        _windowservices.InsertStatus("Stock Sucessfully removed", BrushesStatus.DBProcess, false);
+                        await _windowservices.FillAsync(_windowservices.activeFilters("product"));
                         MessageBox.Show(this, "Stock Succesfully removed", "Remove Stock", MessageBoxButton.OK, MessageBoxImage.Information);
+                       _windowservices.Status.StopProgress();
                     }
                     else
-                    {
-                        MessageBox.Show(this, "Error removing the Brand", "Remove Stock", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-
-
+                        _windowservices.CatchExceptionAndMsg(new Exception("Error removing the Brand"));
                 }
-
             }
-            catch (Microsoft.Data.SqlClient.SqlException ex)
+            catch (SqlException ex)
             {
-
-                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                _windowservices.CatchExceptionAndMsg(ex);
             }
-            catch (Exception)
+            catch (Exception se)
             {
-
-                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                _windowservices.CatchExceptionAndMsg(se);
             }
         }
-        private void btnUpdate_Click(object sender, RoutedEventArgs e)
+        private async void btnUpdate_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 Button btn = sender as Button;
                 StockProductView rowData = (StockProductView)btn.DataContext;
-
-                _editmode = true;
-                Edit(new StockProductParam
+                _windowservices.EditMode = true;
+                await _windowservices.Edit(_editHeight, EditControl(new StockProductParam
                 {
                     idStock = rowData.IdStock,
                     idProduct = rowData.IdProduct,
@@ -506,48 +206,138 @@ namespace SIMA.Presentation.Views
                     stock = rowData.Stock,
                     products = rowData.Products,
                     brands = rowData.Brands
-                });
-                _editmode = false;
+                }));
+                _windowservices.EditMode = false;
             }
             catch (Exception)
             {
-                _editmode = false;
-
+                _windowservices.EditMode = false;
             }
 
         }
-        private void Window_Initialized(object sender, EventArgs e)
+        private async void btnNew_Click(object sender, RoutedEventArgs e)
         {
-            this.SupressEventComboBox();
+            await Clear();
+        }
+        private async void btnsClear_Click(object sender, RoutedEventArgs e)
+        {
+            await Clear(_windowservices.FormState ? _editHeight : _windowservices.StandarHeight);
+       }
+        private async void btnsClose_Click(object sender, RoutedEventArgs e)
+        {
+            await Clear();
+            this.Close();
+        }
+        private void PagePrevious_Click(object sender, RoutedEventArgs e)
+        {
+            _windowservices.NavigationGrid(DIRECTION.previous);
+        }
+        private void PageNext_Click(object sender, RoutedEventArgs e)
+        {
+            _windowservices.NavigationGrid(DIRECTION.next);
+        }
+        private async void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+            if (!_windowservices.Isloaded)
+            {
+                _windowservices.Page.Limit = (int)_windowservices.PageControl.GetSelectedItemsPerPage();
+                if (!_windowservices.FromMain)
+                {
+                    await _windowservices.FillAsync(_windowservices.activeFilters("product"));
+                }
+                else
+                    _windowservices.UpdatePaging();
+            }
+        }
+        private async void btnRefresh_Click(object sender, RoutedEventArgs e)
+        {
+            _windowservices.Page.Limit = (int)_windowservices.PageControl.GetSelectedItemsPerPage();
+            await _windowservices.FillAsync(_windowservices.activeFilters("product"));
+        }
+        private async void parentCombobox_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+            await _windowservices.FillChildComboboxAsync<Brand, BrandView, BrandParam>
+                (sender,typeof(BrandServices), "IdBrand", "Name", "idBrand", "idProduct");
+        }
+        private async void txtSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
+            _cts?.Cancel();
+            _cts = new CancellationTokenSource();
+
+            try
+            {
+                if (!_windowservices.Isloaded && !_windowservices.FromMain)
+                {
+                    await Task.Delay(300, _cts.Token);
+                    await _windowservices.FillAsync(_windowservices.activeFilters("product"));
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                //Cancel
+            }
+
         }
         private void Window_Closing(object sender, CancelEventArgs e)
         {
             e.Cancel = true;
             this.Visibility = Visibility.Hidden;
         }
+        private void Window_Initialized(object sender, EventArgs e)
+        {
+            IPaging _page = new Paging();
+            IConfiguration _config = new Util().CustomConfiguration();
+            _vm = new StockViewModel(_page, _config, _cache,false);
+            this.DataContext = _vm;
+            _vm.ShowErrorFromModel += Vm_ShowErrorFromModel;
+            _windowservices = new WindowServices<StockProduct, StockProductView, StockProductParam>(_config, _page, new StockProductServices(_config,_cache));
+            _windowservices.SupressEventComboBox();
+        }
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
 
-            _page.Offset = (int?)pageControl.GetSelectedItemsPerPage() ?? _page.DefaultOffset;
-            await _page.FillLimitPageVal(pageControl);
-             UpdatePaging();
-            this.SupressEventComboBox(false);
+            _windowservices.DataContext = _vm;
+            _windowservices.PageControl = pageControl;
+            _windowservices.ParentLovtextbox = cmbPropduct;
+            _windowservices.ChildLovtextbox = cmbBrand;
+            _windowservices.TxtSearch = txtSearch;
+            _windowservices.TxtResults = txtResults;
+            _windowservices.Form = FormStock;
+            _windowservices.FormIsOpen(false);
+            _windowservices.Status = statusbox;
+            _windowservices.ObsrverStatus = new ObservableCollection<StatusItem>();
+            _windowservices.Status.ItemsSource = _windowservices.ObsrverStatus;
 
+            _windowservices.InsertStatus("Initializing Stock Window.......", BrushesStatus.Progress);
+            await _windowservices.Status.DelayProgress();
+            _windowservices.Page.Offset = (int?)_windowservices.PageControl.GetSelectedItemsPerPage() ?? _windowservices.Page.DefaultOffset;
+            _windowservices.InsertStatus("Retriving Stocks.......", BrushesStatus.Progress, false);
+            await _windowservices.Page.FillLimitPageVal(_windowservices.PageControl);
+            _windowservices.UpdatePaging();
+            _windowservices.SupressEventComboBox(false);
+            _windowservices.InsertStatus("Window ready.......", BrushesStatus.Progress);
+            _windowservices.Status.StopProgress();
         }
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            ResizeGrid("60%");
+            _windowservices.CurrentWindow = this;
+            _windowservices.GridListView = _windowservices.GridListView ?? gridStocks;
+            _windowservices.GridView = _windowservices.GridView ?? gridCellStocks;
+            _windowservices.StandarHeight = "50%";
+            _windowservices.ResizeGrid();
         }
         private void Vm_ShowErrorFromModel(string mensaje)
         {
-            MessageBox.Show(this, mensaje, "Model Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            _windowservices.CatchExceptionAndMsg(new Exception(mensaje), "Model Error");
         }
-        private void Window_ContentRendered(object sender, EventArgs e)
+        private async void Window_ContentRendered(object sender, EventArgs e)
         {
-            if (_rowData != null)
+            await _windowservices.InsertStatusDBAsync("Stock Window Ready.......", BrushesStatus.Progress);
+           if (_rowData != null)
             {
-                this.SupressEventComboBox(false);
-                Edit(new StockProductParam
+                _windowservices.SupressEventComboBox(false);
+                await _windowservices.Edit(_editHeight, EditControl(new StockProductParam
                 {
                     idStock = _rowData.IdStock,
                     idProduct = _rowData.IdProduct,
@@ -555,10 +345,11 @@ namespace SIMA.Presentation.Views
                     stock = _rowData.Stock,
                     products = _rowData.Products,
                     brands = _rowData.Brands
-                });
-                _fromMain = false;
-                Filter(new StockProductParam { idBrand = _rowData.IdBrand });
+                }));
+                _windowservices.FromMain = false;
+                await _windowservices.FillAsync(new StockProductParam { idBrand = _rowData.IdBrand });
             }
+            _windowservices.Status.StopProgress();
 
         }
         #endregion

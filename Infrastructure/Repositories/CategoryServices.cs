@@ -1,8 +1,10 @@
 ﻿using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
+using SIMA.Domain.Models.Intefaces;
 using SIMA.Domain.Models.Objects;
 using SIMA.Domain.Models.Params;
+using SIMA.Domain.Models.Views;
 using SIMA.ExtensionsHelper;
 using SIMA.Helper;
 using SIMA.Infrastructure.Repositories.Interfaces;
@@ -18,6 +20,7 @@ namespace SIMA.Infrastructure.Repositories
     public class CategoryServices : IContextservices<Category, Category, CategoryParam>
     {
         private readonly IConfiguration _config;
+        private readonly ICacheService _cache;
         private JsonFile<StockProduct> _stockProductFile;
         private int? _currentIdSave;
         private decimal _totalvalue;
@@ -32,21 +35,46 @@ namespace SIMA.Infrastructure.Repositories
             _stockProductFile = new JsonFile<StockProduct>();
             _stockProductFile.loadData();
         }
-        public CategoryServices(IConfiguration config) {
+        public CategoryServices(IConfiguration config, ICacheService cache) {
             _config = config;
-            _stockProductFile = new JsonFile<StockProduct>();
-            _stockProductFile.loadData();
+            _cache = cache;
         }
 
         #region DataBase Action
+        private static string GetKey(CategoryParam param)
+        {
+            return $"product_{param.IdCategory}" +
+                $"_{param.Name}" +
+                $"_{param.offset}" +
+                $"_{param.limit}";
+        }
         private async Task<IEnumerable<Category>> getCategory(CategoryParam param)
         {
-            using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
+            IEnumerable<Category> result;
+            try
             {
-                IEnumerable<Category> result = await conn.QueryAsync<Category>("[dbo].[getCategory]", param, commandType: System.Data.CommandType.StoredProcedure);
-                _totalfound = result.Count();
-                return result;
+                string cacheKey = GetKey(param);
+                var cached = _cache.Get<IEnumerable<Category>>(cacheKey);
+                if (cached != null)
+                {
+                    _totalfound = cached.Count();
+                    return cached;
+                }
+
+                using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
+                {
+                    result = await conn.QueryAsync<Category>("[dbo].[getCategory]", param, commandType: System.Data.CommandType.StoredProcedure);
+                    _totalfound = result.Count();
+                    _cache.Set(cacheKey, result, TimeSpan.FromMinutes(10));
+                    return result;
+                }
             }
+            catch (Exception ex)
+            {
+                result = new List<Category>();
+            }
+            return result;
+
         }
         private async Task<int> setCategory(Category param) {
             using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))

@@ -48,26 +48,30 @@ namespace SIMA.Presentation.Views
         public ObservableCollection<StockProductView> StockProducts
         {
             get => _stockproduct;
-            set { _stockproduct = value; OnPropertyChanged(nameof(Brand)); }
+            set { _stockproduct = value; OnPropertyChanged(nameof(StockProducts)); }
         }
         #endregion
 
-        public StockViewModel() : base()
+        public StockViewModel(ICacheService cache,bool fillstock = true) : base(cache)
         {
-            InitializeModel(() =>
+            InitializeModel(async () =>
             {
-                _stockservices = new StockProductServices(Config);
-                _productservices = new ProductServices(Config);
-                FillLovProd();
+                _stockservices = new StockProductServices(Config, cache);
+                _productservices = new ProductServices(Config,cache);
+                await FillLovProd();
+                if (fillstock)
+                    await FillStockProd();
             });
         }
-        public StockViewModel(IPaging page, IConfiguration config,bool fillgrid = true) :base(page, config) 
+        public StockViewModel(IPaging page, IConfiguration config, ICacheService cache, bool fillstock = true) :base(page, config, cache) 
         {
-            InitializeModel(() =>
+            InitializeModel(async () =>
             {
-                _stockservices = new StockProductServices(Config);
-                _productservices = new ProductServices(Config);
-                 FillLovProd();
+                _stockservices = new StockProductServices(Config, cache);
+                _productservices = new ProductServices(Config, cache);
+                await FillLovProd();
+                if (fillstock)
+                    await FillStockProd();
             });
         }
 
@@ -91,7 +95,7 @@ namespace SIMA.Presentation.Views
         /// <summary>
         /// get the Category data
         /// </summary>
-        private async void FillLovProd()
+        private async Task FillLovProd()
         {
             try
             {
@@ -105,6 +109,26 @@ namespace SIMA.Presentation.Views
             catch (Exception)
             {
                 InvokeError("PopupLov Product System Error Failed");
+            }
+        }
+
+        /// <summary>
+        /// get the Stock data
+        /// </summary>
+        private async Task FillStockProd()
+        {
+            try
+            {
+                IEnumerable<StockProductView> prod = await _stockservices.GetViewAll(new Paging { Offset = 0, Limit = 2000 });
+                StockProducts = new ObservableCollection<StockProductView>(prod.Where(p => p.IdStock != null));
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex)
+            {
+                InvokeError("PopupLov DataBase Error Failed");
+            }
+            catch (Exception)
+            {
+                InvokeError("PopupLov System Error Failed");
             }
         }
         #endregion

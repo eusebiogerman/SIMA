@@ -1,22 +1,21 @@
 ﻿using SIMA.Infrastructure.Repositories;
 using SIMA.Presentation.ViewModel;
+using SIMA.Templates;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 
 namespace SIMA.Helper.Interfaces
 {
-    public interface IUtilServices<U, T>
+    public interface IUtilServices<V, P>
     {
-        U Result();
-        T activeFilters();
-        void FillCombobox(int? id = null);
-        void Fill();
-        void Filter();
-        Task Filter(T param);
-        void FilterbyText(T param);
-        void ClearFilters();
-        void Edit(T param);
+        P activeFilters();
+        P activeFilters(Func<P> actparam);
+        P activeFilters(string FilterFieldClass);
+        void FillChildCombobox(IEnumerable<LovObject> result);
+        void Fill(IEnumerable<V> result);
+        Task Edit(string rizenumber = "40%", Action? editraction = null);
 
     }
 }
