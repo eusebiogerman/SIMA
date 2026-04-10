@@ -21,6 +21,7 @@ namespace SIMA.Infrastructure.Repositories
     public class ProductServices : IContextservices<Product, ProductView, ProductParam>
     {
         private readonly IConfiguration _config;
+        private readonly ICacheService _cache;
         private JsonFile<Product> _ProductFile;
         private int? _currentIdSave;
         private decimal _totalvalue;
@@ -36,22 +37,51 @@ namespace SIMA.Infrastructure.Repositories
             _ProductFile.loadData();
 
         }
-        public ProductServices(IConfiguration config)
+        public ProductServices(IConfiguration config, ICacheService cache)
         {
             _config = config;
+            _cache = cache;
         }
 
         #region DataBase Action
+        private static string GetKey(ProductParam param)
+        {
+            return $"brand_{param.idProduct}" +
+                $"_{param.idCategory}" +
+                $"_{param.categorys}" +
+                $"_{param.name}" +
+                $"_{param.price}" +
+                $"_{param.offset}" +
+                $"_{param.limit}";
+        }
         private async Task<IEnumerable<ProductView>> getProduct(ProductParam param)
         {
-            using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
+            IEnumerable<ProductView> result;
+            try
             {
-                IEnumerable<ProductView> result = await conn.QueryAsync<ProductView>("[dbo].[getProduct]", param, commandType: System.Data.CommandType.StoredProcedure);
+                string cacheKey = GetKey(param);
+                var cached = _cache.Get<IEnumerable<ProductView>>(cacheKey);
+                if (cached != null)
+                {
+                    _totalfound = cached.Count();
+                    return cached;
+                }
+
+                using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
+            {
+                 result = await conn.QueryAsync<ProductView>("[dbo].[getProduct]", param, commandType: System.Data.CommandType.StoredProcedure);
                 _totalfound = result.Count();
+                _cache.Set(cacheKey, result, TimeSpan.FromMinutes(10));
                 return result;
             }
+            }
+            catch (Exception ex)
+            {
+                result = new List<ProductView>();
+            }
+            return result;
 
-       }
+        }
         private async Task<int> setProduct(Product param)
         {
 
@@ -91,12 +121,10 @@ namespace SIMA.Infrastructure.Repositories
         {
             throw new NotImplementedException();
         }
-  
         public async Task<bool> Set(Product entity)
         {
             return (await setProduct(entity) > 0);
         }
-
         #endregion
 
         #region Util Function and Methods
@@ -120,7 +148,6 @@ namespace SIMA.Infrastructure.Repositories
             throw new NotImplementedException();
         }
         #endregion
-
 
     }
 }

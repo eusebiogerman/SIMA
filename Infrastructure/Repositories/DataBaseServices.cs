@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using Dapper;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using SIMA.Infrastructure.Repositories.Interfaces;
 using System;
@@ -42,10 +43,30 @@ namespace SIMA.Infrastructure.Repositories
             }
             finally
             {
-                   stopwatch.Stop();
+                stopwatch.Stop();
             }
 
             return (int)stopwatch.ElapsedMilliseconds;
+        }
+        /// <summary>
+        /// Unit Test SqlException
+        /// </summary>
+        /// <returns></returns>
+        public static SqlException ThrowSqlException()
+        {
+            try
+            {
+                using (var conn = new SqlConnection(@"Data Source=FAIL;Initial Catalog=FAIL;Connection Timeout=1"))
+                {
+                    conn.Open();
+                }
+            }
+            catch (SqlException ex)
+            {
+                return ex;
+            }
+            return null;
+
         }
 
     }

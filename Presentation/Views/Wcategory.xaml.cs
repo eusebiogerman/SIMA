@@ -5,26 +5,17 @@ using SIMA.Presentation.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using SIMA.Infrastructure.Repositories.Interfaces;
 using SIMA.Domain.Models.Objects;
 using SIMA.Domain.Models.Params;
-using SIMA.Domain.Models.Intefaces;
 using SIMA.Templates;
-using SIMA.Domain.Models.Views;
 using SIMA.Presentation.Repository;
 using System.ComponentModel;
+using Microsoft.Data.SqlClient;
 
 namespace SIMA.Presentation.Views
 {
@@ -33,23 +24,25 @@ namespace SIMA.Presentation.Views
     /// </summary>
     public partial class Wcategory : Window
     {
-
-        private IContextservices<Category, Category, CategoryParam> _service;
+        private readonly ICacheService _cache;
         private WindowServices<Category, Category, CategoryParam> _windowservices;
-
         private CancellationTokenSource _cts;
         private Category? _rowData;
         private CategoryViewModel _vm;
-        private Util _util;
-        private readonly Dictionary<int, string> columns_width;
+        private const string _editHeight = "40%";
+
         public WindowServices<Category, Category, CategoryParam> WindowServices { get => _windowservices; }
+
         public Wcategory()
         {
             InitializeComponent();
         }
 
-
- 
+        public Wcategory(ICacheService cache)
+        {
+            _cache = cache;
+            InitializeComponent();
+        }
 
         #region Util
         /// <summary>
@@ -65,33 +58,22 @@ namespace SIMA.Presentation.Views
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="param"></param>
-        /// <returns></returns>
-        private async Task FillGrid(CategoryParam? param = null)
-        {
-            var prod = await _service.GetByFilter(param ?? _windowservices.activeFilters("Name"));
-            _windowservices.Fill(prod);
-        }
-        /// <summary>
-        /// 
-        /// </summary>
         /// <param name="rowData"></param>
         /// <returns></returns>
         private Action EditControl(CategoryParam? rowData = null)
         {
             return () =>
             {
-
                 //Set the Field Values from the grid
                 txtIdCategory.Text = rowData?.IdCategory.ToString();
-                txtName.Text = rowData?.Name.ToString();
+                txtName.Text = rowData?.Name;
             };
         }
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        private async Task Clear(string windowheight = "40%")
+        private async Task Clear(string windowheight = _editHeight)
         {
             await _windowservices.ClearFilters(windowheight, () =>
             {
@@ -109,36 +91,85 @@ namespace SIMA.Presentation.Views
             string name = txtName.Text.ToString();
             try
             {
-                progress.RunProgress(true, "Saving Stock...");
-                await progress.DelayProgress();
-                bool isset = await _service.Set(new Category
+                _windowservices.InsertStatus("Saving Category...", BrushesStatus.DBProcess);
+                await _windowservices.Status.DelayProgress();
+                bool isset = await _windowservices.SetAsync(new Category
                 {
                     IdCategory = id,
                     Name = name,
                 });
-                progress.StopProgress();
 
                 if (isset)
                 {
-                    MessageBox.Show(this, "Stock Sucessfully saved", "Save Stock", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    _windowservices.InsertStatus("Category Sucessfully removed", BrushesStatus.DBProcess, false);
+                    MessageBox.Show(this, "Category Sucessfully saved", "Save Category", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                     await Clear();
-                    await FillGrid();
+                    await _windowservices.FillAsync(_windowservices.activeFilters("Name"));
+                    _windowservices?.Status?.StopProgress();
                 }
                 else
-                {
-                    MessageBox.Show(this, "Error Saving Stock", "Save Stock", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                }
+                    _windowservices.CatchExceptionAndMsg(new Exception("Error Saving Category"));
             }
             catch (Microsoft.Data.SqlClient.SqlException ex)
             {
-                progress.StopProgress();
-                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                _windowservices.CatchExceptionAndMsg(ex);
+            }
+            catch (Exception se)
+            {
+                _windowservices.CatchExceptionAndMsg(se);
+            }
+        }
+        private async void btnRemove_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBoxResult result = MessageBox.Show(this, "Confirm removing Category ?", "Remove Category", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+            try
+            {
+                if (result == MessageBoxResult.Yes)
+                {
+                    _windowservices.InsertStatus("Deleting Category...", BrushesStatus.DBProcess);
+                    await _windowservices.Status.DelayProgress();
+                    Button btn = sender as Button;
+                    Category rowData = (Category)btn.DataContext;
+                    bool valid = await _windowservices.DeleteAsync(rowData.IdCategory) > 0;
+                    if (valid)
+                    {
+                        _windowservices.InsertStatus("Category Sucessfully removed", BrushesStatus.DBProcess, false);
+                        await _windowservices.FillAsync(_windowservices.activeFilters("Name"));
+                        MessageBox.Show(this, "Category Succesfully removed", "Remove Category", MessageBoxButton.OK, MessageBoxImage.Information);
+                        _windowservices.Status.StopProgress();
+                    }
+                    else
+                        _windowservices.CatchExceptionAndMsg(new Exception("Error removing the Brand"));
+                }
+            }
+            catch (SqlException ex)
+            {
+                _windowservices.CatchExceptionAndMsg(ex);
+            }
+            catch (Exception se)
+            {
+                _windowservices.CatchExceptionAndMsg(se);
+            }
+        }
+        private async void btnUpdate_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Button btn = sender as Button;
+                Category rowData = (Category)btn.DataContext;
+                _windowservices.EditMode = true;
+                await _windowservices.Edit(_editHeight, EditControl(new CategoryParam
+                {
+                    IdCategory = rowData.IdCategory,
+                    Name = rowData.Name
+                }));
+                _windowservices.EditMode = false;
             }
             catch (Exception)
             {
-                progress.StopProgress();
-                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                _windowservices.EditMode = false;
             }
+
         }
         private async void btnNew_Click(object sender, RoutedEventArgs e)
         {
@@ -146,7 +177,7 @@ namespace SIMA.Presentation.Views
         }
         private async void btnsClear_Click(object sender, RoutedEventArgs e)
         {
-            await Clear(_windowservices.FormState ? "40%" : "60%");
+            await Clear(_windowservices.FormState ? _editHeight : _windowservices.StandarHeight);
         }
         private async void btnsClose_Click(object sender, RoutedEventArgs e)
         {
@@ -168,20 +199,20 @@ namespace SIMA.Presentation.Views
                 _windowservices.Page.Limit = (int)_windowservices.PageControl.GetSelectedItemsPerPage();
                 if (!_windowservices.FromMain)
                 {
-                    await FillGrid();
+                  await _windowservices.FillAsync(_windowservices.activeFilters("Name"));
                 }
-                _windowservices.UpdatePaging();
+                else
+                    _windowservices.UpdatePaging();
             }
         }
         private async void btnRefresh_Click(object sender, RoutedEventArgs e)
         {
             _windowservices.Page.Limit = (int)_windowservices.PageControl.GetSelectedItemsPerPage();
-            await FillGrid();
-            _windowservices.UpdatePaging();
+             await _windowservices.FillAsync(_windowservices.activeFilters("Name"));
         }
         private async void parentCombobox_SelectionChanged(object sender, RoutedEventArgs e)
         {
-            await FillGrid();
+          await _windowservices.FillAsync(_windowservices.activeFilters("Name"));
         }
         private async void txtSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -194,66 +225,12 @@ namespace SIMA.Presentation.Views
                 if (!_windowservices.Isloaded && !_windowservices.FromMain)
                 {
                     await Task.Delay(300, _cts.Token);
-                    await FillGrid();
+                    await _windowservices.FillAsync(_windowservices.activeFilters("Name"));
                 }
             }
             catch (TaskCanceledException)
             {
                 //Cancel
-            }
-
-        }
-        private async void btnRemove_Click(object sender, RoutedEventArgs e)
-        {
-            MessageBoxResult result = MessageBox.Show(this, "Confirm removing Stock ?", "Remove Stock", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
-            try
-            {
-                if (result == MessageBoxResult.Yes)
-                {
-
-                    Button btn = sender as Button;
-                    Category rowData = (Category)btn.DataContext;
-                    bool valid = await _service.Delete(rowData.IdCategory) > 0;
-                    if (valid)
-                    {
-                        await FillGrid();
-                        MessageBox.Show(this, "Stock Succesfully removed", "Remove Stock", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-                    else
-                    {
-                        MessageBox.Show(this, "Error removing the Brand", "Remove Stock", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-                }
-
-            }
-            catch (Microsoft.Data.SqlClient.SqlException ex)
-            {
-
-                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-            catch (Exception)
-            {
-
-                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-        }
-        private async void btnUpdate_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                Button btn = sender as Button;
-                Category rowData = (Category)btn.DataContext;
-                _windowservices.EditMode = true;
-                await _windowservices.Edit("40%", EditControl(new CategoryParam
-                {
-                    IdCategory = rowData.IdCategory,
-                    Name = rowData.Name
-                }));
-                _windowservices.EditMode = false;
-            }
-            catch (Exception)
-            {
-                _windowservices.EditMode = false;
             }
 
         }
@@ -264,21 +241,16 @@ namespace SIMA.Presentation.Views
         }
         private void Window_Initialized(object sender, EventArgs e)
         {
-            _util = new Util();
             IPaging _page = new Paging();
-            IConfiguration _config = _util.CustomConfiguration();
-            _vm = new CategoryViewModel(_page, _config);
+            IConfiguration _config = new Util().CustomConfiguration();
+            _vm = new CategoryViewModel(_page, _config, _cache);
             this.DataContext = _vm;
             _vm.ShowErrorFromModel += Vm_ShowErrorFromModel;
-            _service = new CategoryServices(_config);
-            _windowservices = new WindowServices<Category, Category, CategoryParam>(_config, _page, _service);
+            _windowservices = new WindowServices<Category, Category, CategoryParam>(_config, _page, new CategoryServices(_config, _cache));
             _windowservices.SupressEventComboBox();
-
-
         }
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-
             _windowservices.DataContext = _vm;
             _windowservices.PageControl = pageControl;
             _windowservices.ParentLovtextbox = null;
@@ -288,12 +260,19 @@ namespace SIMA.Presentation.Views
             _windowservices.IngorePredicate = null;
             _windowservices.Form = FormCategory;
             _windowservices.FormIsOpen(false);
+            _windowservices.Status = statusbox;
+            _windowservices.ObsrverStatus = new ObservableCollection<StatusItem>();
+            _windowservices.Status.ItemsSource = _windowservices.ObsrverStatus;
 
-            progress.RunProgress(true, "Init Window....");
+            _windowservices.InsertStatus("Initializing Category Window.......", BrushesStatus.Progress);
+            await _windowservices.Status.DelayProgress();
             _windowservices.Page.Offset = (int?)_windowservices.PageControl.GetSelectedItemsPerPage() ?? _windowservices.Page.DefaultOffset;
+            _windowservices.InsertStatus("Retriving Category.......", BrushesStatus.Progress, false);
             await _windowservices.Page.FillLimitPageVal(_windowservices.PageControl);
             _windowservices.UpdatePaging();
             _windowservices.SupressEventComboBox(false);
+            _windowservices.InsertStatus("Window ready.......", BrushesStatus.Progress);
+            _windowservices.Status.StopProgress();
         }
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
@@ -303,30 +282,31 @@ namespace SIMA.Presentation.Views
             _windowservices.ColumnsWidth = new Dictionary<int, string>
             {
                 { 0, "4%" },
-                { 1, "86%" },
+                { 1, "84%" },
                 { 2, "7%" },
             };
-            _windowservices.ResizeGrid("60%");
+            _windowservices.StandarHeight = "51%";
+            _windowservices.ResizeGrid();
         }
         private void Vm_ShowErrorFromModel(string mensaje)
         {
-            MessageBox.Show(this, mensaje, "Model Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            _windowservices.CatchExceptionAndMsg(new Exception(mensaje), "Model Error");
         }
         private async void Window_ContentRendered(object sender, EventArgs e)
         {
-            progress.StopProgress();
+            _windowservices.InsertStatus("Category Window Ready.......", BrushesStatus.Progress);
             if (_rowData != null)
             {
                 _windowservices.SupressEventComboBox(false);
-                await _windowservices.Edit("40%", EditControl(new CategoryParam
+                await _windowservices.Edit(_editHeight, EditControl(new CategoryParam
                 {
                     IdCategory = _rowData.IdCategory,
                     Name = _rowData.Name
                 }));
                 _windowservices.FromMain = false;
-                await FillGrid(new CategoryParam { IdCategory = _rowData.IdCategory });
+                await _windowservices.FillAsync(new CategoryParam { IdCategory = _rowData.IdCategory });
             }
-
+            _windowservices.Status.StopProgress();
         }
         #endregion
 

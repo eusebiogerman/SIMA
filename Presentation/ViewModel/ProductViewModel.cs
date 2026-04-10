@@ -60,22 +60,22 @@ namespace SIMA.Presentation.Views
         }
         #endregion
 
-        public ProductViewModel():base()
+        public ProductViewModel(ICacheService cache):base(cache)
         {
             InitializeModel(async () =>
             {
-                _categoryservices = new CategoryServices(Config);
-                _productservices = new ProductServices(Config);
+                _categoryservices = new CategoryServices(Config, cache);
+                _productservices = new ProductServices(Config, cache);
                 await FillLovCat();
                 await FillProd();
             });
         }
-        public ProductViewModel(IPaging page, IConfiguration config) : base(page, config) 
+        public ProductViewModel(IPaging page, IConfiguration config, ICacheService cache) : base(page, config, cache) 
         {
             InitializeModel(async () =>
             {
-                _categoryservices = new CategoryServices(Config);
-                _productservices = new ProductServices(Config);
+                _categoryservices = new CategoryServices(Config, cache);
+                _productservices = new ProductServices(Config, cache);
                 await FillLovCat();
                 await FillProd();
             });
@@ -145,9 +145,6 @@ namespace SIMA.Presentation.Views
 
         }
         #endregion
-
-
-
 
     }
 }

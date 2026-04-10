@@ -22,26 +22,27 @@ using SIMA.Domain.Models.Views;
 using SIMA.Domain.Models.Params;
 using SIMA.Domain.Models.Intefaces;
 using SIMA.Presentation.Repository;
+using System.Collections.ObjectModel;
+using Microsoft.Data.SqlClient;
+using System.Threading;
 
 namespace SIMA.Presentation
 {
-    //public partial class MainWindow : Window, IUtilServices<StockProduct, StockProductParam>, IUtil
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
-        private IContextservices<StockProduct, StockProductView, StockProductParam> _service;
-        private IContextservices<Category, Category, CategoryParam> _categoryservices;
+        private  ICacheService _cache;
         private WindowServices<StockProduct, StockProductView, StockProductParam> _windowservices;
-
-     
+        private CancellationTokenSource _cts;
         private Wstocks _windowStock;
         private Wproduct _wproduct;
         private Wcategory _wcategory;
         private Wbrand _wbrand;
         private ViewModelBase _vm;
         private readonly Dictionary<int, string> columns_width;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -59,22 +60,78 @@ namespace SIMA.Presentation
         }
 
 
-        private async Task FillGrid()
-        {
-            var prod = await _service.GetByFilter(_windowservices.activeFilters("Name"));
-            _windowservices.Fill(prod);
-        }
-
-
         #region Events
-        private void txtSearch_TextChanged(object sender, TextChangedEventArgs e)
+        private async void btnRemove_Click(object sender, RoutedEventArgs e)
         {
-            if (!_windowservices.Isloaded)
+            MessageBoxResult result = MessageBox.Show(this, "Confirm removing Stock ?", "Remove Stock", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+            try
             {
-                progress.SetLoadingStateDataBase(async () =>
+                if (result == MessageBoxResult.Yes)
                 {
-                   await FillGrid();
-                }, _windowservices.Config, true, "Loading Stocks...");
+                    _windowservices.InsertStatus("Deleting Stock...", BrushesStatus.DBProcess);
+                    await _windowservices.Status.DelayProgress();
+                    Button btn = sender as Button;
+                    StockProductView rowData = (StockProductView)btn.DataContext;
+                    bool valid = await _windowservices.DeleteAsync(rowData.IdStock) > 0;
+                    if (valid)
+                    {
+                        _windowservices.InsertStatus("Stock Sucessfully removed", BrushesStatus.DBProcess, false);
+                        await _windowservices.FillAsync(_windowservices.activeFilters("Name"));
+                        MessageBox.Show(this, "Stock Succesfully removed", "Remove Stock", MessageBoxButton.OK, MessageBoxImage.Information);
+                        _windowservices.Status.StopProgress();
+                    }
+                    else
+                        _windowservices.CatchExceptionAndMsg(new Exception("Error removing the Brand"));
+                }
+
+            }
+            catch (SqlException ex)
+            {
+                _windowservices.CatchExceptionAndMsg(ex);
+            }
+            catch (Exception se)
+            {
+                _windowservices.CatchExceptionAndMsg(se);
+            }
+        }
+        private void btnUpdate_Click(object sender, RoutedEventArgs e)
+        {
+            Button btn = sender as Button;
+            StockProductView rowData = (StockProductView)btn.DataContext;
+
+            if (rowData != null)
+            {
+                if (_windowStock != null)
+                {
+                    if (_windowStock.IsEnabled)
+                    {
+                        _windowStock.Close();
+                        _windowStock = null;
+                    }
+                }
+
+                _windowStock = new Wstocks(rowData, _cache);
+                _windowStock.Owner = this;
+                _windowStock.Activate();
+                _windowStock.Show();
+            }
+
+        }
+        private async void txtSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            _cts?.Cancel();
+            _cts = new CancellationTokenSource();
+            try
+            {
+                if (!_windowservices.Isloaded)
+                {
+                    await Task.Delay(300, _cts.Token);
+                    await _windowservices.FillAsync(_windowservices.activeFilters("Name"));
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                //Cancel
             }
 
         }
@@ -83,12 +140,10 @@ namespace SIMA.Presentation
             LovObject sendobj = _windowservices.ParentLovtextbox.getSelectedItem(sender);
             if (!_windowservices.Isloaded && sendobj != null)
             {
-                var prod = await _service.GetByFilter(new StockProductParam
-                {
+               await _windowservices.FillAsync(new StockProductParam{
                     idCategory = sendobj.Id
                 });
-                _windowservices.Page.resetPage();
-                _windowservices.Fill(prod);
+
             }
         }
         private async void PageNavigation_SelectionChanged(object sender, RoutedEventArgs e)
@@ -96,8 +151,7 @@ namespace SIMA.Presentation
             if (!_windowservices.Isloaded)
             {
                 _windowservices.Page.Limit = (int)_windowservices.PageControl.GetSelectedItemsPerPage();
-                await FillGrid();
-                _windowservices.UpdatePaging();
+                await _windowservices.FillAsync(_windowservices.activeFilters("Name"));
             }
         }
         private async void btnClear_Click(object sender, RoutedEventArgs e)
@@ -108,7 +162,7 @@ namespace SIMA.Presentation
         {
             if (_windowStock == null)
             {
-                _windowStock = new Wstocks();
+                _windowStock = new Wstocks(_cache);
             }
             _windowStock.Owner = this;
             _windowStock.WindowServices.SupressEventComboBox();
@@ -122,7 +176,7 @@ namespace SIMA.Presentation
         {
             if (_wproduct == null)
             {
-                _wproduct = new Wproduct();
+                _wproduct = new Wproduct(_cache);
             }
             _wproduct.Owner = this;
             _wproduct.WindowServices.SupressEventComboBox();
@@ -134,7 +188,7 @@ namespace SIMA.Presentation
         {
             if (_wbrand == null)
             {
-                _wbrand = new Wbrand();
+                _wbrand = new Wbrand(_cache);
             }
             _wbrand.Owner = this;
             _wbrand.WindowServices.SupressEventComboBox();
@@ -147,7 +201,7 @@ namespace SIMA.Presentation
         {
             if (_wcategory == null)
             {
-                _wcategory = new Wcategory();
+                _wcategory = new Wcategory(_cache);
             }
             _wcategory.Owner = this;
             _wcategory.WindowServices.SupressEventComboBox();
@@ -169,83 +223,22 @@ namespace SIMA.Presentation
             this.Close();
 
         }
-        private void btnUpdate_Click(object sender, RoutedEventArgs e)
-        {
-            Button btn = sender as Button;
-            StockProductView rowData = (StockProductView)btn.DataContext;
-
-            if (rowData != null)
-            {
-                if (_windowStock != null)
-                {
-                    if (_windowStock.IsEnabled)
-                    {
-                        _windowStock.Close();
-                        _windowStock = null;
-                    }
-                }
-
-                _windowStock = new Wstocks(rowData);
-                _windowStock.Owner = this;
-                _windowStock.Activate();
-                _windowStock.Show();
-            }
-
-        }
-        private async void btnRemove_Click(object sender, RoutedEventArgs e)
-        {
-            MessageBoxResult result = MessageBox.Show(this, "Confirm removing Stock ?", "Remove Stock", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
-            try
-            {
-                if (result == MessageBoxResult.Yes)
-                {
-
-                    Button btn = sender as Button;
-                    StockProductView rowData = (StockProductView)btn.DataContext;
-                    bool valid = await _service.Delete(rowData.IdStock) > 0;
-                    if (valid)
-                    {
-                        await FillGrid(); 
-                        MessageBox.Show(this, "Stock Succesfully removed", "Remove Stock", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-                    else
-                    {
-                        MessageBox.Show(this, "Error removing the Brand", "Remove Stock", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-                }
-
-            }
-            catch (Microsoft.Data.SqlClient.SqlException ex)
-            {
-
-                MessageBox.Show(this, "DataBase Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-            catch (Exception)
-            {
-
-                MessageBox.Show(this, "System Error Failed", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-
-        }
         private async void btnRefresh_Click(object sender, RoutedEventArgs e)
         {
-            _service = null;
-            _service = new StockProductServices();
             _windowservices.GridListView.ItemsSource = null;
             _windowservices.GridListView.Items.Clear();
-            await FillGrid();
+            await _windowservices.FillAsync(_windowservices.activeFilters("Name"));
         }
         private void Window_Initialized(object sender, EventArgs e)
         {
+            _cache = new MemoryCacheService();
             IPaging _page = new Paging();
             var _util = new Util();
             IConfiguration _config = _util.CustomConfiguration();
-            _vm = new MainViewModel(_page, _config);
+            _vm = new MainViewModel(_page, _config, _cache);
             this.DataContext = _vm;
             _vm.ShowErrorFromModel += Vm_ShowErrorFromModel;
-            _service = new StockProductServices(_config);
-            _categoryservices = new CategoryServices(_config);
-            _windowservices = new WindowServices<StockProduct, StockProductView, StockProductParam>(_config,_page, _service);
+            _windowservices = new WindowServices<StockProduct, StockProductView, StockProductParam>(_config,_page, new StockProductServices(_config, _cache));
             _windowservices.SupressEventComboBox();
         }
         private async void Window_Loaded(object sender, RoutedEventArgs e)
@@ -255,19 +248,22 @@ namespace SIMA.Presentation
             _windowservices.ParentLovtextbox = cmbCategory;
             _windowservices.TxtSearch = txtSearch;
             _windowservices.TxtResults = txtResults;
-            _windowservices.IngorePredicate = (x) => x.IdProduct != null;
+            _windowservices.Status = statusbox;
+            _windowservices.ObsrverStatus = new ObservableCollection<StatusItem>();
+            _windowservices.Status.ItemsSource = _windowservices.ObsrverStatus;
 
-            progress.RunProgress(true, "Init Window....");
+            await _windowservices.InsertStatusAsync("Initializing SIMA Window.......", BrushesStatus.Progress);
             _windowservices.Page.Offset = (int?)_windowservices.PageControl.GetSelectedItemsPerPage() ?? _windowservices.Page.DefaultOffset;
-            _windowservices.SupressEventComboBox();
+            _windowservices.InsertStatus("Retriving Stocks.......", BrushesStatus.Progress, false);
             await _windowservices.Page.FillLimitPageVal(_windowservices.PageControl);
             _windowservices.UpdatePaging();
             _windowservices.SupressEventComboBox(false);
-
+            _windowservices.InsertStatus("Window ready.......", BrushesStatus.Progress);
+            _windowservices.Status.StopProgress();
         }
         private void Vm_ShowErrorFromModel(string mensaje)
         {
-            MessageBox.Show(this, mensaje, "Model Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            _windowservices.CatchExceptionAndMsg(new Exception(mensaje), "Model Error");
         }
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
@@ -278,12 +274,10 @@ namespace SIMA.Presentation
         }
         private void Window_ContentRendered(object sender, EventArgs e)
         {
-            progress.StopProgress();
+            _windowservices.InsertStatus("SIMA Window Ready.......", BrushesStatus.Progress,false);
+            _windowservices.Status.StopProgress();
         }
-
-
         #endregion
-
 
     }
 

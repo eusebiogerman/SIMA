@@ -15,8 +15,11 @@ using SIMA.Domain.Models.Params;
 
 namespace SIMA.Infrastructure.Repositories
 {
+
+
     public class BrandServices : IContextservices<Brand, BrandView, BrandParam>
     {
+        private readonly ICacheService _cache;
         private readonly IConfiguration _config;
         private JsonFile<Product> _ProductFile;
         private int? _currentIdSave;
@@ -33,21 +36,50 @@ namespace SIMA.Infrastructure.Repositories
             _ProductFile.loadData();
 
         }
-        public BrandServices(IConfiguration config)
+        public BrandServices(IConfiguration config, ICacheService cache)
         {
             _config = config;
+            _cache = cache;
         }
 
-
         #region DataBase Action
+        private static string GetKey(BrandParam param)
+        {
+            return $"brand_{param.idBrand}" +
+                $"_{param.idProduct}" +
+                $"_{param.idCategory}" +
+                $"_{param.categorys}" +
+                $"_{param.name}" +
+                $"_{param.products}" +
+                $"_{param.offset}" +
+                $"_{param.limit}";
+        }
         private async Task<IEnumerable<BrandView>> getBrand(BrandParam param)
         {
-            using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
+            IEnumerable<BrandView> result;
+            try
             {
-                IEnumerable<BrandView> result = await conn.QueryAsync<BrandView>("[dbo].[getBrand]", param, commandType: System.Data.CommandType.StoredProcedure);
-                _totalfound = result.Count();
-                return result;
+                string cacheKey = GetKey(param);
+                var cached = _cache.Get<IEnumerable<BrandView>>(cacheKey);
+                if (cached != null)
+                {
+                    _totalfound = cached.Count();
+                    return cached;
+                }
+
+                using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
+                {
+                     result = await conn.QueryAsync<BrandView>("[dbo].[getBrand]", param, commandType: System.Data.CommandType.StoredProcedure);
+                    _totalfound = result.Count();
+                    _cache.Set(cacheKey, result, TimeSpan.FromMinutes(10));
+                    return result;
+                }
             }
+            catch (Exception ex)
+            {
+                result = new List<BrandView>();
+            }
+            return result;
 
         }
         private async Task<int> setBrand(Brand param)

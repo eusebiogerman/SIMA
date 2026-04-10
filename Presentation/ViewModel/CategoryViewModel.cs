@@ -38,19 +38,19 @@ namespace SIMA.Presentation.ViewModel
         }
         #endregion
 
-        public CategoryViewModel() : base()
+        public CategoryViewModel(ICacheService cache) : base(cache)
         {
             InitializeModel(async () => {
 
-                _categoryservices = new CategoryServices(Config);
+                _categoryservices = new CategoryServices(Config,cache);
                 await FillCat();
             });
         }
-        public CategoryViewModel(IPaging page, IConfiguration config) : base(page, config) 
+        public CategoryViewModel(IPaging page, IConfiguration config,ICacheService cache) : base(page, config,cache) 
         {
             InitializeModel(async () => {
 
-                _categoryservices = new CategoryServices(Config);
+                _categoryservices = new CategoryServices(Config, cache);
                 await FillCat();
             });
         }

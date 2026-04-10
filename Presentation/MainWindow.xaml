@@ -15,13 +15,15 @@
 
     <Grid Margin="5">
         <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="96*"/>
+            <RowDefinition Height="4*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="220"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Border Grid.Column="0" 
+                Grid.Row="0"
                 Background="#1E1E1C" 
                 Padding="15" 
                 Margin="0,0,0,0">
@@ -89,6 +91,7 @@
             </DockPanel>
         </Border>
         <ScrollViewer Grid.Column="1" 
+                      Grid.Row="0"
                       VerticalScrollBarVisibility="Auto"
                       Padding="5">
             <Grid>
@@ -101,10 +104,10 @@
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="auto"/>
+                        <RowDefinition Height="*"/>
                         <RowDefinition Height="auto"/>
-                        <RowDefinition Height="auto"/>
-                        <RowDefinition Height="auto"/>
-                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     <Border Grid.Row="0" 
                             Style="{StaticResource SectionBorder}"
@@ -326,12 +329,15 @@
                         </Grid>
                     </Border>
                 </Grid>
-                <ctrl:Loading x:Name="progress" 
-                      HorizontalAlignment="Center"
-                      VerticalAlignment="Center"        
-                      IsLoading="{Binding IsBusy}" 
-                      Message="{Binding Message}"/>
             </Grid>
         </ScrollViewer>
+        <Grid Grid.Row="1" Grid.ColumnSpan="2" >
+            <ctrl:StatusbarLoading 
+                x:Name="statusbox" 
+                Height="auto"
+                IsLoading="{Binding IsBusy}"
+                Message="{Binding Message}"
+                Color="{Binding Color}"/>
+        </Grid>
     </Grid>
 </Window>

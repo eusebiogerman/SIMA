@@ -37,33 +37,34 @@ namespace SIMA.Presentation.ViewModel
         }
         #endregion
 
-        public MainViewModel() : base()
+        public MainViewModel(ICacheService cache) : base(cache)
         {
-
-            InitializeModel(async () => {
-                _stockservices = new StockProductServices(Config);
-                _categoryservices = new CategoryServices(Config);
+               
+               InitializeModel(async () => {
+                _stockservices = new StockProductServices(Config, cache);
+                _categoryservices = new CategoryServices(Config, cache);
                 await FillLovCat();
                 await FillGridStock();
             });
         }
-        public MainViewModel(IPaging page) : base(page)
+        public MainViewModel(IPaging page, ICacheService cache) : base(page, cache)
         {
 
 
-            InitializeModel(async () => {
-                _stockservices = new StockProductServices(Config);
-                _categoryservices = new CategoryServices(Config);
+            InitializeModel(async () =>
+            {
+                _stockservices = new StockProductServices(Config, cache);
+                _categoryservices = new CategoryServices(Config, cache);
                 await FillLovCat();
                 await FillGridStock();
             });
         }
-        public MainViewModel(IPaging page,IConfiguration config) : base(page, config) 
+        public MainViewModel(IPaging page,IConfiguration config, ICacheService cache) : base(page, config, cache) 
         {
 
             InitializeModel(async () => {
-                _stockservices = new StockProductServices(Config);
-                _categoryservices = new CategoryServices(Config);
+                _stockservices = new StockProductServices(Config, cache);
+                _categoryservices = new CategoryServices(Config, cache);
                 await FillLovCat();
                 await FillGridStock();
             });

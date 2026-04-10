@@ -5,6 +5,7 @@ using SIMA.Domain.Models.Views;
 using SIMA.Helper;
 using SIMA.Infrastructure.Repositories;
 using SIMA.Infrastructure.Repositories.Interfaces;
+using SIMA.Presentation.Repository;
 using SIMA.Presentation.ViewModel;
 using SIMA.Templates;
 using System;
@@ -22,13 +23,15 @@ namespace SIMA.Presentation.Views
 {
     public class BrandViewModel : ViewModelBase
     {
-        private string _name;
-        private decimal _price;
+
+        private IContextservices<Category, Category, CategoryParam> _categoryservices;
+        private IContextservices<Brand, BrandView, BrandParam> _brandservices;
+
         private ObservableCollection<LovObject> _category;
         private ObservableCollection<LovObject> _product;
         private ObservableCollection<BrandView> _brand;
-        private IContextservices<Category, Category, CategoryParam> _categoryservices;
-        private IContextservices<Brand, BrandView, BrandParam> _brandservices;
+        private string _name;
+        private decimal _price;
 
         public string Name
         {
@@ -67,22 +70,22 @@ namespace SIMA.Presentation.Views
         }
         #endregion
 
-        public BrandViewModel() :base()
+        public BrandViewModel(ICacheService cache) :base(cache)
         {
 
             InitializeModel(async () => {
-                _categoryservices = new CategoryServices(Config);
-                _brandservices = new BrandServices(Config);
+                _categoryservices = new CategoryServices(Config, cache);
+                _brandservices = new BrandServices(Config,cache);
                 await FillLovCat();
                 await FillBrand();
             });
         }
-        public BrandViewModel(IPaging page, IConfiguration config):base()
+        public BrandViewModel(IPaging page, IConfiguration config, ICacheService cache):base(page,config,cache)
         {
 
             InitializeModel(async () => {
-                _categoryservices = new CategoryServices(Config);
-                _brandservices = new BrandServices(Config);
+                _categoryservices = new CategoryServices(Config, cache);
+                _brandservices = new BrandServices(Config, cache);
                 await FillLovCat();
                 await FillBrand();
             });
@@ -152,11 +155,7 @@ namespace SIMA.Presentation.Views
             }
 
         }
-
         #endregion
-
-
-
 
     }
 }

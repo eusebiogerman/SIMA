@@ -8,8 +8,24 @@ using System.Threading.Tasks;
 
 namespace SIMA.Helper
 {
+    public enum ExceptionType
+    {
+        DBErrorFailed = 1,
+        SystemErrorFailed = 2,
+        CustomError = 3,
+        None = 4
+    }
+
     public class CustomException : Exception
     {
+
+        public static class ExcetionMessage {
+
+           public static string DBErrorFailed { get => "DataBase Error Failed"; }
+           public static string SystemErrorFailed { get => "System Error Failed"; }
+           public static string CustomErrorFailed { get => "Window Error "; }
+        }
+
         private string? _message;
         private readonly Exception? _innerException;
 

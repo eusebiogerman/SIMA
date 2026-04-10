@@ -52,24 +52,26 @@ namespace SIMA.Presentation.Views
         }
         #endregion
 
-        public StockViewModel() : base()
+        public StockViewModel(ICacheService cache,bool fillstock = true) : base(cache)
         {
             InitializeModel(async () =>
             {
-                _stockservices = new StockProductServices(Config);
-                _productservices = new ProductServices(Config);
+                _stockservices = new StockProductServices(Config, cache);
+                _productservices = new ProductServices(Config,cache);
                 await FillLovProd();
-                await FillStockProd();
+                if (fillstock)
+                    await FillStockProd();
             });
         }
-        public StockViewModel(IPaging page, IConfiguration config,bool fillgrid = true) :base(page, config) 
+        public StockViewModel(IPaging page, IConfiguration config, ICacheService cache, bool fillstock = true) :base(page, config, cache) 
         {
             InitializeModel(async () =>
             {
-                _stockservices = new StockProductServices(Config);
-                _productservices = new ProductServices(Config);
+                _stockservices = new StockProductServices(Config, cache);
+                _productservices = new ProductServices(Config, cache);
                 await FillLovProd();
-                await FillStockProd();
+                if (fillstock)
+                    await FillStockProd();
             });
         }
 

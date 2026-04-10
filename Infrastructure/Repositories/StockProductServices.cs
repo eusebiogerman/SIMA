@@ -26,7 +26,8 @@ namespace SIMA.Infrastructure.Repositories
 
     public class StockProductServices : IContextservices<StockProduct, StockProductView, StockProductParam>
     {
-        private IConfiguration _config;
+        private readonly ICacheService _cache;
+        private readonly IConfiguration _config;
         private JsonFile<StockProduct> _stockProductFile;
         private int? _currentIdSave;
         private int _totalfound;
@@ -42,10 +43,10 @@ namespace SIMA.Infrastructure.Repositories
             _stockProductFile = new JsonFile<StockProduct>();
             _stockProductFile.loadData();
         }
-        public StockProductServices(IConfiguration config)
+        public StockProductServices(IConfiguration config, ICacheService cache)
         {
             _config = config;
-            _stockProductFile = new JsonFile<StockProduct>();
+             _cache = cache;
         }
 
         /// <summary>
@@ -74,19 +75,37 @@ namespace SIMA.Infrastructure.Repositories
         }
 
         #region Database Action
+        private static string GetKey(GetStockParam param)
+        {
+            return $"product_{param.idStock}" +
+                $"_{param.idBrand}" +
+                $"_{param.idProduct}" +
+                $"_{param.idCategory}" +
+                $"_{param.textSearch}" +
+                $"_{param.offset}" +
+                $"_{param.limit}";
+        }
         private async Task<IEnumerable<StockProductView>> getStock(StockProductParam param)
         {
             IEnumerable<StockProductView> result;
-             var getparam = new GetStockParam(param);
             try
             {
+                var getparam = new GetStockParam(param);
+                string cacheKey = GetKey(getparam);
+                var cached = _cache.Get<IEnumerable<StockProductView>>(cacheKey);
+                if (cached != null)
+                {
+                    _totalfound = cached.Count();
+                    return cached;
+                }
 
                 using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
                 {
                     result = await conn.QueryAsync<StockProductView>("[dbo].[getStock]", getparam, commandType: System.Data.CommandType.StoredProcedure);
                     _totalfound = result.Count();
+                    _cache.Set(cacheKey, result, TimeSpan.FromMinutes(10));
+                    return result;
                 }
-
             }
             catch (Exception ex)
             {
@@ -96,13 +115,11 @@ namespace SIMA.Infrastructure.Repositories
         }
         private async Task<int> setStock(StockProduct param)
         {
-
-            using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
+           using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
             {
                 object inparam = new { idStock = param.IdStock, idBrand = param.IdBrand, stock = param.Stock };
                 return await conn.ExecuteScalarAsync<int>("[dbo].[setStock]", inparam, commandType: System.Data.CommandType.StoredProcedure);
             }
-
         }
         #endregion
 

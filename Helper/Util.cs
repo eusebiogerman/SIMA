@@ -6,9 +6,19 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Extensions.Configuration;
+using System.Windows.Media;
 
 namespace SIMA.Helper
 {
+    public sealed class BrushesStatus
+    {
+        public static SolidColorBrush Progress { get => Brushes.Blue; }
+        public static SolidColorBrush DBProcess { get => Brushes.Green; }
+        public static SolidColorBrush Error { get => Brushes.Red; }
+        public static SolidColorBrush Warming { get => Brushes.OrangeRed; }
+
+    }
+
     public class Util
     {
 
@@ -102,8 +112,13 @@ namespace SIMA.Helper
             }
 
         }
-
-        internal void ResponsiveGridWidth(object gridView, double v, Dictionary<int, string> columns_width)
+        /// <summary>
+        /// ListView Height Adaptation of the size screen 
+        /// </summary>
+        /// <param name="listview">>Object listview to resize given the gridWindowHeight</param>
+        /// <param name="gridWindowHeight">This is the actual Window Size Height </param>
+        /// <param name="height">Size Height = Only Numeric string percent {Size}% or Size}</param>
+        public void ResponsiveGridWidth(object gridView, double v, Dictionary<int, string> columns_width)
         {
             throw new NotImplementedException();
         }
