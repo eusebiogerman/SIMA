@@ -11,9 +11,7 @@ using System.Threading.Tasks;
 
 namespace SIMA.Infrastructure.Repositories.Interfaces
 {
-
-
-    public interface IContextservices<T, V, P> 
+    public interface IContextservices<T, V, P>
     {
         int? CurrentIdSave { get; }
         int TotalFound { get; }
@@ -33,6 +31,4 @@ namespace SIMA.Infrastructure.Repositories.Interfaces
         Task<object?> GetNextId();
 
     }
-
-
 }

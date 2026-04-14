@@ -40,7 +40,6 @@ namespace SIMA.Presentation.Views
         {
             InitializeComponent();
         }
-
         public Wbrand(ICacheService cache)
         {
             _cache = cache;

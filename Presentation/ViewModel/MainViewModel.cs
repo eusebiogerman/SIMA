@@ -41,7 +41,7 @@ namespace SIMA.Presentation.ViewModel
         {
                
                InitializeModel(async () => {
-                _stockservices = new StockProductServices(Config, cache);
+                   _stockservices = new StockProductServices(Config, cache);
                 _categoryservices = new CategoryServices(Config, cache);
                 await FillLovCat();
                 await FillGridStock();
@@ -49,7 +49,6 @@ namespace SIMA.Presentation.ViewModel
         }
         public MainViewModel(IPaging page, ICacheService cache) : base(page, cache)
         {
-
 
             InitializeModel(async () =>
             {
@@ -61,6 +60,7 @@ namespace SIMA.Presentation.ViewModel
         }
         public MainViewModel(IPaging page,IConfiguration config, ICacheService cache) : base(page, config, cache) 
         {
+            
 
             InitializeModel(async () => {
                 _stockservices = new StockProductServices(Config, cache);

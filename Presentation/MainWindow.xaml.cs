@@ -33,7 +33,7 @@ namespace SIMA.Presentation
     /// </summary>
     public partial class MainWindow : Window
     {
-        private  ICacheService _cache;
+        private ICacheService _cache;
         private WindowServices<StockProduct, StockProductView, StockProductParam> _windowservices;
         private CancellationTokenSource _cts;
         private Wstocks _windowStock;
@@ -42,8 +42,9 @@ namespace SIMA.Presentation
         private Wbrand _wbrand;
         private ViewModelBase _vm;
         private readonly Dictionary<int, string> columns_width;
+        private string _username;
 
-        public MainWindow()
+        public MainWindow(string username)
         {
             InitializeComponent();
             columns_width = new Dictionary<int, string>
@@ -56,6 +57,7 @@ namespace SIMA.Presentation
                 { 5, "12%" },
                 { 6, "7%" }
             };
+            txbusername.Text = username;
 
         }
 
@@ -140,7 +142,8 @@ namespace SIMA.Presentation
             LovObject sendobj = _windowservices.ParentLovtextbox.getSelectedItem(sender);
             if (!_windowservices.Isloaded && sendobj != null)
             {
-               await _windowservices.FillAsync(new StockProductParam{
+                await _windowservices.FillAsync(new StockProductParam
+                {
                     idCategory = sendobj.Id
                 });
 
@@ -168,7 +171,7 @@ namespace SIMA.Presentation
             _windowStock.WindowServices.SupressEventComboBox();
             _windowStock.Activate();
             _windowStock.Show();
-          
+
 
 
         }
@@ -231,6 +234,7 @@ namespace SIMA.Presentation
         }
         private void Window_Initialized(object sender, EventArgs e)
         {
+  
             _cache = new MemoryCacheService();
             IPaging _page = new Paging();
             var _util = new Util();
@@ -238,7 +242,7 @@ namespace SIMA.Presentation
             _vm = new MainViewModel(_page, _config, _cache);
             this.DataContext = _vm;
             _vm.ShowErrorFromModel += Vm_ShowErrorFromModel;
-            _windowservices = new WindowServices<StockProduct, StockProductView, StockProductParam>(_config,_page, new StockProductServices(_config, _cache));
+            _windowservices = new WindowServices<StockProduct, StockProductView, StockProductParam>(_config, _page, new StockProductServices(_config, _cache));
             _windowservices.SupressEventComboBox();
         }
         private async void Window_Loaded(object sender, RoutedEventArgs e)
@@ -270,11 +274,11 @@ namespace SIMA.Presentation
             _windowservices.CurrentWindow = this;
             _windowservices.GridListView = _windowservices.GridListView ?? gridProducts;
             _windowservices.GridView = _windowservices.GridView ?? gridCellProduct;
-            _windowservices.ResizeGrid("60%",this.ActualHeight,this.ActualWidth, columns_width);
+            _windowservices.ResizeGrid("60%", this.ActualHeight, this.ActualWidth, columns_width);
         }
         private void Window_ContentRendered(object sender, EventArgs e)
         {
-            _windowservices.InsertStatus("SIMA Window Ready.......", BrushesStatus.Progress,false);
+            _windowservices.InsertStatus("SIMA Window Ready.......", BrushesStatus.Progress, false);
             _windowservices.Status.StopProgress();
         }
         #endregion
