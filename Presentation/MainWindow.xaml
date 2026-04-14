@@ -11,19 +11,38 @@
         Background="#F5F5F5"
         Loaded="Window_Loaded" 
         Initialized="Window_Initialized" 
-        SizeChanged="Window_SizeChanged" WindowState="Maximized" ContentRendered="Window_ContentRendered">
+        SizeChanged="Window_SizeChanged" 
+        WindowState="Maximized" 
+        ContentRendered="Window_ContentRendered">
 
     <Grid Margin="5">
         <Grid.RowDefinitions>
-            <RowDefinition Height="96*"/>
+            <RowDefinition Height="2*"/>
+            <RowDefinition Height="94*"/>
             <RowDefinition Height="4*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="220"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <Border Grid.Column="0" 
-                Grid.Row="0"
+        <Grid Grid.Row="0" Grid.ColumnSpan="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="90*"/>
+                <ColumnDefinition Width="10*"/>
+            </Grid.ColumnDefinitions>
+            <Border Grid.Column="0"></Border>
+            <Border Grid.Column="1"
+                     Style="{StaticResource SectionBorder}">
+                    <TextBlock x:Name="txbusername" 
+                               FontWeight="Bold"
+                               FontSize="12"
+                               Style="{StaticResource TitleStyle}"
+                               Text="username"
+                               HorizontalAlignment="Right"/>
+            </Border>
+        </Grid>
+            <Border Grid.Column="0" 
+                Grid.Row="1"
                 Background="#1E1E1C" 
                 Padding="15" 
                 Margin="0,0,0,0">
@@ -91,7 +110,7 @@
             </DockPanel>
         </Border>
         <ScrollViewer Grid.Column="1" 
-                      Grid.Row="0"
+                      Grid.Row="1"
                       VerticalScrollBarVisibility="Auto"
                       Padding="5">
             <Grid>
@@ -331,7 +350,7 @@
                 </Grid>
             </Grid>
         </ScrollViewer>
-        <Grid Grid.Row="1" Grid.ColumnSpan="2" >
+        <Grid Grid.Row="2" Grid.ColumnSpan="2" >
             <ctrl:StatusbarLoading 
                 x:Name="statusbox" 
                 Height="auto"
@@ -340,4 +359,5 @@
                 Color="{Binding Color}"/>
         </Grid>
     </Grid>
+    
 </Window>

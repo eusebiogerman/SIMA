@@ -79,11 +79,6 @@ namespace SIMA.Templates
         /// <param name="delay">Decent Time to delay</param>
         public void SetLoadingState(Action process, bool isloading,string message="Loading....",int delay= DefaulDelay)
         {
-
-            Delay = delay;
-            IsLoading = isloading;
-            Message = message;
-
             if (_popup != null)
             {
                 try
@@ -109,11 +104,7 @@ namespace SIMA.Templates
         /// <param name="message">Loadind Message</param>
         public void SetLoadingStateDataBase(Action process, IConfiguration config, bool isloading=true, string message = "Loading...." )
         {
-
             int delay = DataBaseServices.PingSqlServer(config) + DefaulDelay;
-            IsLoading = isloading;
-            Message = message;
-
             if (_popup != null )
             {
                 try
@@ -142,9 +133,6 @@ namespace SIMA.Templates
         {
 
             int delay = DataBaseServices.PingSqlServer(config) + DefaulDelay;
-            IsLoading = isloading;
-            Message = message;
-
             if (_popup != null)
             {
                 try
@@ -173,10 +161,7 @@ namespace SIMA.Templates
         {
 
             int delay = DataBaseServices.PingSqlServer(config) + DefaulDelay;
-            IsLoading = isloading;
-            Message = message;
             bool _result = false;
-
             if (_popup != null)
             {
                 try
