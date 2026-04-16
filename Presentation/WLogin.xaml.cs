@@ -17,7 +17,7 @@ namespace SIMA.Presentation
     public partial class WLogin : Window
     {
         private ICacheService _cache;
-        private IContextservicesLogin<User, UsertView, UserParam> _services;
+        private IContextservicesLogin<Users, UsertView, UserParam> _services;
 
         public WLogin()
         {

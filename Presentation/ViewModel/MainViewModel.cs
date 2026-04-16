@@ -14,15 +14,25 @@ using SIMA.Infrastructure.Repositories.Interfaces;
 using SIMA.Domain.Models.Objects;
 using SIMA.Domain.Models.Views;
 using SIMA.Domain.Models.Params;
+using System.Windows.Controls;
 
 namespace SIMA.Presentation.ViewModel
 {
+    public class MenuItems
+    {
+        public MenuSima ItemMenu { get; set; }
+        public ObservableCollection<MenuItems> Items { get; } = new();
+    }
+
     public class MainViewModel : ViewModelBase
     {
         private IContextservices<StockProduct, StockProductView, StockProductParam> _stockservices;
         private IContextservices<Category, Category, CategoryParam> _categoryservices;
+        private IContextservicesMenu<MenuSima> _menuservices;
+
         private ObservableCollection<StockProductView> _stockproduct;
         private ObservableCollection<LovObject> _category;
+        private ObservableCollection<MenuItems> _menutree;
 
         #region Observable Collection Property
         public ObservableCollection<StockProductView> StockProducts
@@ -35,14 +45,21 @@ namespace SIMA.Presentation.ViewModel
             get => _category;
             set { _category = value; OnPropertyChanged(nameof(Category)); }
         }
+        public ObservableCollection<MenuItems> MenuTree
+        {
+            get => _menutree;
+            set { _menutree = value; OnPropertyChanged(nameof(MenuTree)); }
+        }
         #endregion
 
         public MainViewModel(ICacheService cache) : base(cache)
         {
                
                InitializeModel(async () => {
-                   _stockservices = new StockProductServices(Config, cache);
+                _stockservices = new StockProductServices(Config, cache);
                 _categoryservices = new CategoryServices(Config, cache);
+                _menuservices = new MenuServices(Config, cache);
+                await FillMenu();
                 await FillLovCat();
                 await FillGridStock();
             });
@@ -54,6 +71,8 @@ namespace SIMA.Presentation.ViewModel
             {
                 _stockservices = new StockProductServices(Config, cache);
                 _categoryservices = new CategoryServices(Config, cache);
+                _menuservices = new MenuServices(Config, cache);
+                await FillMenu();
                 await FillLovCat();
                 await FillGridStock();
             });
@@ -65,13 +84,54 @@ namespace SIMA.Presentation.ViewModel
             InitializeModel(async () => {
                 _stockservices = new StockProductServices(Config, cache);
                 _categoryservices = new CategoryServices(Config, cache);
+                _menuservices = new MenuServices(Config, cache);
+                await FillMenu();
                 await FillLovCat();
                 await FillGridStock();
             });
 
         }
 
-        #region fill Observable Collection 
+        #region fill Observable Collection
+        /// <summary>
+        /// Fill the Menu Tree
+        /// </summary>
+        private async Task FillMenu()
+        {
+            try
+            {
+                IEnumerable<MenuSima> menusima = await _menuservices.GetMenu(0);
+                var root = new MenuItems { ItemMenu = new MenuSima { AppName = "Menu", IdParent = 0 } };
+                MenuItems? child = null;
+                foreach (var item in menusima)
+                {
+                    if (item.IdChild == null)
+                    {
+                        if(child != null)
+                        {
+                            root.Items.Add(child);
+                        }
+                        child = null;
+                        child = new MenuItems { ItemMenu = item };
+                        child.ItemMenu.AppName = child.ItemMenu.ParentName;
+                    }
+                    else
+                        child?.Items?.Add(new MenuItems { ItemMenu = item });
+                }
+                root.Items.Add(child);
+                MenuTree = new ObservableCollection<MenuItems>();
+                MenuTree.Add(root);
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex)
+            {
+                InvokeError("DataBase Error Failed");
+            }
+            catch (Exception)
+            {
+                InvokeError("System Error Failed");
+            }
+
+        }
         /// <summary>
         /// get the Category data
         /// </summary>

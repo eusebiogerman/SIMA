@@ -1,42 +1,48 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <Style x:Key="MenuButtonStyle" TargetType="Button">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="Foreground" Value="#9c9a92"/>
-        <Setter Property="FontSize" Value="14"/>
-        <Setter Property="Padding" Value="15,12"/>
-        <Setter Property="HorizontalContentAlignment" Value="Left"/>
-        <Setter Property="Margin" Value="0,2"/>
-        <Setter Property="Cursor" Value="Hand"/>
 
+    <Style x:Key="StyleButtonEffect" TargetType="Button">
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Background" Value="#2a2a28"/>
-                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="TextBlock.Foreground" Value="White"/>
             </Trigger>
             <Trigger Property="IsFocused" Value="True">
-                <Setter Property="Background" Value="#3B6FD4"/>
-                <Setter Property="Foreground" Value="Black"/>
-                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="TextBlock.Foreground" Value="Black"/>
+                <Setter Property="TextBlock.FontWeight" Value="SemiBold"/>
             </Trigger>
         </Style.Triggers>
     </Style>
 
-    <Style x:Key="CommunButton" TargetType="Button">
-        <Setter Property="FontWeight" Value="Bold"/>
+    <Style x:Key="StyleButton" TargetType="Button" BasedOn="{StaticResource StyleButtonEffect}">
         <Setter Property="Width" Value="100"/>
         <Setter Property="Height" Value="25"/>
         <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+
+    <Style x:Key="CommunButton" TargetType="Button" BasedOn="{StaticResource StyleButton}">
+        <Setter Property="FontWeight" Value="Bold"/>
         <Setter Property="Margin" Value="10,0,0,0"/>
     </Style>
 
-    <Style x:Key="ShortButtonPanel" TargetType="Button">
-        <Setter Property="Width" Value="100"/>
-        <Setter Property="Height" Value="25"/>
+
+    <Style x:Key="ShortButtonPanel" TargetType="Button" BasedOn="{StaticResource StyleButton}">
         <Setter Property="Margin"  Value="5,0,8,5"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+
+    <Style x:Key="TreeButton" TargetType="Button" BasedOn="{StaticResource StyleButtonEffect}">
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Margin" Value="3,0,0,0"/>
+        <Setter Property="Width" Value="25"/>
+        <Setter Property="Height" Value="25"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="#9c9a92"/>
+        <Setter Property="Margin" Value="0,2"/>
+        <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Cursor" Value="Hand"/>
     </Style>
 

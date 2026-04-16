@@ -291,7 +291,7 @@ namespace SIMA.Presentation.Views
             _vm = new StockViewModel(_page, _config, _cache,false);
             this.DataContext = _vm;
             _vm.ShowErrorFromModel += Vm_ShowErrorFromModel;
-            _windowservices = new WindowServices<StockProduct, StockProductView, StockProductParam>(_config, _page, new StockProductServices(_config,_cache));
+            _windowservices = new WindowServices<StockProduct, StockProductView, StockProductParam>(_cache,_config, _page, new StockProductServices(_config,_cache));
             _windowservices.SupressEventComboBox();
         }
         private async void Window_Loaded(object sender, RoutedEventArgs e)

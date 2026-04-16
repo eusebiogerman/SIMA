@@ -29,6 +29,5 @@ namespace SIMA.Infrastructure.Repositories.Interfaces
         Task<int> GetTotalFound(P param);
         Task<decimal> GetTotalValue();
         Task<object?> GetNextId();
-
     }
 }

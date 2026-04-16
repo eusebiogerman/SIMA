@@ -38,6 +38,11 @@ namespace SIMA.Presentation.Repository
         {
             InsertStatus("Initializing Window Services.......", Brushes.Blue);
         }
+        public WindowServices( ICacheService cache, IConfiguration config, IPaging page, IContextservices<T, V, P> services) : base(cache,config, page, services)
+        {
+            InsertStatus("Initializing Window Services.......", Brushes.Blue);
+        }
+
 
         /// <summary>
         /// Returns the object Generic Value P with passing the values of the Active Filter controls 
