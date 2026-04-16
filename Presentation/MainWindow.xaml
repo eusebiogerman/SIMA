@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
         xmlns:ctrl="clr-namespace:SIMA.Templates"
+        xmlns:local="clr-namespace:SIMA.Presentation.ViewModel"
         mc:Ignorable="d"
         Title="Simple Inventory Management App(SIMA)" 
         Height="Auto" Width="1400"
@@ -41,7 +42,7 @@
                                HorizontalAlignment="Right"/>
             </Border>
         </Grid>
-            <Border Grid.Column="0" 
+        <Border Grid.Column="0" 
                 Grid.Row="1"
                 Background="#1E1E1C" 
                 Padding="15" 
@@ -57,56 +58,67 @@
                                HorizontalAlignment="Center"/>
                     <Separator Margin="10,15" Background="#333"/>
                 </StackPanel>
-                <StackPanel>
-                    <Button x:Name="btnCategory" 
-                            Style="{StaticResource MenuButtonStyle}" 
-                            Tag="Category"
-                            Click="btnCategory_Click">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="💸" Margin="0,0,10,0"/>
-                            <TextBlock Text="Category"/>
-                        </StackPanel>
-                    </Button>
-                    <Button x:Name="btnProduct" 
-                            Style="{StaticResource MenuButtonStyle}" 
-                            Tag="Product"
-                             Click="btnProduct_Click">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="💸" Margin="0,0,10,0"/>
-                            <TextBlock Text="Product"/>
-                        </StackPanel>
-                    </Button>
-                    <Button x:Name="btnBrand" 
-                            Style="{StaticResource MenuButtonStyle}" 
-                            Tag="Brand"
-                            Click="btnBrand_Click">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="💸" Margin="0,0,10,0"/>
-                            <TextBlock Text="Brand"/>
-                        </StackPanel>
-                    </Button>
-                    <Button x:Name="btnNewStock" 
-                            Style="{StaticResource MenuButtonStyle}" 
-                            Tag="Stock"
-                            Click="btnNewStock_Click">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="📊" Margin="0,0,10,0"/>
-                            <TextBlock Text="Stock"/>
-                        </StackPanel>
-                    </Button>
-                    <Button Style="{StaticResource MenuButtonStyle}" Tag="Reportes">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="📑" Margin="0,0,10,0"/>
-                            <TextBlock Text="Reports "/>
-                        </StackPanel>
-                    </Button>
-                    <Button Style="{StaticResource MenuButtonStyle}" Tag="Config">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="⚙️" Margin="0,0,10,0"/>
-                            <TextBlock Text="Configuration"/>
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
+                    <Grid DockPanel.Dock="Top"
+                          Margin="0,1,0,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="50*"/>
+                        <ColumnDefinition Width="50*"/>
+                    </Grid.ColumnDefinitions>
+
+                   <StackPanel Grid.Column="0" 
+                               Orientation="Horizontal"
+                               HorizontalAlignment="Left">
+                       <Button Content="&#x25B2;"
+                               HorizontalAlignment="Left"
+                               Style="{StaticResource TreeButton}"
+                               Tag="All"
+                               Click="btnCollapse_Click" />
+                       <Button Content="&#x25B2;&#x25B4;" 
+                               HorizontalAlignment="Left"
+                               Style="{StaticResource TreeButton}"
+                               Tag="Current"
+                               Click="btnCollapse_Click" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" 
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Right">
+                        <Button Content="&#x25BC;&#x25BE;" 
+                                HorizontalAlignment="Right"
+                                Style="{StaticResource TreeButton}"
+                                Tag="All"
+                                Click="btnExpand_Click" />
+                        <Button Content="&#x25BC;"
+                                HorizontalAlignment="Right"
+                                Style="{StaticResource TreeButton}"
+                                Tag="Current"
+                                Click="btnExpand_Click" />
+                    </StackPanel>
+                </Grid>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <TreeView ItemsSource="{Binding MenuTree}" 
+                              Background="Transparent" 
+                              Cursor="Hand" 
+                              BorderThickness="0"
+                              SelectedItemChanged="tree_SelectionCurrent"
+                              MouseDoubleClick="tree_OpenSelection">
+                        <TreeView.ItemTemplate>
+                            <HierarchicalDataTemplate DataType="{x:Type local:MenuItems}"
+                                                      ItemsSource="{Binding Items}">
+                                    <StackPanel Orientation="Horizontal"
+                                            Style="{StaticResource MenuPanelStyle}" 
+                                            Tag="{Binding ItemMenu.AppName }">
+                                    <TextBlock Text="{Binding ItemMenu.IconClass}" Margin="0,0,10,0"/>
+                                    <TextBlock Text="{Binding ItemMenu.AppName}"/>
+                                </StackPanel>
+                            </HierarchicalDataTemplate>
+                        </TreeView.ItemTemplate>
+                        <TreeView.ItemContainerStyle>
+                            <Style TargetType="TreeViewItem">
+                                <Setter Property="IsExpanded" Value="True" />
+                            </Style>
+                        </TreeView.ItemContainerStyle>
+                    </TreeView>
+                </ScrollViewer>
             </DockPanel>
         </Border>
         <ScrollViewer Grid.Column="1" 

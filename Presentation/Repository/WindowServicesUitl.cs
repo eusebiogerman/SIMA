@@ -33,7 +33,7 @@ using System.Windows.Media;
 
 namespace SIMA.Presentation.Repository
 {
-    public partial class WindowServices<T, V,P> : WindowServicesBase<T, V, P> , IUtilServices<V, P>
+    public partial class WindowServices<T, V, P> : WindowServicesBase<T, V, P>, IUtilServices<V, P>
     {
         private int _stscnt = 0;
         private int maxCapacity = 50;
@@ -268,7 +268,7 @@ namespace SIMA.Presentation.Repository
         /// <param name="color">Mark the color of the message</param>
         /// <param name="ErrorType">Classify the Message if its a Error Exception, recomended in the catch </param>
         /// <param name="ex">Exception catching </param>
-        public void InsertStatus(string message, Brush color, bool isprogress = true, ExceptionType ErrorType = ExceptionType.None, Exception? ex = null,int delay = 500)
+        public void InsertStatus(string message, Brush color, bool isprogress = true, ExceptionType ErrorType = ExceptionType.None, Exception? ex = null, int delay = 500)
         {
             var traceError = string.Empty;
             if (Status != null)
@@ -276,7 +276,7 @@ namespace SIMA.Presentation.Repository
                 if (isprogress && ex == null)
                 {
                     var msgloading = message.Length > 15 ? message.Substring(0, 15) : message;
-                    Status.RunProgress(isloading:isprogress,text: msgloading + "...",delay);
+                    Status.RunProgress(isloading: isprogress, text: msgloading + "...", delay);
                 }
 
                 //Writing Status Error Message in the bar 
@@ -337,7 +337,7 @@ namespace SIMA.Presentation.Repository
         /// <returns>Task</returns>
         public async Task InsertStatusAsync(string message, Brush color, bool isprogress = true, ExceptionType ErrorType = ExceptionType.None, Exception? ex = null)
         {
-            InsertStatus(message, color, true, ErrorType, ex,1000);
+            InsertStatus(message, color, true, ErrorType, ex, 1000);
             await Status.DelayProgress();
 
         }
@@ -360,7 +360,7 @@ namespace SIMA.Presentation.Repository
         /// <param name="obj">(LovTextBox) Object Window Services(Paranet,Child) Window or Any </param>
         /// <param name="searchtext">Mark the Text for the popup</param>
         /// <param name="id">Id to find in Source IEnumeralble(LovObject)</param>
-        public void SetLoveValueItem(LovTextBox? obj,string? searchtext = null,int? id = null )
+        public void SetLoveValueItem(LovTextBox? obj, string? searchtext = null, int? id = null)
         {
             if (obj != null)
             {
@@ -370,7 +370,52 @@ namespace SIMA.Presentation.Repository
                 obj.Close();
             }
         }
+        /// <summary>
+        /// Get the Current Node Of the TreeView civeng Items Template
+        /// </summary>
+        /// <param name="treeView">Current TreeView Object</param>
+        /// <param name="dataItem">Item Template Object</param>
+        /// <returns>TreeViewItem</returns>
+        public TreeViewItem GetTreeViewItemFromObject(TreeView treeView, object dataItem)
+        {
+            var container = treeView.ItemContainerGenerator.ContainerFromItem(dataItem) as TreeViewItem;
 
+            if (container != null)
+                return container;
+
+            foreach (var item in treeView.Items)
+            {
+                var parent = treeView.ItemContainerGenerator.ContainerFromItem(item) as TreeViewItem;
+                var result = GetTreeViewItemRecursive(parent, dataItem);
+                if (result != null)
+                    return result;
+            }
+
+            return null;
+        }
+        /// <summary>
+        /// Services to Open and Singlenton Window
+        /// </summary>
+        /// <typeparam name="T">Any Object as Window Abstract Type</typeparam>
+        /// <param name="win">Window object</param>
+        /// <returns>Window</returns>
+        public Window OpenWindow<W>(W win) 
+        {
+            var typ = typeof(W);
+            Window inswin = null;
+            if (typeof(Window).IsAssignableFrom(typ))
+            {
+
+                inswin = win is Window w ? w : (Window?)Activator.CreateInstance(typ, new object[] { _cache });
+                inswin?.Show();
+                inswin.Owner = this.CurrentWindow;
+                this.SupressEventComboBox();
+                inswin.Activate();
+                inswin.Show();
+            }
+            return inswin;
+        }
 
     }
+
 }

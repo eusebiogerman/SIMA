@@ -63,7 +63,7 @@ namespace SIMA.Infrastructure.Repositories
 
                 using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
                 {
-                    result = await conn.QueryAsync<Category>("[dbo].[getCategory]", param, commandType: System.Data.CommandType.StoredProcedure);
+                    result = await conn.QueryAsync<Category>("[SIMA].[getCategory]", param, commandType: System.Data.CommandType.StoredProcedure);
                     _totalfound = result.Count();
                     _cache.Set(cacheKey, result, TimeSpan.FromMinutes(10));
                     return result;
@@ -79,7 +79,7 @@ namespace SIMA.Infrastructure.Repositories
         private async Task<int> setCategory(Category param) {
             using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
             {
-                var test = await conn.ExecuteScalarAsync<int>("[dbo].[setCategory]", param, commandType: System.Data.CommandType.StoredProcedure);
+                var test = await conn.ExecuteScalarAsync<int>("[SIMA].[setCategory]", param, commandType: System.Data.CommandType.StoredProcedure);
                 return test;
             }
         }

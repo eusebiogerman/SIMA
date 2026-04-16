@@ -15,9 +15,7 @@ using SIMA.Domain.Models.Params;
 
 namespace SIMA.Infrastructure.Repositories
 {
-
-
-    public class BrandServices : IContextservices<Brand, BrandView, BrandParam>
+  public class BrandServices : IContextservices<Brand, BrandView, BrandParam>
     {
         private readonly ICacheService _cache;
         private readonly IConfiguration _config;
@@ -69,7 +67,7 @@ namespace SIMA.Infrastructure.Repositories
 
                 using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
                 {
-                     result = await conn.QueryAsync<BrandView>("[dbo].[getBrand]", param, commandType: System.Data.CommandType.StoredProcedure);
+                    result = await conn.QueryAsync<BrandView>("[SIMA].[getBrand]", param, commandType: System.Data.CommandType.StoredProcedure);
                     _totalfound = result.Count();
                     _cache.Set(cacheKey, result, TimeSpan.FromMinutes(10));
                     return result;
@@ -87,7 +85,7 @@ namespace SIMA.Infrastructure.Repositories
 
             using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
             {
-                return await conn.ExecuteScalarAsync<int>("[dbo].[setBrand]", param, commandType: System.Data.CommandType.StoredProcedure);
+                return await conn.ExecuteScalarAsync<int>("[SIMA].[setBrand]", param, commandType: System.Data.CommandType.StoredProcedure);
             }
 
         }

@@ -18,8 +18,9 @@ namespace SIMA.Presentation.Repository
     public class WindowServicesBase<T, V, P> 
     {
         private IPaging _page;
-        private readonly IConfiguration _config;
         private IContextservices<T, V, P> _service;
+        private readonly IConfiguration _config;
+        protected readonly ICacheService _cache;
 
         private Util? _util;
         private bool _formState = false;
@@ -28,6 +29,7 @@ namespace SIMA.Presentation.Repository
         public IConfiguration Config => _config;
         public IPaging Page { get => _page; set => _page = value; }
         public IContextservices<T, V, P> Service { get => _service; set => _service = value; }
+        public ICacheService Cache => _cache;
 
         public ViewModelBase? DataContext { get; set; }
         public LovTextBox? ChildLovtextbox { get; set; }
@@ -62,7 +64,42 @@ namespace SIMA.Presentation.Repository
             _service = services;
             _formState = true;
         }
+        public WindowServicesBase(ICacheService cache, IConfiguration config, IPaging page, IContextservices<T, V, P> services)
+        {
+            _cache = cache;
+            _config = config;
+            _page = page;
+            _util = new Util();
+            _service = services;
+            _formState = true;
+        }
 
+        /// <summary>
+        /// Get the current Node given the Parent Node
+        /// </summary>
+        /// <param name="parent">Node Parent</param>
+        /// <param name="dataItem">Item Template to Find</param>
+        /// <returns></returns>
+        protected TreeViewItem GetTreeViewItemRecursive(TreeViewItem parent, object dataItem)
+        {
+            if (parent == null)
+                return null;
+
+            var container = parent.ItemContainerGenerator.ContainerFromItem(dataItem) as TreeViewItem;
+
+            if (container != null)
+                return container;
+
+            foreach (var item in parent.Items)
+            {
+                var child = parent.ItemContainerGenerator.ContainerFromItem(item) as TreeViewItem;
+                var result = GetTreeViewItemRecursive(child, dataItem);
+                if (result != null)
+                    return result;
+            }
+
+            return null;
+        }
 
     }
 }

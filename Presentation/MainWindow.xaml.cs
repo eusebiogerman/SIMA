@@ -25,6 +25,8 @@ using SIMA.Presentation.Repository;
 using System.Collections.ObjectModel;
 using Microsoft.Data.SqlClient;
 using System.Threading;
+using System.Windows.Input;
+using System.Windows.Markup.Localizer;
 
 namespace SIMA.Presentation
 {
@@ -41,6 +43,7 @@ namespace SIMA.Presentation
         private Wcategory _wcategory;
         private Wbrand _wbrand;
         private ViewModelBase _vm;
+        private TreeViewItem? _currentItem = null;
         private readonly Dictionary<int, string> columns_width;
         private string _username;
 
@@ -161,56 +164,69 @@ namespace SIMA.Presentation
         {
             await _windowservices.ClearFilters();
         }
-        private void btnNewStock_Click(object sender, RoutedEventArgs e)
+        private void tree_OpenSelection(object sender, MouseButtonEventArgs e)
         {
-            if (_windowStock == null)
+            var element = e.OriginalSource as DependencyObject;
+            TreeView tree = sender as TreeView;
+
+            while (element != null && element is not TreeViewItem)
+                element = VisualTreeHelper.GetParent(element);
+
+            if (element is TreeViewItem item)
             {
-                _windowStock = new Wstocks(_cache);
+                var node = (MenuItems)item.DataContext;
+                if (node.ItemMenu.ParentName != null)
+                {
+                    var nd = _windowservices.GetTreeViewItemFromObject(tree, item);
+                    if (nd != null)
+                        nd.IsExpanded = !nd.IsExpanded;
+                }
+                else
+                {
+                    switch (node.ItemMenu.ObjectName)
+                    {
+                        case "Wcategory":
+                            _wcategory = (Wcategory)_windowservices.OpenWindow<Wcategory>(_wcategory);
+                            break;
+                        case "Wproduct":
+                            _wproduct = (Wproduct)_windowservices.OpenWindow<Wproduct>(_wproduct);
+                            break;
+                        case "Wbrand":
+                            _wbrand = (Wbrand)_windowservices.OpenWindow<Wbrand>(_wbrand);
+                            break;
+                        case "Wstocks":
+                            _windowStock = (Wstocks)_windowservices.OpenWindow<Wstocks>(_windowStock);
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+
             }
-            _windowStock.Owner = this;
-            _windowStock.WindowServices.SupressEventComboBox();
-            _windowStock.Activate();
-            _windowStock.Show();
+        }
+        private void tree_SelectionCurrent(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            TreeView tree = sender as TreeView;
+            if (tree != null)
+            {
+                if (e.NewValue == null)
+                    return;
 
+                _currentItem = _windowservices.GetTreeViewItemFromObject(tree, e.NewValue);
 
+            }
+        }
+        private void btnCollapse_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentItem != null)
+                _currentItem.IsExpanded = false;
 
         }
-        private void btnProduct_Click(object sender, RoutedEventArgs e)
+        private void btnExpand_Click(object sender, RoutedEventArgs e)
         {
-            if (_wproduct == null)
-            {
-                _wproduct = new Wproduct(_cache);
-            }
-            _wproduct.Owner = this;
-            _wproduct.WindowServices.SupressEventComboBox();
-            _wproduct.Activate();
-            _wproduct.Show();
-
-        }
-        private void btnBrand_Click(object sender, RoutedEventArgs e)
-        {
-            if (_wbrand == null)
-            {
-                _wbrand = new Wbrand(_cache);
-            }
-            _wbrand.Owner = this;
-            _wbrand.WindowServices.SupressEventComboBox();
-            _wbrand.Activate();
-            _wbrand.Show();
-
-
-        }
-        private void btnCategory_Click(object sender, RoutedEventArgs e)
-        {
-            if (_wcategory == null)
-            {
-                _wcategory = new Wcategory(_cache);
-            }
-            _wcategory.Owner = this;
-            _wcategory.WindowServices.SupressEventComboBox();
-            _wcategory.Activate();
-            _wcategory.Show();
-
+            if (_currentItem != null)
+                _currentItem.IsExpanded = true;
         }
         private void PagePrevious_Click(object sender, RoutedEventArgs e)
         {
@@ -234,7 +250,7 @@ namespace SIMA.Presentation
         }
         private void Window_Initialized(object sender, EventArgs e)
         {
-  
+
             _cache = new MemoryCacheService();
             IPaging _page = new Paging();
             var _util = new Util();
@@ -242,7 +258,7 @@ namespace SIMA.Presentation
             _vm = new MainViewModel(_page, _config, _cache);
             this.DataContext = _vm;
             _vm.ShowErrorFromModel += Vm_ShowErrorFromModel;
-            _windowservices = new WindowServices<StockProduct, StockProductView, StockProductParam>(_config, _page, new StockProductServices(_config, _cache));
+            _windowservices = new WindowServices<StockProduct, StockProductView, StockProductParam>(_cache, _config, _page, new StockProductServices(_config, _cache));
             _windowservices.SupressEventComboBox();
         }
         private async void Window_Loaded(object sender, RoutedEventArgs e)
@@ -255,6 +271,7 @@ namespace SIMA.Presentation
             _windowservices.Status = statusbox;
             _windowservices.ObsrverStatus = new ObservableCollection<StatusItem>();
             _windowservices.Status.ItemsSource = _windowservices.ObsrverStatus;
+
 
             await _windowservices.InsertStatusAsync("Initializing SIMA Window.......", BrushesStatus.Progress);
             _windowservices.Page.Offset = (int?)_windowservices.PageControl.GetSelectedItemsPerPage() ?? _windowservices.Page.DefaultOffset;
@@ -284,5 +301,4 @@ namespace SIMA.Presentation
         #endregion
 
     }
-
 }

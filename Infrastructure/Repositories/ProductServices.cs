@@ -69,7 +69,7 @@ namespace SIMA.Infrastructure.Repositories
 
                 using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
             {
-                 result = await conn.QueryAsync<ProductView>("[dbo].[getProduct]", param, commandType: System.Data.CommandType.StoredProcedure);
+                 result = await conn.QueryAsync<ProductView>("[SIMA].[getProduct]", param, commandType: System.Data.CommandType.StoredProcedure);
                 _totalfound = result.Count();
                 _cache.Set(cacheKey, result, TimeSpan.FromMinutes(10));
                 return result;
@@ -87,7 +87,7 @@ namespace SIMA.Infrastructure.Repositories
 
             using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
             {
-                return await conn.ExecuteScalarAsync<int>("[dbo].[setProduct]", param, commandType: System.Data.CommandType.StoredProcedure);
+                return await conn.ExecuteScalarAsync<int>("[SIMA].[setProduct]", param, commandType: System.Data.CommandType.StoredProcedure);
             }
 
         }

@@ -101,7 +101,7 @@ namespace SIMA.Infrastructure.Repositories
 
                 using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
                 {
-                    result = await conn.QueryAsync<StockProductView>("[dbo].[getStock]", getparam, commandType: System.Data.CommandType.StoredProcedure);
+                    result = await conn.QueryAsync<StockProductView>("[SIMA].[getStock]", getparam, commandType: System.Data.CommandType.StoredProcedure);
                     _totalfound = result.Count();
                     _cache.Set(cacheKey, result, TimeSpan.FromMinutes(10));
                     return result;
@@ -118,7 +118,7 @@ namespace SIMA.Infrastructure.Repositories
            using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
             {
                 object inparam = new { idStock = param.IdStock, idBrand = param.IdBrand, stock = param.Stock };
-                return await conn.ExecuteScalarAsync<int>("[dbo].[setStock]", inparam, commandType: System.Data.CommandType.StoredProcedure);
+                return await conn.ExecuteScalarAsync<int>("[SIMA].[setStock]", inparam, commandType: System.Data.CommandType.StoredProcedure);
             }
         }
         #endregion

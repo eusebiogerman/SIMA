@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace SIMA.Infrastructure.Repositories
 {
-    public class UserServices : IContextservicesLogin<User, UsertView, UserParam>
+    public class UserServices : IContextservicesLogin<Users, UsertView, UserParam>
     {
 
         private readonly ICacheService _cache;
@@ -69,7 +69,7 @@ namespace SIMA.Infrastructure.Repositories
             return result;
 
         }
-        private async Task<int> setBrand(User param)
+        private async Task<int> setBrand(Users param)
         {
 
             using (var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
@@ -81,15 +81,15 @@ namespace SIMA.Infrastructure.Repositories
         #endregion
 
         #region Abstractions
-        public async Task<int> Add(User entitiy)
+        public async Task<int> Add(Users entitiy)
         {
             return await setBrand(entitiy);
         }
-        public async Task<bool> Update(User entity)
+        public async Task<bool> Update(Users entity)
         {
             return (await setBrand(entity) > 0);
         }
-        public async Task<bool> Set(User entity)
+        public async Task<bool> Set(Users entity)
         {
             return (await setBrand(entity) > 0);
         }
@@ -104,11 +104,11 @@ namespace SIMA.Infrastructure.Repositories
         {
             return await getBrand(new UserParam(page));
         }
-        public async Task<IEnumerable<User>> GetAll(IPaging page)
+        public async Task<IEnumerable<Users>> GetAll(IPaging page)
         {
             throw new NotImplementedException();
         }
-        public async Task<IEnumerable<User>> GetbyId(int? id)
+        public async Task<IEnumerable<Users>> GetbyId(int? id)
         {
             throw new NotImplementedException();
         }
