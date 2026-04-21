@@ -3,18 +3,13 @@ using SIMA.Infrastructure.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
-using SIMA.Templates;
 using SIMA.Infrastructure.Repositories.Interfaces;
 using SIMA.Domain.Models.Objects;
 using SIMA.Domain.Models.Views;
 using SIMA.Domain.Models.Params;
-using System.Windows.Controls;
+using WpfJEG.net6;
 
 namespace SIMA.Presentation.ViewModel
 {

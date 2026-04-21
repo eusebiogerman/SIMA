@@ -1,33 +1,12 @@
-﻿using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json.Linq;
-using SIMA.Domain.Models.Intefaces;
-using SIMA.Domain.Models.Objects;
-using SIMA.Domain.Models.Params;
-using SIMA.Domain.Models.Views;
-using SIMA.Helper;
+﻿using Microsoft.Extensions.Configuration;
 using SIMA.Helper.Interfaces;
-using SIMA.Infrastructure.Repositories;
 using SIMA.Infrastructure.Repositories.Interfaces;
-using SIMA.Presentation.ViewModel;
-using SIMA.Templates;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Drawing;
-using System.Dynamic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Input;
 using System.Windows.Media;
+using WpfJEG.net6;
 
 namespace SIMA.Presentation.Repository
 {

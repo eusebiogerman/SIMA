@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using SIMA.ExtensionsHelper;
-using SIMA.Templates;
 using SIMA.Infrastructure.Repositories.Interfaces;
+using WpfJEG.net6;
 
 namespace SIMA.Infrastructure.Repositories
 {

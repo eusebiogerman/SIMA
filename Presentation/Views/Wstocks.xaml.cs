@@ -1,42 +1,21 @@
-﻿using Azure;
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
-using SIMA.Domain.Models.Intefaces;
 using SIMA.Domain.Models.Objects;
 using SIMA.Domain.Models.Params;
 using SIMA.Domain.Models.Views;
 using SIMA.ExtensionsHelper;
 using SIMA.Helper;
-using SIMA.Helper.Interfaces;
 using SIMA.Infrastructure.Repositories;
 using SIMA.Infrastructure.Repositories.Interfaces;
 using SIMA.Presentation.Repository;
-using SIMA.Presentation.ViewModel;
-using SIMA.Presentation.Views;
-using SIMA.Templates;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
-using System.Drawing;
-using System.IO.Pipelines;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using System.Xml.Linq;
-using static System.Net.Mime.MediaTypeNames;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using WpfJEG.net6;
 
 namespace SIMA.Presentation.Views
 {

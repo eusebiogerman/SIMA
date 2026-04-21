@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SIMA.Presentation"
-        xmlns:ctrl="clr-namespace:SIMA.Templates"
+        xmlns:ctrl="clr-namespace:WpfJEG.net6;assembly=WpfJEG"
         mc:Ignorable="d"
         ResizeMode="NoResize"
         Title="WLogin" Height="450" Width="800" Loaded="Window_Loaded">
@@ -57,8 +57,6 @@
                 </Border>
                 <Border Grid.Row="2">
                     <ctrl:Loading x:Name="progress" 
-                      Width="auto"
-                      Height="auto"
                       HorizontalAlignment="Center"
                       VerticalAlignment="Center"/>
                 </Border>

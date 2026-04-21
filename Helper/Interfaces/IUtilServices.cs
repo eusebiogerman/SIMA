@@ -1,10 +1,10 @@
 ﻿using SIMA.Infrastructure.Repositories;
 using SIMA.Presentation.ViewModel;
-using SIMA.Templates;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using WpfJEG.net6;
 
 namespace SIMA.Helper.Interfaces
 {

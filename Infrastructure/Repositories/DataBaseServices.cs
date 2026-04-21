@@ -39,15 +39,45 @@ namespace SIMA.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
+                stopwatch.Stop();
                 return -1;
             }
-            finally
-            {
-                stopwatch.Stop();
-            }
 
+            stopwatch.Stop();
             return (int)stopwatch.ElapsedMilliseconds;
         }
+
+        /// <summary>
+        /// Test Latency Database 
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public static async Task<int> PingSqlServerAsync(IConfiguration config)
+        {
+            _config = config;
+            var stopwatch = Stopwatch.StartNew();
+            try
+            {
+                await Task.Delay(500);
+                using (var connection = new SqlConnection(_config.GetConnectionString("DefaultConnection")))
+                {
+                    using var command = new SqlCommand("SELECT 1", connection);
+                    stopwatch = Stopwatch.StartNew();
+                    connection.Open();
+                    command.ExecuteScalar();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                stopwatch.Stop(); 
+                return -1;
+            }
+   
+            stopwatch.Stop();
+            return (int)stopwatch.ElapsedMilliseconds;
+        }
+
         /// <summary>
         /// Unit Test SqlException
         /// </summary>
