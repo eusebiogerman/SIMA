@@ -41,13 +41,13 @@
 </ItemGroup>
   
   <ItemGroup>
-    <Page Update="Themes\generic.xaml">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Page>
+    <Folder Include="Properties\" />
   </ItemGroup>
   
   <ItemGroup>
-    <Folder Include="Properties\" />
+    <Reference Include="WpfJEG">
+      <HintPath>..\WpfJEG\net6\WpfJEG\bin\Release\net6.0-windows\WpfJEG.dll</HintPath>
+    </Reference>
   </ItemGroup>
   
   <ItemGroup>

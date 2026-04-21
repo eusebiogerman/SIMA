@@ -1,11 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json.Linq;
 using SIMA.Helper;
 using SIMA.Infrastructure.Repositories;
 using SIMA.Infrastructure.Repositories.Interfaces;
 using SIMA.Presentation.Interfaces;
-using SIMA.Presentation.Repository;
-using SIMA.Templates;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -15,6 +12,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Media;
+using WpfJEG.net6;
 
 namespace SIMA.Presentation.ViewModel
 {

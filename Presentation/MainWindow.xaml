@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-        xmlns:ctrl="clr-namespace:SIMA.Templates"
         xmlns:local="clr-namespace:SIMA.Presentation.ViewModel"
+        xmlns:ctrl="clr-namespace:WpfJEG.net6;assembly=WpfJEG"
         mc:Ignorable="d"
         Title="Simple Inventory Management App(SIMA)" 
         Height="Auto" Width="1400"
@@ -371,5 +371,4 @@
                 Color="{Binding Color}"/>
         </Grid>
     </Grid>
-    
 </Window>

@@ -1,8 +1,7 @@
-﻿using SIMA.ExtensionsHelper;
-using SIMA.Templates;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using WpfJEG.net6;
 
 namespace SIMA.Infrastructure.Repositories.Interfaces
 {

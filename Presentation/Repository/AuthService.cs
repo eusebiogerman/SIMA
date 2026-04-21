@@ -10,7 +10,6 @@ namespace SIMA.Presentation.Repository
         private AuthenticationResult _authResult;
 
         public bool IsAuthenticated => _authResult != null;
-
         public IPublicClientApplication AuthApp => _authApp;
 
         public AuthService()
@@ -39,7 +38,6 @@ namespace SIMA.Presentation.Repository
 
             return _authResult != null;
         }
-
         public string GetUserName()
         {
             return _authResult?.Account?.Username ?? "";

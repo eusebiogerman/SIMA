@@ -12,10 +12,10 @@ using System.Windows.Controls;
 using SIMA.Infrastructure.Repositories.Interfaces;
 using SIMA.Domain.Models.Objects;
 using SIMA.Domain.Models.Params;
-using SIMA.Templates;
 using SIMA.Presentation.Repository;
 using System.ComponentModel;
 using Microsoft.Data.SqlClient;
+using WpfJEG.net6;
 
 namespace SIMA.Presentation.Views
 {

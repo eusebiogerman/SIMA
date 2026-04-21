@@ -1,35 +1,16 @@
 ﻿using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json.Linq;
-using SIMA.Domain.Models.Intefaces;
-using SIMA.Domain.Models.Objects;
-using SIMA.Domain.Models.Params;
-using SIMA.Domain.Models.Views;
 using SIMA.Helper;
 using SIMA.Helper.Interfaces;
-using SIMA.Infrastructure.Repositories;
 using SIMA.Infrastructure.Repositories.Interfaces;
-using SIMA.Presentation.ViewModel;
-using SIMA.Templates;
+using WpfJEG.net6;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.DirectoryServices.ActiveDirectory;
-using System.Drawing;
-using System.Dynamic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Net.NetworkInformation;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Input;
 using System.Windows.Media;
+using Microsoft.Extensions.Configuration;
 
 namespace SIMA.Presentation.Repository
 {
@@ -148,6 +129,7 @@ namespace SIMA.Presentation.Repository
             Page.parsePageData(intotal);
             TxtResults.Text = getResultMessage(intotal, Domain);
             pagingLabels(intotal);
+            Status.StopProgress();
         }
         /// <summary>
         /// Managment of Responsive Windows given the Height and Width of the current windows
@@ -352,7 +334,7 @@ namespace SIMA.Presentation.Repository
         public async Task InsertStatusDBAsync(string message, Brush color, ExceptionType ErrorType = ExceptionType.None, Exception? ex = null)
         {
             InsertStatus(message, color, true, ErrorType, ex);
-            await Status.DelayDBProgress();
+            await Status.DelayDBProgress(Config.GetConnectionString("DefaultConnection"));
         }
         /// <summary>
         /// Set the Cuurent Item Value int the LovTextBox obj given the Text and id(LovObject.Id) 

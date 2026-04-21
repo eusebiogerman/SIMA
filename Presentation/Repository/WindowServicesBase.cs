@@ -1,17 +1,13 @@
-﻿using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using SIMA.Helper;
 using SIMA.Infrastructure.Repositories.Interfaces;
 using SIMA.Presentation.ViewModel;
-using SIMA.Templates;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
+using WpfJEG.net6;
 
 namespace SIMA.Presentation.Repository
 {

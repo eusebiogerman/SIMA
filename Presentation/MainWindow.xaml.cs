@@ -1,5 +1,4 @@
 ﻿using SIMA.Infrastructure.Repositories;
-using SIMA.ExtensionsHelper;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -8,25 +7,18 @@ using System.Windows.Controls;
 using SIMA.Presentation.Views;
 using SIMA.Helper;
 using SIMA.Presentation.ViewModel;
-using System.Linq;
 using System.Windows.Media;
 using Microsoft.Extensions.Configuration;
-using System.Xml.Linq;
-using SIMA.Templates;
-using System.Reflection.PortableExecutable;
-using System.Windows.Media.Media3D;
 using SIMA.Infrastructure.Repositories.Interfaces;
-using System.Data.Common;
 using SIMA.Domain.Models.Objects;
 using SIMA.Domain.Models.Views;
 using SIMA.Domain.Models.Params;
-using SIMA.Domain.Models.Intefaces;
 using SIMA.Presentation.Repository;
 using System.Collections.ObjectModel;
 using Microsoft.Data.SqlClient;
 using System.Threading;
 using System.Windows.Input;
-using System.Windows.Markup.Localizer;
+using WpfJEG.net6;
 
 namespace SIMA.Presentation
 {
@@ -46,6 +38,7 @@ namespace SIMA.Presentation
         private TreeViewItem? _currentItem = null;
         private readonly Dictionary<int, string> columns_width;
         private string _username;
+ 
 
         public MainWindow(string username)
         {
@@ -263,6 +256,7 @@ namespace SIMA.Presentation
         }
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            //initalizing controls
             _windowservices.DataContext = _vm;
             _windowservices.PageControl = pageControl;
             _windowservices.ParentLovtextbox = cmbCategory;
@@ -272,7 +266,7 @@ namespace SIMA.Presentation
             _windowservices.ObsrverStatus = new ObservableCollection<StatusItem>();
             _windowservices.Status.ItemsSource = _windowservices.ObsrverStatus;
 
-
+            //updating page and events
             await _windowservices.InsertStatusAsync("Initializing SIMA Window.......", BrushesStatus.Progress);
             _windowservices.Page.Offset = (int?)_windowservices.PageControl.GetSelectedItemsPerPage() ?? _windowservices.Page.DefaultOffset;
             _windowservices.InsertStatus("Retriving Stocks.......", BrushesStatus.Progress, false);
@@ -280,7 +274,8 @@ namespace SIMA.Presentation
             _windowservices.UpdatePaging();
             _windowservices.SupressEventComboBox(false);
             _windowservices.InsertStatus("Window ready.......", BrushesStatus.Progress);
-            _windowservices.Status.StopProgress();
+            _windowservices?.Status?.StopProgress();
+
         }
         private void Vm_ShowErrorFromModel(string mensaje)
         {
@@ -293,10 +288,19 @@ namespace SIMA.Presentation
             _windowservices.GridView = _windowservices.GridView ?? gridCellProduct;
             _windowservices.ResizeGrid("60%", this.ActualHeight, this.ActualWidth, columns_width);
         }
-        private void Window_ContentRendered(object sender, EventArgs e)
+        private async void Window_ContentRendered(object sender, EventArgs e)
         {
-            _windowservices.InsertStatus("SIMA Window Ready.......", BrushesStatus.Progress, false);
-            _windowservices.Status.StopProgress();
+            //check DataBase conection
+            _windowservices.InsertStatus("SIMA Conection Status.......", BrushesStatus.DBProcess, true);
+            bool checksts = await DataBaseServices.PingSqlServerAsync(_windowservices.Config) == -1;
+
+            if (checksts)
+                _windowservices.CatchExceptionAndMsg(new Exception("No Database Conection"),"Conection Failed",true);
+            else
+            {
+                _windowservices.InsertStatus("SIMA Window Ready.......", BrushesStatus.Progress, false);
+                _windowservices?.Status?.StopProgress();
+            }
         }
         #endregion
 
